@@ -1,3 +1,57 @@
+<<<<<<< HEAD
+=======
+{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    background-color: #f4f4f4;
+}
+
+.sidebar {
+    width: 220px;
+    background: #0a5956;
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+.sidebar img {
+    width: 120px;
+    margin-bottom: 10px;
+}
+
+.sidebar button {
+    width: 90%;
+    background: white;
+    border: none;
+    padding: 12px;
+    margin: 5px 0;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.sidebar button i {
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar button:hover {
+    background: #ddd;
+    transform: scale(1.05);
+}
+>>>>>>> 7db4c5822599be3b59b25d30950f0afd8aef7712
 
 .logout {
     margin-top: auto;
@@ -77,4 +131,8 @@
 .eliminar {
     background: #d9534f;
     color: white;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 7db4c5822599be3b59b25d30950f0afd8aef7712
