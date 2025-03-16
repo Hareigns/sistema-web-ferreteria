@@ -1,0 +1,76 @@
+<div class="search-container" style="max-width: 900px; margin: 100px auto; background: white; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+    <!-- Estilos del Contenedor y del Botón de Búsqueda -->
+    <div style="display: flex; width: 100%; margin-bottom: 20px; align-items: center;">
+        <select class="form-select form-select-sm" style="border: none; padding: 8px; border-radius: 4px; background: #f8f9fa; margin-right: 10px;">
+            <option>Sector</option>
+            <option>Sector 1</option>
+            <option>Sector 2</option>
+        </select>
+        <input type="text" class="form-control" id="search-input" placeholder="Enter keywords?" style="flex: 1; border: none; padding: 8px; outline: none;">
+        <button class="btn-search" onclick="searchData()" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px;">
+            <i class="bi bi-search" style="color: white;"></i> <!-- Icono de lupa -->
+        </button>
+    </div>
+
+    <!-- Estilos para la DataTable -->
+    <div class="dataTable-container" style="margin-top: 20px; width: 100%;">
+        <table id="dataTable" class="display" style="width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
+            <thead>
+                <tr style="background-color: #92eca7; color: rgb(0, 0, 0);">
+                    <th style="width: 15%;">Código Producto</th>
+                    <th style="width: 20%;">Nombre del Producto</th>
+                    <th style="width: 15%;">Marca</th>
+                    <th style="width: 15%;">Fecha de Vencimiento</th>
+                    <th style="width: 15%;">Cantidad Disponible</th>
+                    <th style="width: 20%;">Fecha de Entrada</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>001</td>
+                    <td>Producto A</td>
+                    <td>Marca X</td>
+                    <td>2025-12-31</td>
+                    <td>50</td>
+                    <td>2025-03-15</td>
+                </tr>
+                <tr>
+                    <td>002</td>
+                    <td>Producto B</td>
+                    <td>Marca Y</td>
+                    <td>2024-11-30</td>
+                    <td>100</td>
+                    <td>2024-03-20</td>
+                </tr>
+                <tr>
+                    <td>003</td>
+                    <td>Producto C</td>
+                    <td>Marca Z</td>
+                    <td>2026-01-01</td>
+                    <td>200</td>
+                    <td>2023-07-10</td>
+                </tr>
+                <tr>
+                    <td>004</td>
+                    <td>Producto D</td>
+                    <td>Marca W</td>
+                    <td>2025-08-15</td>
+                    <td>150</td>
+                    <td>2023-05-05</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable(); // Inicializar DataTable
+    });
+
+    function searchData() {
+        var input = document.getElementById('search-input').value.toLowerCase();
+        var table = $('#dataTable').DataTable();
+        table.search(input).draw(); // Realizar búsqueda en DataTable
+    }
+</script>
