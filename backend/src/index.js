@@ -95,7 +95,6 @@ app.listen(app.get('port'), () => {
     console.log(`➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦  Servidor corriendo en el puerto ${app.get('port')}`);
 });
 */
-
 import express from "express";
 import morgan from "morgan";
 import { engine } from "express-handlebars";
@@ -180,6 +179,7 @@ app.use('/ventas', ventasRoutes);
 // Ruta correcta a los archivos estáticos
 const assetsPath = join(__dirname, '../../frontend/src/assets');
 app.use(express.static(assetsPath));
+app.set('assets', assetsPath);
 
 // Verifica la ruta de assets
 console.log('Ruta de assets:', assetsPath);
