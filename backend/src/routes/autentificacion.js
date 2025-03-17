@@ -17,7 +17,7 @@ router.post('/register', isNotLoggedIn, (req, res, next) => {
 });
 
 router.get('/login', isNotLoggedIn, (req, res) => {
-  res.render('auth/login');
+  res.render('auth/login' , { cssFile: 'login.css' });
 });
 
 router.post('/login', isNotLoggedIn, (req, res, next) => {
