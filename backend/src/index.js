@@ -106,6 +106,7 @@ import MySQLStoreFactory from "express-mysql-session";
 import passport from "passport";
 import { fileURLToPath } from "url";
 import { database } from "./keys.js";
+
 import cookieParser from 'cookie-parser';
 import { Handlebars } from "./lib/handlebars.js"; // Importa Handlebars
 import './lib/passport.js'; // Importa la configuración de Passport

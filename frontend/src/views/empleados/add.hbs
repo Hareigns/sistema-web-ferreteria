@@ -1,0 +1,92 @@
+
+<link rel="stylesheet" href="/styles/empleados.css">
+
+
+  <section class="vh-100 gradient-custom">
+  <div class="card">
+  <div class="container py-5 h-100">
+    <div class="row justify-content-center align-items-center h-100">
+      <div class="col-12 col-lg-9 col-xl-7">
+        <div class="card shadow-2-strong card-registration" style="border-radius: 15px;">
+          <div class="card-body p-4 p-md-5">
+            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5">Registro de Empleado</h3>
+            <form>
+
+              <div class="row">
+                <div class="col-12 mb-4">
+                  <select class="form-control form-control-lg" id="codigo_empleado">
+                    <option value="" disabled selected>Seleccione un empleado</option>
+                    <option value="1">Empleado A</option>
+                    <option value="2">Empleado B</option>
+                    <option value="3">Empleado C</option>
+                  </select>
+                  <label class="form-label" for="codigo_empleado">Código Empleado</label>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-4">
+                  <div class="form-outline">
+                    <input type="text" id="nombre" class="form-control form-control-lg" />
+                    <label class="form-label" for="nombre">Nombre</label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                  <div class="form-outline">
+                    <input type="text" id="apellido" class="form-control form-control-lg" />
+                    <label class="form-label" for="apellido">Apellido</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12 mb-4">
+                  <div class="form-outline">
+                    <input type="text" id="direccion" class="form-control form-control-lg" />
+                    <label class="form-label" for="direccion">Dirección</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-4 pb-2">
+                  <div class="form-outline">
+                    <input type="tel" id="telefono" class="form-control form-control-lg" />
+                    <label class="form-label" for="telefono">Teléfono</label>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-4 pb-2">
+                  <select class="form-control form-control-lg" id="compania_telefonica">
+                    <option value="" disabled selected>Seleccione una compañía</option>
+                    <option value="Tigo">Tigo</option>
+                    <option value="Claro">Claro</option>
+                  </select>
+                  <label class="form-label" for="compania_telefonica">Compañía Telefónica</label>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-2 d-flex justify-content-between">
+                <button class="btn btn-warning btn-lg" type="button">Modificar</button>
+                <button class="btn btn-danger btn-lg" type="button" onclick="limpiarCampos()">Limpiar</button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+  function limpiarCampos() {
+    document.getElementById('codigo_empleado').value = '';
+    document.getElementById('nombre').value = '';
+    document.getElementById('apellido').value = '';
+    document.getElementById('direccion').value = '';
+    document.getElementById('telefono').value = '';
+    document.getElementById('compania_telefonica').value = '';
+  }
+</script>
+
