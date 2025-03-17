@@ -58,8 +58,10 @@
                 <div class="col-md-6 mb-4 pb-2">
                   <select class="form-control form-control-lg" id="compania_telefonica">
                     <option value="" disabled selected>Seleccione una compañía</option>
+
                     <option value="Tigo">Tigo</option>
                     <option value="Claro">Claro</option>
+
                   </select>
                   <label class="form-label" for="compania_telefonica">Compañía Telefónica</label>
                 </div>
@@ -67,7 +69,9 @@
 
               <div class="mt-4 pt-2 d-flex justify-content-between">
                 <button class="btn btn-warning btn-lg" type="button">Modificar</button>
+
                 <button class="btn btn-danger btn-lg" type="button" onclick="limpiarCampos()">Limpiar</button>
+
               </div>
 
             </form>
@@ -79,14 +83,16 @@
 </div>
 </section>
 
+
 <script>
   function limpiarCampos() {
-    document.getElementById('codigo_empleado').value = '';
+    document.getElementById('codigo_empleado').value = 'Seleccione un empleado';
     document.getElementById('nombre').value = '';
     document.getElementById('apellido').value = '';
     document.getElementById('direccion').value = '';
     document.getElementById('telefono').value = '';
-    document.getElementById('compania_telefonica').value = '';
+    document.getElementById('compania_telefonica').value = 'Seleccione una compañía';
   }
 </script>
+
 

@@ -1,9 +1,12 @@
-import express from "express";
+import express from 'express';
 const router = express.Router();
+import { isLoggedIn } from "../lib/auth.js";
 
-// Rutas de bodega
-router.get('/', (req, res) => {
-    res.send('Ruta de bodega');
+// Definir rutas
+router.get("/add", isLoggedIn,  (req, res) => {
+    res.render("Bodega/list");
 });
 
-export { router }; // <-- Exportación nombrada
+
+// Exportar el router
+export { router }; // Exportación nombrada
