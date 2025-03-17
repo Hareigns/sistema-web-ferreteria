@@ -1,0 +1,61 @@
+README.txt
+----------
+
+Este archivo explica brevemente para qué sirve cada una de las dependencias utilizadas en este proyecto de ferreretería.
+
+---
+
+### Dependencias principales:
+
+1. **bcryptjs**: 
+   - Es una librería para encriptar contraseñas. Ayuda a proteger las contraseñas de los usuarios almacenándolas de forma segura en la base de datos.
+
+2. **connect-flash**: 
+   - Sirve para mostrar mensajes temporales (como errores o notificaciones) al usuario después de redirigirlo a otra página. Útil en formularios o autenticación.
+
+3. **cookie-parser**: 
+   - Analiza las cookies enviadas por el navegador y las hace accesibles en el servidor. Se usa para manejar sesiones o recordar preferencias del usuario.
+
+4. **express**: 
+   - Es el framework principal de Node.js para crear aplicaciones web y APIs. Simplifica la creación de rutas, manejo de solicitudes y respuestas.
+
+5. **express-handlebars**: 
+   - Es un motor de plantillas para Express. Permite crear páginas HTML dinámicas usando Handlebars, lo que facilita la inserción de datos en las vistas.
+
+6. **express-mysql-session**: 
+   - Almacena las sesiones de los usuarios en una base de datos MySQL. Es útil para mantener la información de sesión persistente.
+
+7. **express-session**: 
+   - Gestiona las sesiones de los usuarios. Permite almacenar datos específicos del usuario durante su visita al sitio.
+
+8. **express-validator**: 
+   - Valida los datos enviados por formularios. Asegura que la información ingresada por el usuario sea correcta antes de procesarla.
+
+9. **handlebars**: 
+   - Es un motor de plantillas que permite crear HTML dinámico. Se usa junto con `express-handlebars` para renderizar vistas.
+
+10. **morgan**: 
+    - Es un middleware que registra las solicitudes HTTP en la consola. Ayuda a depurar y monitorear la actividad del servidor.
+
+11. **mysql2**: 
+    - Es un cliente de MySQL para Node.js. Permite conectarse y realizar consultas a una base de datos MySQL.
+
+12. **passport**: 
+    - Es una librería de autenticación. Facilita la implementación de sistemas de login y registro.
+
+13. **passport-local**: 
+    - Es una estrategia de Passport para autenticar usuarios usando un nombre de usuario y contraseña almacenados en la base de datos.
+
+---
+
+### Dependencias de desarrollo:
+
+1. **nodemon**: 
+   - Es una herramienta que reinicia automáticamente el servidor cuando detecta cambios en el código. Muy útil durante el desarrollo para ahorrar tiempo.
+
+---
+
+### Resumen:
+Este proyecto utiliza un conjunto de dependencias para manejar la autenticación, la base de datos, las sesiones, las vistas y la seguridad. Además, se incluyen herramientas como `nodemon` para facilitar el desarrollo.
+
+---
