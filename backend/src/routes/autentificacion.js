@@ -4,22 +4,12 @@ import { isLoggedIn, isNotLoggedIn } from "../lib/auth.js";
 
 const router = express.Router();
 
-router.get('/register', isNotLoggedIn, (req, res) => {
-  res.render('auth/register');
-});
-
-router.post('/register', isNotLoggedIn, (req, res, next) => {
-  passport.authenticate('local.register', {
-    successRedirect: '/dashboard',
-    failureRedirect: '/register',
-    failureFlash: true,
-  })(req, res, next);
-});
-
+// Ruta de login
 router.get('/login', isNotLoggedIn, (req, res) => {
-  res.render('auth/login' , { cssFile: 'login.css' });
+  res.render('auth/login', { cssFile: 'login.css' });
 });
 
+// Procesar el formulario de login con los nuevos campos
 router.post('/login', isNotLoggedIn, (req, res, next) => {
   passport.authenticate('local.login', {
     successRedirect: '/dashboard',
@@ -28,10 +18,12 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
   })(req, res, next);
 });
 
+// Ruta del dashboard (requiere autenticación)
 router.get('/dashboard', isLoggedIn, (req, res) => {
   res.render('dashboard');
 });
 
+// Ruta para cerrar sesión
 router.get('/logout', (req, res, next) => {
   req.logout((err) => {
     if (err) {
@@ -42,13 +34,11 @@ router.get('/logout', (req, res, next) => {
   });
 });
 
-// Middleware de error global
+// Middleware global de manejo de errores
 router.use((err, req, res, next) => {
   console.error('Error en la aplicación:', err);
-
   req.flash('error', 'Los datos ingresados son incorrectos.');
   return res.redirect('/login');
-  //res.status(500).send('Error en el servidor');
 });
 
 export default router;

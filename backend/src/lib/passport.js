@@ -68,38 +68,30 @@ passport.deserializeUser(async (id, done) => {
 
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import helpers from "./helpers.js";
 import pool from "../database.js";
 
-// Estrategia para el login
+// Estrategia de autenticación usando Cod_Empleado, Nombre y Apellido
 passport.use('local.login', new LocalStrategy({
-    usernameField: 'username',
-    passwordField: 'password',
+    usernameField: 'codigo_empleado',
+    passwordField: 'nombre', // Aquí lo usamos temporalmente porque la estrategia de Passport requiere un segundo campo
     passReqToCallback: true
-}, async (req, username, password, done) => {
+}, async (req, codigo_empleado, nombre, done) => {
     try {
-        console.log('Autenticando usuario:', username);
+        const { apellido } = req.body;
 
-        // Busca el usuario en la base de datos
-        const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
-        console.log('Resultado de la consulta:', rows);
+        console.log('Autenticando empleado:', codigo_empleado);
+
+        // Buscar en la tabla Empleado
+        const [rows] = await pool.query('SELECT * FROM Empleado WHERE Cod_Empleado = ? AND Nombre = ? AND Apellido = ?', 
+            [codigo_empleado, nombre, apellido]);
 
         if (rows.length > 0) {
-            const user = rows[0]; // Accede directamente al primer registro
-            console.log('Usuario encontrado:', user);
-
-            // Verifica la contraseña
-            const validPassword = await helpers.matchPassword(password, user.password);
-            if (validPassword) {
-                console.log('Contraseña válida');
-                done(null, user, req.flash('success', '¡Bienvenido ' + user.username + '!'));
-            } else {
-                console.log('Contraseña incorrecta');
-                done(null, false, req.flash('error', 'Contraseña incorrecta'));
-            }
+            const empleado = rows[0];
+            console.log('Empleado encontrado:', empleado);
+            done(null, empleado, req.flash('success', '¡Bienvenido ' + empleado.Nombre + '!'));
         } else {
-            console.log('Usuario no encontrado');
-            return done(null, false, req.flash('error', 'Usuario no encontrado'));
+            console.log('Empleado no encontrado');
+            done(null, false, req.flash('error', 'Código, nombre o apellido incorrectos'));
         }
     } catch (error) {
         console.error("Error en el inicio de sesión:", error);
@@ -107,54 +99,26 @@ passport.use('local.login', new LocalStrategy({
     }
 }));
 
-// Estrategia para el registro
-passport.use('local.register', new LocalStrategy({
-    usernameField: 'username',
-    passwordField: 'password',
-    passReqToCallback: true
-}, async (req, username, password, done) => {
-    try {
-        const { fullname } = req.body;
-        const newUser = { username, password, fullname };
-
-        // Encripta la contraseña
-        newUser.password = await helpers.encryptPassword(password);
-
-        // Guarda el usuario en la base de datos
-        const [result] = await pool.query('INSERT INTO users SET ?', [newUser]);
-        newUser.id = result.insertId;
-
-        console.log('Usuario registrado:', newUser);
-        return done(null, newUser);
-    } catch (error) {
-        console.error("Error en el registro:", error);
-        return done(error);
-    }
-}));
-
-// Serialización del usuario
-passport.serializeUser((user, done) => {
-    console.log('Serializando usuario con ID:', user.id);
-    done(null, user.id);
+// Serialización del empleado
+passport.serializeUser((empleado, done) => {
+    console.log('Serializando empleado con ID:', empleado.Cod_Empleado);
+    done(null, empleado.Cod_Empleado);
 });
 
-// Deserialización del usuario
+// Deserialización del empleado
 passport.deserializeUser(async (id, done) => {
     try {
-        console.log('Deserializando usuario con ID:', id);
-
-        // Busca el usuario en la base de datos
-        const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
-        console.log('Resultado de la deserialización:', rows);
+        console.log('Deserializando empleado con ID:', id);
+        const [rows] = await pool.query('SELECT * FROM Empleado WHERE Cod_Empleado = ?', [id]);
 
         if (rows.length > 0) {
-            const user = rows[0]; // Accede directamente al primer registro
-            done(null, user);
+            const empleado = rows[0];
+            done(null, empleado);
         } else {
-            done(new Error('Usuario no encontrado'));
+            done(new Error('Empleado no encontrado'));
         }
     } catch (error) {
-        console.error("Error al deserializar usuario:", error);
+        console.error("Error al deserializar empleado:", error);
         done(error);
     }
 });
