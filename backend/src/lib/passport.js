@@ -73,25 +73,31 @@ import pool from "../database.js";
 // Estrategia de autenticación usando Cod_Empleado, Nombre y Apellido
 passport.use('local.login', new LocalStrategy({
     usernameField: 'codigo_empleado',
-    passwordField: 'nombre', // Aquí lo usamos temporalmente porque la estrategia de Passport requiere un segundo campo
+    passwordField: 'nombre', // Este campo no se usa realmente, pero es necesario para la estrategia
     passReqToCallback: true
 }, async (req, codigo_empleado, nombre, done) => {
     try {
-        const { apellido } = req.body;
-
         console.log('Autenticando empleado:', codigo_empleado);
 
-        // Buscar en la tabla Empleado
-        const [rows] = await pool.query('SELECT * FROM Empleado WHERE Cod_Empleado = ? AND Nombre = ? AND Apellido = ?', 
-            [codigo_empleado, nombre, apellido]);
+        // Busca el empleado en la base de datos
+        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [codigo_empleado]);
+        console.log('Resultado de la consulta:', rows);
 
         if (rows.length > 0) {
-            const empleado = rows[0];
+            const empleado = rows[0]; // Accede directamente al primer registro
             console.log('Empleado encontrado:', empleado);
-            done(null, empleado, req.flash('success', '¡Bienvenido ' + empleado.Nombre + '!'));
+
+            // Verifica que el nombre y apellido coincidan
+            if (empleado.Nombre === req.body.nombre && empleado.Apellido === req.body.apellido) {
+                console.log('Nombre y apellido válidos');
+                done(null, empleado, req.flash('success', '¡Bienvenido ' + empleado.Nombre + ' ' + empleado.Apellido + '!'));
+            } else {
+                console.log('Nombre o apellido incorrecto');
+                done(null, false, req.flash('error', 'Nombre o apellido incorrecto'));
+            }
         } else {
             console.log('Empleado no encontrado');
-            done(null, false, req.flash('error', 'Código, nombre o apellido incorrectos'));
+            return done(null, false, req.flash('error', 'Empleado no encontrado'));
         }
     } catch (error) {
         console.error("Error en el inicio de sesión:", error);
@@ -99,20 +105,41 @@ passport.use('local.login', new LocalStrategy({
     }
 }));
 
-// Serialización del empleado
 passport.serializeUser((empleado, done) => {
-    console.log('Serializando empleado con ID:', empleado.Cod_Empleado);
+    console.log('Serializando empleado con Cod_Empleado:', empleado.Cod_Empleado);
     done(null, empleado.Cod_Empleado);
 });
 
-// Deserialización del empleado
-passport.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (Cod_Empleado, done) => {
     try {
-        console.log('Deserializando empleado con ID:', id);
-        const [rows] = await pool.query('SELECT * FROM Empleado WHERE Cod_Empleado = ?', [id]);
+        console.log('Deserializando empleado con Cod_Empleado:', Cod_Empleado);
+
+        // Busca el empleado en la base de datos
+        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
+        console.log('Resultado de la deserialización:', rows);
 
         if (rows.length > 0) {
-            const empleado = rows[0];
+            const empleado = rows[0]; // Accede directamente al primer registro
+            done(null, empleado);
+        } else {
+            done(new Error('Empleado no encontrado'));
+        }
+    } catch (error) {
+        console.error("Error al deserializar empleado:", error);
+        done(error);
+    }
+});
+
+passport.deserializeUser(async (Cod_Empleado, done) => {
+    try {
+        console.log('Deserializando empleado con Cod_Empleado:', Cod_Empleado);
+
+        // Busca el empleado en la base de datos
+        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
+        console.log('Resultado de la deserialización:', rows);
+
+        if (rows.length > 0) {
+            const empleado = rows[0]; // Accede directamente al primer registro
             done(null, empleado);
         } else {
             done(new Error('Empleado no encontrado'));
