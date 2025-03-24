@@ -1,3 +1,72 @@
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import pool from "../database.js";
+
+// Estrategia de autenticación usando Cod_Empleado, Nombre y Apellido
+passport.use('local.login', new LocalStrategy({
+    usernameField: 'codigo_empleado',
+    passwordField: 'nombre', // Este campo no se usa realmente, pero es necesario para la estrategia
+    passReqToCallback: true
+}, async (req, codigo_empleado, nombre, done) => {
+    try {
+        console.log('Autenticando empleado:', codigo_empleado);
+
+        // Busca el empleado en la base de datos
+        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [codigo_empleado]);
+        console.log('Resultado de la consulta:', rows);
+
+        if (rows.length > 0) {
+            const empleado = rows[0]; // Accede directamente al primer registro
+            console.log('Empleado encontrado:', empleado);
+
+            // Verifica que el nombre y apellido coincidan sin importar mayúsculas o minúsculas
+            if (empleado.Nombre.toLowerCase() === req.body.nombre.toLowerCase() && 
+                empleado.Apellido.toLowerCase() === req.body.apellido.toLowerCase()) {
+                console.log('Nombre y apellido válidos');
+                done(null, empleado, req.flash('success', '¡Bienvenido ' + empleado.Nombre + ' ' + empleado.Apellido + '!'));
+            } else {
+                console.log('Nombre o apellido incorrecto');
+                done(null, false, req.flash('error', 'Nombre o apellido incorrecto'));
+            }
+        } else {
+            console.log('Empleado no encontrado');
+            return done(null, false, req.flash('error', 'Empleado no encontrado'));
+        }
+    } catch (error) {
+        console.error("Error en el inicio de sesión:", error);
+        return done(error);
+    }
+}));
+
+passport.serializeUser((empleado, done) => {
+    console.log('Serializando empleado con Cod_Empleado:', empleado.Cod_Empleado);
+    done(null, empleado.Cod_Empleado);
+});
+
+passport.deserializeUser(async (Cod_Empleado, done) => {
+    try {
+        console.log('Deserializando empleado con Cod_Empleado:', Cod_Empleado);
+
+        // Busca el empleado en la base de datos
+        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
+        console.log('Resultado de la deserialización:', rows);
+
+        if (rows.length > 0) {
+            const empleado = rows[0]; // Accede directamente al primer registro
+            done(null, empleado);
+        } else {
+            done(new Error('Empleado no encontrado'));
+        }
+    } catch (error) {
+        console.error("Error al deserializar empleado:", error);
+        done(error);
+    }
+});
+
+export default passport;
+
+
+
 /*
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -66,88 +135,4 @@ passport.deserializeUser(async (id, done) => {
 */
 
 
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import pool from "../database.js";
 
-// Estrategia de autenticación usando Cod_Empleado, Nombre y Apellido
-passport.use('local.login', new LocalStrategy({
-    usernameField: 'codigo_empleado',
-    passwordField: 'nombre', // Este campo no se usa realmente, pero es necesario para la estrategia
-    passReqToCallback: true
-}, async (req, codigo_empleado, nombre, done) => {
-    try {
-        console.log('Autenticando empleado:', codigo_empleado);
-
-        // Busca el empleado en la base de datos
-        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [codigo_empleado]);
-        console.log('Resultado de la consulta:', rows);
-
-        if (rows.length > 0) {
-            const empleado = rows[0]; // Accede directamente al primer registro
-            console.log('Empleado encontrado:', empleado);
-
-            // Verifica que el nombre y apellido coincidan
-            if (empleado.Nombre === req.body.nombre && empleado.Apellido === req.body.apellido) {
-                console.log('Nombre y apellido válidos');
-                done(null, empleado, req.flash('success', '¡Bienvenido ' + empleado.Nombre + ' ' + empleado.Apellido + '!'));
-            } else {
-                console.log('Nombre o apellido incorrecto');
-                done(null, false, req.flash('error', 'Nombre o apellido incorrecto'));
-            }
-        } else {
-            console.log('Empleado no encontrado');
-            return done(null, false, req.flash('error', 'Empleado no encontrado'));
-        }
-    } catch (error) {
-        console.error("Error en el inicio de sesión:", error);
-        return done(error);
-    }
-}));
-
-passport.serializeUser((empleado, done) => {
-    console.log('Serializando empleado con Cod_Empleado:', empleado.Cod_Empleado);
-    done(null, empleado.Cod_Empleado);
-});
-
-passport.deserializeUser(async (Cod_Empleado, done) => {
-    try {
-        console.log('Deserializando empleado con Cod_Empleado:', Cod_Empleado);
-
-        // Busca el empleado en la base de datos
-        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
-        console.log('Resultado de la deserialización:', rows);
-
-        if (rows.length > 0) {
-            const empleado = rows[0]; // Accede directamente al primer registro
-            done(null, empleado);
-        } else {
-            done(new Error('Empleado no encontrado'));
-        }
-    } catch (error) {
-        console.error("Error al deserializar empleado:", error);
-        done(error);
-    }
-});
-
-passport.deserializeUser(async (Cod_Empleado, done) => {
-    try {
-        console.log('Deserializando empleado con Cod_Empleado:', Cod_Empleado);
-
-        // Busca el empleado en la base de datos
-        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
-        console.log('Resultado de la deserialización:', rows);
-
-        if (rows.length > 0) {
-            const empleado = rows[0]; // Accede directamente al primer registro
-            done(null, empleado);
-        } else {
-            done(new Error('Empleado no encontrado'));
-        }
-    } catch (error) {
-        console.error("Error al deserializar empleado:", error);
-        done(error);
-    }
-});
-
-export default passport;
