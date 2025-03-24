@@ -1,30 +1,106 @@
-<link rel="stylesheet" href="/styles/login.css">
+<!-- Bootstrap 5 y Google Fonts -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-<div class="container">
-  <div class="col-md-4 mx-auto">
-    <div class="card text-center">
-      <div class="card-header">
-        <h3>Login</h3>
-      </div>
-      <div class="card-body">
-        <img src="/images/logo1.webp" alt="logo ferreteria" class="card-img-top mx-auto m-2 rounded-circle w-350">
-        <form action="/login" method="post">
-          <div class="form-group">
-            <input type="text" name="codigo_empleado" placeholder="Código de Empleado" class="form-control" style="margin-bottom: 20px">
-          </div>
-          <div class="form-group">
-            <input type="text" name="nombre" placeholder="Nombre" class="form-control" style="margin-bottom: 20px">
-          </div>
-          <div class="form-group">
-            <input type="text" name="apellido" placeholder="Apellido" class="form-control" style="margin-bottom: 20px">
-          </div>
-          <div class="form-group">
-            <button class="btn btn-success btn-block">Iniciar sesión</button>
-          </div>
-        </form>
-      </div>
-      <div class="card-footer text-muted">
-      </div>
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background: url('/images/ferrete.webp') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .login-container {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .login-container img {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    /* Cuadrado con bordes suavizados */
+  }
+
+  .login-container h3 {
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+
+  .input-group {
+    margin-bottom: 15px;
+  }
+
+  .form-control {
+    border-radius: 8px;
+  }
+
+  .input-group-text {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px 0 0 8px;
+  }
+
+  .btn-success {
+    background: #28a745;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    width: 100%;
+  }
+
+  .btn-success:hover {
+    background: #218838;
+  }
+
+  .forgot-password {
+    margin-top: 10px;
+    display: block;
+    font-size: 14px;
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  .forgot-password:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="login-container">
+  <img src="/images/logo1.webp" alt="Logo de la Ferretería">
+  <h3>Iniciar Sesión</h3>
+  <form action="/login" method="post">
+
+    <div class="input-group">
+      <span class="input-group-text"><i class="fa-solid fa-id-badge"></i></span>
+      <input type="text" name="codigo_empleado" placeholder="Código de Empleado" class="form-control">
     </div>
-  </div>
+
+    <div class="input-group">
+      <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+      <input type="text" name="nombre" placeholder="Nombre" class="form-control">
+    </div>
+
+    <div class="input-group">
+      <span class="input-group-text"><i class="fa-solid fa-user-tag"></i></span>
+      <input type="text" name="apellido" placeholder="Apellido" class="form-control">
+    </div>
+
+    <button class="btn btn-success">Iniciar Sesión</button>
+
+  </form>
 </div>
