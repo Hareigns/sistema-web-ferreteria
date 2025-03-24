@@ -14,13 +14,15 @@
         /* Estilos Generales */
         body {
             font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
             background: url('/images/fondo.webp') no-repeat center center/cover;
-            height: 100vh;
             display: flex;
+            align-items: center;
+            height: 100vh;
+            position: relative;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            text-align: center;
             overflow: hidden;
         }
 
@@ -162,11 +164,12 @@
             border-radius: 10px;
             border: none;
             transition: transform 0.3s ease, background-color 0.3s ease;
-            margin-top: 20px;
-            display: inline-block;
+            margin: 0 auto;
+            display: grid;
             transform: translateX(1000px); /* Mover más a la izquierda */
             opacity: 0;
             animation: fadeInLeft 1.2s ease-out forwards;
+            width: 40%;
         }
 
         .btn-custom:hover {
