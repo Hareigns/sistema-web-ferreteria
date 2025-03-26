@@ -11,6 +11,7 @@ import { database } from "./keys.js";
 import cookieParser from 'cookie-parser';
 import { Handlebars } from "./lib/handlebars.js"; // Importa Handlebars
 import './lib/passport.js'; // Importa la configuración de Passport
+import bodyParser from 'body-parser';
 
 // Importación de rutas
 import indexRoutes from "./routes/index.js";
@@ -58,6 +59,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 // Variables globales
 app.use((req, res, next) => {

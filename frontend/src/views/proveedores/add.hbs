@@ -4,128 +4,176 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/styles/Proveedores.css">
 
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8 col-lg-6">
-        <div class="card p-4">
-          <div class="card-body">
-            <h3 class="text-center mb-4">Registro de Proveedores</h3>
-            <form  action="/proveedores/add" method="post" id="proveedorForm">
-              <div class="mb-3">
-                <label for="codigo" class="form-label">Código</label>
-                <input type="text" id="codigo" name="codigo" class="form-control">
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card p-4">
+        <div class="card-body">
+          <h3 class="text-center mb-4">Registro de Proveedores</h3>
+          <form action="/proveedores/add" method="post" id="proveedorForm">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" id="nombre" name="nombre" class="form-control" required>
               </div>
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="nombre" class="form-label">Nombre</label>
-                  <input type="text" id="nombre" name="nombre" class="form-control">
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="apellido" class="form-label">Apellido</label>
-                  <input type="text" id="apellido" name="apellido" class="form-control">
-                </div>
+              <div class="col-md-6 mb-3">
+                <label for="apellido" class="form-label">Apellido</label>
+                <input type="text" id="apellido" name="apellido" class="form-control" required>
               </div>
-              <div class="mb-3">
-                <label for="telefono" class="form-label">Teléfono</label>
-                <input type="tel" id="telefono" name="telefono" class="form-control">
-              </div>
-              <div class="mb-3">
-                <label for="compania" class="form-label">Compañía</label>
-                <select id="compania" name="compania" class="form-select">
-                  <option value="" disabled selected>Seleccione una compañía</option>
-                  <option value="Tigo">Tigo</option>
-                  <option value="Claro">Claro</option>
-                </select>
-              </div>
-              <div class="mb-4">
-                <label for="sector" class="form-label">Sector</label>
-                <select id="sector" name="sector" class="form-select">
-                  <option value="" disabled selected>Seleccione un sector</option>
-                  <option value="Herramientas manuales">Herramientas manuales</option>
-                  <option value="Herramientas eléctricas">Herramientas eléctricas</option>
-                  <option value="Materiales de construcción">Materiales de construcción</option>
-                  <option value="Pinturas o accesorios">Pinturas o accesorios</option>
-                  <option value="Tuberías y plomería">Tuberías y plomería</option>
-                  <option value="Electricidad e iluminación">Electricidad e iluminación</option>
-                  <option value="Seguridad industrial">Seguridad industrial</option>
-                  <option value="Productos de ferretería general">Productos de ferretería general</option>
-                </select>
-              </div>
-              <div class="d-flex justify-content-between">
-                <button class="btn btn-primary" type="submit">Ingresar</button>
-                <button class="btn btn-danger" type="reset">Limpiar</button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div class="mb-3">
+              <label for="telefono" class="form-label">Teléfono</label>
+              <input type="tel" id="telefono" name="telefono" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="compania" class="form-label">Compañía</label>
+              <select id="compania" name="compania" class="form-select" required>
+                <option value="" disabled selected>Seleccione una compañía</option>
+                <option value="Tigo">Tigo</option>
+                <option value="Claro">Claro</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label for="sector" class="form-label">Sector</label>
+              <select id="sector" name="sector" class="form-select" required>
+                <option value="" disabled selected>Seleccione un sector</option>
+                <option value="Herramientas manuales">Herramientas manuales</option>
+                <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+                <option value="Materiales de construcción">Materiales de construcción</option>
+                <option value="Pinturas o accesorios">Pinturas o accesorios</option>
+                <option value="Tuberías y plomería">Tuberías y plomería</option>
+                <option value="Electricidad e iluminación">Electricidad e iluminación</option>
+                <option value="Seguridad industrial">Seguridad industrial</option>
+                <option value="Productos de ferretería general">Productos de ferretería general</option>
+              </select>
+            </div>
+            <div class="d-flex justify-content-between">
+              <button class="btn btn-primary" type="submit">Ingresar</button>
+              <button class="btn btn-danger" type="reset">Limpiar</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
-  
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    document.getElementById('proveedorForm').addEventListener('submit', async function(event) {
-  event.preventDefault();
+</div>
 
-  const codigo = document.getElementById('codigo').value.trim();
-  const nombre = document.getElementById('nombre').value.trim();
-  const apellido = document.getElementById('apellido').value.trim();
-  const telefono = document.getElementById('telefono').value.trim();
-  const compania = document.getElementById('compania').value;
-  const sector = document.getElementById('sector').value;
+<div class="card mb-4" style="border: 1px solid #ddd;">
+  <div class="card-body text-center">
+    <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Proveedores</h3>
+    <div class="card p-4 table-responsive">
+      <div class="card-body">
+        <table class="table align-middle mb-0 bg-white" id="proveedoresTable">
+          <thead class="bg-light">
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Teléfono</th>
+              <th>Compañía</th>
+              <th>Sector</th>
+            </tr>
+          </thead>
+          <tbody id="proveedores-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
-  if (!codigo || !nombre || !apellido || !telefono || !compania || !sector) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Faltan datos',
-      text: 'El Proveedor no fue registrado exitosamente!',
-      timer: 3000,
-      showConfirmButton: false
-    });
-    return;
-  }
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.getElementById('proveedorForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
 
-  if (!/^\d{8,15}$/.test(telefono)) {
-    Swal.fire('Error', 'El teléfono debe contener solo números (8-15 dígitos)', 'error');
-    return;
-  }
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const compania = document.getElementById('compania').value;
+    const sector = document.getElementById('sector').value;
 
-  Swal.fire({
-    title: '¿Confirmar registro?',
-    text: '¿Está seguro que desea registrar este proveedor?',
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Sí, registrar',
-    cancelButtonText: 'Cancelar'
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      // Enviar datos al servidor
-      const response = await fetch('/proveedores/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          codigo,
-          nombre,
-          apellido,
-          telefono,
-          compania,
-          sector
-        })
+    if (!nombre || !apellido || !telefono || !compania || !sector) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan datos',
+        text: 'El Proveedor no fue registrado exitosamente!',
+        timer: 3000,
+        showConfirmButton: false
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        Swal.fire('Éxito', 'Proveedor registrado correctamente', 'success')
-          .then(() => location.reload()); // Recargar la página para actualizar la lista
-      } else {
-        Swal.fire('Error', result.error || 'No se pudo registrar el proveedor', 'error');
-      }
+      return;
     }
+
+    if (!/^\d{8,9}$/.test(telefono)) {
+      Swal.fire('Error', 'El teléfono debe contener solo números (8-9 dígitos)', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: '¿Confirmar registro?',
+      text: '¿Está seguro que desea registrar este proveedor?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, registrar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const formData = {
+          nombre: nombre,
+          apellido: apellido,
+          telefono: telefono,
+          compania: compania,
+          sector: sector
+        };
+
+        const response = await fetch('/proveedores/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          Swal.fire('Éxito', 'Proveedor registrado correctamente', 'success')
+            .then(() => location.reload()); // Recargar la página para actualizar la lista
+        } else {
+          Swal.fire('Error', result.error || 'No se pudo registrar el proveedor', 'error');
+        }
+      }
+    });
   });
-});
+
+  async function cargarProveedores() {
+    try {
+      const response = await fetch('/proveedores/api/proveedores');
+      const data = await response.json();
+
+      if (data.success) {
+        const proveedores = data.data;
+        const tableBody = document.getElementById('proveedores-table-body');
+        tableBody.innerHTML = ''; // Limpiar la tabla antes de agregar los nuevos proveedores
+
+        proveedores.forEach((proveedor) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+              <td>${proveedor.Cod_Proveedor}</td>
+              <td>${proveedor.Nombre}</td>
+              <td>${proveedor.Apellido}</td>
+              <td>${proveedor.Telefono}</td>
+              <td>${proveedor.Compania}</td>
+              <td>${proveedor.Sector}</td>
+            `;
+          tableBody.appendChild(row);
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar los proveedores:', error);
+    }
+  }
+
+  window.onload = cargarProveedores;
 </script>

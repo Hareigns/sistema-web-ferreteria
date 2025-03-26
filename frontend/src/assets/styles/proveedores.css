@@ -41,3 +41,22 @@ body {
   z-index: 1000;
   border-radius: 0;
 }
+
+#proveedoresTable {
+  width: 100%;
+  text-align: center;
+}
+
+#proveedoresTable th, #proveedoresTable td {
+  padding: 10px;
+  white-space: nowrap;
+}
+
+
+
+
+
+
+
+
+
