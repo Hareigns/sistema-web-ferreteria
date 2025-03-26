@@ -2,115 +2,115 @@
 
 <div class="container mt-4">
     <div class="card">
-        <div class="card p-4" style="background-color: #a2c8e2; border-light;">
-        <h3 class="text-center" style="color: #000000;">Ventas</h3> <!-- Título dentro del cuadro celeste -->
-        <div class="row g-3">
-            <div class="col-md-4">
-                <input type="text" id="codigoVenta" class="form-control" placeholder="Código de Venta" disabled>
+        <div class="card p-4" style="background-color: #ffffff8f; border-light;">
+            <h3 class="text-center" style="color: #000000;">Ventas</h3>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" id="codigoVenta" class="form-control" placeholder="Código de Venta" disabled>
+                </div>
+                <div class="col-md-4">
+                    <select id="sector" class="form-select">
+                        <option value="Herramientas manuales">Herramientas manuales</option>
+                        <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+                        <option value="Materiales de construcción">Materiales de construcción</option>
+                        <option value="Pinturas o accesorios">Pinturas o accesorios</option>
+                        <option value="Tuberías y plomería">Tuberías y plomería</option>
+                        <option value="Electricidad e iluminación">Electricidad e iluminación</option>
+                        <option value="Seguridad industrial">Seguridad industrial</option>
+                        <option value="Productos de ferretería general">Productos de ferretería general</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="codigoEmpleado" class="form-control" placeholder="Código de Empleado"
+                        value="EMP123" disabled>
+                </div>
+                <div class="col-md-4">
+                    <select id="nombreProducto" class="form-select">
+                        <option value="" disabled selected>Seleccione Producto</option>
+                        <option>Producto A</option>
+                        <option>Producto B</option>
+                        <option>Producto C</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" id="precio" class="form-control" placeholder="Precio">
+                </div>
+                <div class="col-md-4">
+                    <select id="metodoPago" class="form-select">
+                        <option value="" disabled selected>Seleccione Método de Pago</option>
+                        <option>Efectivo</option>
+                        <option>Tarjeta</option>
+                        <option>Transferencia</option>
+                    </select>
+                </div>
             </div>
-            <div class="col-md-4">
-                <select id="sector" class="form-select">
-                    <option value="" disabled selected>Seleccione un sector</option>
-                    <option value="1">Herramientas manuales</option>
-                    <option value="2">Herramientas eléctricas</option>
-                    <option value="3">Materiales de construcción</option>
-                    <option value="4">Pinturas o accesorios</option>
-                    <option value="5">Tuberías y plomería</option>
-                    <option value="6">Electricidad e iluminación</option>
-                    <option value="7">Seguridad industrial</option>
-                    <option value="8">Productos de ferretería general</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <input type="text" id="codigoEmpleado" class="form-control" placeholder="Código de Empleado" value="EMP123" disabled>
-            </div>
-            <div class="col-md-4">
-                <select id="nombreProducto" class="form-select">
-                    <option selected>Seleccione Producto</option>
-                    <option>Producto A</option>
-                    <option>Producto B</option>
-                    <option>Producto C</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
-            </div>
-            <div class="col-md-2">
-                <input type="text" id="precio" class="form-control" placeholder="Precio">
-            </div>
-            <div class="col-md-4">
-                <select id="metodoPago" class="form-select">
-                    <option selected>Seleccione Método de Pago</option>
-                    <option>Efectivo</option>
-                    <option>Tarjeta</option>
-                    <option>Transferencia</option>
-                </select>
-            </div>
-        </div>
 
-        <div class="text-center mt-3">
-            <button id="agregarProducto" class="btn btn-primary">Agregar Más</button>
-        </div>
+            <div class="text-center mt-3">
+                <button id="agregarProducto" class="btn btn-custom btn-custom-primary">➕ Agregar Más</button>
+            </div>
 
-        <div class="mt-4">
-            <h5 class="text-center" style="background-color: #80c7e0; color: #fff; padding: 8px; border-radius: 5px;">Lista de Productos</h5>
-            <table class="table table-light table-striped text-center">
-                <thead class="table-secondary">
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio</th>
-                        <th>Método de Pago</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaProductos">
-                    <!-- Aquí se agregarán dinámicamente los productos -->
-                </tbody>
-            </table>
-        </div>
+            <div class="mt-4">
+                <h5 class="text-center"
+                    style="background-color: #80c7e0; color: #fff; padding: 8px; border-radius: 5px;">Lista de Productos
+                </h5>
+                <table class="table table-light table-striped text-center">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Método de Pago</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaProductos">
+                        <!-- Aquí se agregarán dinámicamente los productos -->
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="d-flex justify-content-between mt-3">
-            <button class="btn btn-success">Guardar Venta</button>
+            <div class="d-flex justify-content-between mt-3">
+                <button class="btn btn-custom btn-custom-success">💾 Guardar Venta</button>
+            </div>
         </div>
     </div>
 </div>
-</div>
 
 <script>
-document.getElementById("agregarProducto").addEventListener("click", function() {
-    let nombre = document.getElementById("nombreProducto").value;
-    let cantidad = document.getElementById("cantidad").value;
-    let precio = document.getElementById("precio").value;
-    let metodoPago = document.getElementById("metodoPago").value;
+    document.getElementById("agregarProducto").addEventListener("click", function () {
+        let nombre = document.getElementById("nombreProducto").value;
+        let cantidad = document.getElementById("cantidad").value;
+        let precio = document.getElementById("precio").value;
+        let metodoPago = document.getElementById("metodoPago").value;
 
-    if (nombre === "Seleccione Producto" || cantidad === "" || precio === "" || metodoPago === "Seleccione Método de Pago") {
-        alert("Por favor, complete todos los campos antes de agregar.");
-        return;
-    }
+        if (nombre === "Seleccione Producto" || cantidad === "" || precio === "" || metodoPago === "Seleccione Método de Pago") {
+            alert("Por favor, complete todos los campos antes de agregar.");
+            return;
+        }
 
-    let tabla = document.getElementById("tablaProductos");
-    let fila = document.createElement("tr");
+        let tabla = document.getElementById("tablaProductos");
+        let fila = document.createElement("tr");
 
-    fila.innerHTML = `
+        fila.innerHTML = `
         <td>${nombre}</td>
         <td>${cantidad}</td>
         <td>${precio}</td>
         <td>${metodoPago}</td>
-        <td><button class="btn btn-danger btn-sm eliminar">Eliminar</button></td>
+        <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
     `;
 
-    tabla.appendChild(fila);
+        tabla.appendChild(fila);
 
-    // Limpiar los campos
-    document.getElementById("nombreProducto").value = "Seleccione Producto";
-    document.getElementById("cantidad").value = "";
-    document.getElementById("precio").value = "";
-    document.getElementById("metodoPago").value = "Seleccione Método de Pago";
+        document.getElementById("nombreProducto").value = "Seleccione Producto";
+        document.getElementById("cantidad").value = "";
+        document.getElementById("precio").value = "";
+        document.getElementById("metodoPago").value = "Seleccione Método de Pago";
 
-    // Evento para eliminar fila
-    fila.querySelector(".eliminar").addEventListener("click", function() {
-        fila.remove();
+        fila.querySelector(".eliminar").addEventListener("click", function () {
+            fila.remove();
+        });
     });
-});
 </script>

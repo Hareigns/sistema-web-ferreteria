@@ -1,108 +1,34 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Ferretería</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: url(/images/ferrete.webp) no-repeat center center/cover;
-            display: flex;
-            flex-direction: column; /* Asegura que los elementos estén en una columna */
-            align-items: center; /* Centra los elementos horizontalmente */
-            justify-content: space-between; /* Crea un espacio entre la barra de navegación y el dashboard */
-            min-height: 100vh; /* Asegura que todo el contenido ocupe la altura de la pantalla */
-            padding-top: 20px; /* Espacio extra arriba para mejor separación */
-        }
+<link rel="stylesheet" href="/styles/dashboard.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Ferretería</title>
 
-
-
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
-            max-width: 750px;
-            width: 100%;
-            
-            position: absolute; /* Para poder ubicarlo en la pantalla */
-            top: 50%; /* Lo posiciona en la mitad vertical */
-            left: 50%; /* Lo posiciona en la mitad horizontal */
-            transform: translate(-50%, -50%); /* Ajuste fino para centrarlo perfectamente */
-        }
-
-
-        .card {
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card h3 {
-            font-size: 20px;
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-
-        .card p {
-            font-size: 14px;
-            color: #34495e;
-            line-height: 1.5;
-        }
-
-        .icon {
-            font-size: 30px;
-            margin-bottom: 8px;
-            color: #e67e22;
-        }
-
-        .navbar {
-            background: #2c3e50;
-            padding: 15px;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            border-radius: 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="dashboard-container">
-        <div class="card">
-            <div class="icon">🌟</div>
-            <h3>Visión</h3>
-            <p>Ser la ferretería líder en el sector sur de León, reconocida por nuestra amplia variedad de productos, precios accesibles y excelente servicio al cliente.</p>
-        </div>
-        <div class="card">
-            <div class="icon">🚀</div>
-            <h3>Misión</h3>
-            <p>Proveer materiales ferreteros de calidad, ofreciendo una amplia gama de productos que faciliten la construcción, reparación y mantenimiento.</p>
-        </div>
-        <div class="card">
-            <div class="icon">📍</div>
-            <h3>Dirección</h3>
-            <p>Del Rastro 3c. Al sur. León</p>
-        </div>
-        <div class="card">
-            <div class="icon">📞</div>
-            <h3>Teléfono del dueño</h3>
-            <p><strong>8680-0409</strong></p>
-        </div>
+<div class="dashboard-container">
+    <div class="card">
+        <div class="icon">🌟</div>
+        <h3>Visión</h3>
+        <p>Ser la ferretería líder en el sector sur de León, reconocida por nuestra amplia variedad de productos,
+            precios accesibles y excelente servicio al cliente.</p>
     </div>
-</body>
-</html>
+    <div class="card">
+        <div class="icon">🚀</div>
+        <h3>Misión</h3>
+        <p>Proveer materiales ferreteros de calidad, ofreciendo una amplia gama de productos que faciliten la
+            construcción, reparación y mantenimiento.</p>
+    </div>
+    <div class="card">
+        <div class="icon">📍</div>
+        <h3>Dirección</h3>
+        <p>Del Rastro 3c. Al sur. León</p>
+    </div>
+    <div class="card">
+        <div class="icon">📞</div>
+        <h3>Teléfono del dueño</h3>
+        <p><strong>8680-0409</strong></p>
+    </div>
+</div>
+
+<!-- Botón Manual de Usuario -->
+<a href="manual_usuario.pdf" class="manual-btn" target="_blank">
+    📖 Manual de Usuario
+</a>

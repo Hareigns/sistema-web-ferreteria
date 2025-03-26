@@ -1,107 +1,92 @@
 <link rel="stylesheet" href="/styles/productos.css">
 
-<section class="vh-100 gradient-custom">
-  <div class="card">
-     <div class="container py-5 h-100">
-    <div class="row justify-content-center align-items-center h-100">
-      <div class="col-12 col-lg-9 col-xl-7">
-        <div class="card shadow-2-strong card-registration" style="border-radius: 15px;">
-          <div class="card-body p-4 p-md-5">
-            <h3 class="mb-4 pb-2 pb-md-0 mb-md-5">Registro Producto</h3>
-            <form>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Productos</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-              <div class="row">
-                <div class="col-md-6 mb-4">
-                  <div class="form-outline">
-                    <input type="text" id="codigo_producto" class="form-control form-control-lg" />
-                    <label class="form-label" for="codigo_producto">Código Producto</label>
-                  </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                  <select class="form-control form-control-lg" id="codigo_proveedor">
-                    <option value="" disabled selected>Seleccione un proveedor</option>
-                    <option value="1">Proveedor A</option>
-                    <option value="2">Proveedor B</option>
-                    <option value="3">Proveedor C</option>
-                  </select>
-                  <label class="form-label" for="codigo_proveedor">Código Proveedor</label>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-4">
-                  <div class="form-outline">
-                    <input type="text" id="nombre" class="form-control form-control-lg" />
-                    <label class="form-label" for="nombre">Nombre</label>
-                  </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                  <div class="form-outline">
-                    <input type="number" id="precio_compra" class="form-control form-control-lg" step="0.01" />
-                    <label class="form-label" for="precio_compra">Precio Compra</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-4 pb-2">
-                  <div class="form-outline">
-                    <input type="number" id="cantidad" class="form-control form-control-lg" />
-                    <label class="form-label" for="cantidad">Cantidad</label>
-                  </div>
-                </div>
-                <div class="col-md-6 mb-4 pb-2">
-                  <select class="form-control form-control-lg" id="sector">
-                    <option value="" disabled selected>Seleccione un sector</option>
-                    <option value="1">Herramientas manuales</option>
-                    <option value="2">Herramientas eléctricas</option>
-                    <option value="3">Materiales de construcción</option>
-                    <option value="4">Pinturas o accesorios</option>
-                    <option value="5">Tuberías y plomería</option>
-                    <option value="6">Electricidad e iluminación</option>
-                    <option value="7">Seguridad industrial</option>
-                    <option value="8">Productos de ferretería general</option>
-                  </select>
-                  <label class="form-label" for="sector">Sector</label>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-12 mb-4">
-                  <div class="form-outline">
-                    <input type="text" id="marca" class="form-control form-control-lg" />
-                    <label class="form-label" for="marca">Marca</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-4">
-                  <div class="form-outline">
-                    <input type="date" id="fecha_entrada" class="form-control form-control-lg" disabled value="2024-03-15" />
-                    <label class="form-label" for="fecha_entrada">Fecha Entrada</label>
-                  </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                  <div class="form-outline">
-                    <input type="date" id="fecha_vencimiento" class="form-control form-control-lg" />
-                    <label class="form-label" for="fecha_vencimiento">Fecha Vencimiento</label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-4 pt-2 d-flex justify-content-between">
-                <button class="btn btn-primary btn-lg" type="submit">Ingresar</button>
-                <button class="btn btn-warning btn-lg" type="button">Modificar Precio o Cantidad</button>
-                <button class="btn btn-danger btn-lg" type="button">Eliminar</button>
-              </div>
-
-            </form>
-          </div>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card p-4">
+        <div class="card-body">
+          <h3 class="text-center mb-4">Registro de Producto</h3>
+          <form>
+            <div class="mb-3">
+              <label for="codigo_producto" class="form-label">Código Producto</label>
+              <input type="text" id="codigo_producto" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="codigo_proveedor" class="form-label">Código Proveedor</label>
+              <select id="codigo_proveedor" class="form-select" required>
+                <option value="" disabled selected>Seleccione un proveedor</option>
+                <option value="1">Proveedor A</option>
+                <option value="2">Proveedor B</option>
+                <option value="3">Proveedor C</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input type="text" id="nombre" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="precio_compra" class="form-label">Precio Compra</label>
+              <input type="number" id="precio_compra" class="form-control" step="0.01" required>
+            </div>
+            <div class="mb-3">
+              <label for="cantidad" class="form-label">Cantidad</label>
+              <input type="number" id="cantidad" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="sector" class="form-label">Sector</label>
+              <select id="sector" class="form-select" required>
+                <option value="" disabled selected>Seleccione un sector</option>
+                <option value="Herramientas manuales">Herramientas manuales</option>
+                <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+                <option value="Materiales de construcción">Materiales de construcción</option>
+                <option value="Pinturas o accesorios">Pinturas o accesorios</option>
+                <option value="Tuberías y plomería">Tuberías y plomería</option>
+                <option value="Electricidad e iluminación">Electricidad e iluminación</option>
+                <option value="Seguridad industrial">Seguridad industrial</option>
+                <option value="Productos de ferretería general">Productos de ferretería general</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="marca" class="form-label">Marca</label>
+              <input type="text" id="marca" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="fecha_entrada" class="form-label">Fecha Entrada</label>
+              <input type="date" id="fecha_entrada" class="form-control" disabled value="2024-03-15">
+            </div>
+            <div class="mb-3">
+              <label for="fecha_vencimiento" class="form-label">Fecha Vencimiento</label>
+              <input type="date" id="fecha_vencimiento" class="form-control" required>
+            </div>
+            <div class="d-flex justify-content-between">
+              <button class="btn btn-primary btn-custom w-45" type="submit">Ingresar</button>
+              <button class="btn btn-warning btn-custom w-45" type="button">Modificar</button>
+              <button class="btn btn-danger btn-custom w-45" type="button">Eliminar</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
 </div>
-</section>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const navbar = document.querySelector(".navbar");
 
+  window.addEventListener("scroll", function () {
+    if (window.scrollY === 0) {
+      // Si está en la parte superior, mostramos la navbar
+      navbar.style.top = "0";
+      navbar.style.opacity = "1";
+    } else {
+      // Si baja, ocultamos la navbar
+      navbar.style.top = "-80px"; // Ajusta según el tamaño de la navbar
+      navbar.style.opacity = "0";
+    }
+  });
+</script>

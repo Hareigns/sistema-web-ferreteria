@@ -1,0 +1,33 @@
+body {
+    background: url(/images/productosfondo.webp) no-repeat center center/cover;
+    background-size: cover;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0; /* Eliminar márgenes extra */
+    padding: 0; /* Eliminar padding extra */
+}
+
+.navbar {
+    background: #2c3e50;
+    padding: 10px 15px; /* Reducir padding si es necesario */
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    border-radius: 0;
+}
+
+main {
+    padding-top: 60px; /* Ajustar según la altura real de la navbar */
+    width: 100%;
+}
+
+/* Si hay un margen superior en el contenido, elimínalo */
+.container, .content {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}

@@ -1,111 +1,59 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: url(/images/dash.webp) no-repeat center center/cover;
-      background-size: cover;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding-top: 80px;
-      /* Ajuste para evitar que la navbar cubra contenido */
-    }
-
-    .card {
-      border-radius: 15px;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-      background: rgba(255, 255, 255, 0.9);
-    }
-
-    .btn-custom {
-      font-size: 1.2rem;
-      font-weight: bold;
-      padding: 10px 20px;
-      transition: all 0.3s ease;
-    }
-
-    .btn-primary:hover {
-      background-color: #0056b3;
-    }
-
-    .btn-danger:hover {
-      background-color: #b30000;
-    }
-
-    .navbar {
-      background: #2c3e50;
-      padding: 15px;
-      width: 100%;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 1000;
-      border-radius: 0;
-    }
-  </style>
-</head>
-
-<body>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/styles/Proveedores.css">
 
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6">
         <div class="card p-4">
           <div class="card-body">
-            <h3 class="text-center mb-4">Registro</h3>
-            <form>
+            <h3 class="text-center mb-4">Registro de Proveedores</h3>
+            <form  action="/proveedores/add" method="post" id="proveedorForm">
               <div class="mb-3">
                 <label for="codigo" class="form-label">Código</label>
-                <input type="text" id="codigo" class="form-control" required>
+                <input type="text" id="codigo" name="codigo" class="form-control">
               </div>
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="nombre" class="form-label">Nombre</label>
-                  <input type="text" id="nombre" class="form-control" required>
+                  <input type="text" id="nombre" name="nombre" class="form-control">
                 </div>
                 <div class="col-md-6 mb-3">
                   <label for="apellido" class="form-label">Apellido</label>
-                  <input type="text" id="apellido" class="form-control" required>
+                  <input type="text" id="apellido" name="apellido" class="form-control">
                 </div>
               </div>
               <div class="mb-3">
                 <label for="telefono" class="form-label">Teléfono</label>
-                <input type="tel" id="telefono" class="form-control" required>
+                <input type="tel" id="telefono" name="telefono" class="form-control">
               </div>
               <div class="mb-3">
                 <label for="compania" class="form-label">Compañía</label>
-                <select id="compania" class="form-select" required>
+                <select id="compania" name="compania" class="form-select">
                   <option value="" disabled selected>Seleccione una compañía</option>
-                  <option value="1">Tigo</option>
-                  <option value="2">Claro</option>
+                  <option value="Tigo">Tigo</option>
+                  <option value="Claro">Claro</option>
                 </select>
               </div>
               <div class="mb-4">
                 <label for="sector" class="form-label">Sector</label>
-                <select id="sector" class="form-select" required>
+                <select id="sector" name="sector" class="form-select">
                   <option value="" disabled selected>Seleccione un sector</option>
-                  <option value="1">Herramientas manuales</option>
-                  <option value="2">Herramientas eléctricas</option>
-                  <option value="3">Materiales de construcción</option>
-                  <option value="4">Pinturas o accesorios</option>
-                  <option value="5">Tuberías y plomería</option>
-                  <option value="6">Electricidad e iluminación</option>
-                  <option value="7">Seguridad industrial</option>
-                  <option value="8">Productos de ferretería general</option>
+                  <option value="Herramientas manuales">Herramientas manuales</option>
+                  <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+                  <option value="Materiales de construcción">Materiales de construcción</option>
+                  <option value="Pinturas o accesorios">Pinturas o accesorios</option>
+                  <option value="Tuberías y plomería">Tuberías y plomería</option>
+                  <option value="Electricidad e iluminación">Electricidad e iluminación</option>
+                  <option value="Seguridad industrial">Seguridad industrial</option>
+                  <option value="Productos de ferretería general">Productos de ferretería general</option>
                 </select>
               </div>
               <div class="d-flex justify-content-between">
-                <button class="btn btn-primary btn-custom w-45" type="submit">Ingresar</button>
-                <button class="btn btn-danger btn-custom w-45" type="reset">Limpiar</button>
+                <button class="btn btn-primary" type="submit">Ingresar</button>
+                <button class="btn btn-danger" type="reset">Limpiar</button>
               </div>
             </form>
           </div>
@@ -113,7 +61,71 @@
       </div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+  
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.getElementById('proveedorForm').addEventListener('submit', async function(event) {
+  event.preventDefault();
 
-</html>
+  const codigo = document.getElementById('codigo').value.trim();
+  const nombre = document.getElementById('nombre').value.trim();
+  const apellido = document.getElementById('apellido').value.trim();
+  const telefono = document.getElementById('telefono').value.trim();
+  const compania = document.getElementById('compania').value;
+  const sector = document.getElementById('sector').value;
+
+  if (!codigo || !nombre || !apellido || !telefono || !compania || !sector) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Faltan datos',
+      text: 'El Proveedor no fue registrado exitosamente!',
+      timer: 3000,
+      showConfirmButton: false
+    });
+    return;
+  }
+
+  if (!/^\d{8,15}$/.test(telefono)) {
+    Swal.fire('Error', 'El teléfono debe contener solo números (8-15 dígitos)', 'error');
+    return;
+  }
+
+  Swal.fire({
+    title: '¿Confirmar registro?',
+    text: '¿Está seguro que desea registrar este proveedor?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, registrar',
+    cancelButtonText: 'Cancelar'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      // Enviar datos al servidor
+      const response = await fetch('/proveedores/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          codigo,
+          nombre,
+          apellido,
+          telefono,
+          compania,
+          sector
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        Swal.fire('Éxito', 'Proveedor registrado correctamente', 'success')
+          .then(() => location.reload()); // Recargar la página para actualizar la lista
+      } else {
+        Swal.fire('Error', result.error || 'No se pudo registrar el proveedor', 'error');
+      }
+    }
+  });
+});
+</script>

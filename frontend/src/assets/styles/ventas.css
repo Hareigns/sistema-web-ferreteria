@@ -1,0 +1,61 @@
+body {
+    background: url('/images/productosfondo.webp') no-repeat center center/cover;
+    background-size: cover;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    background: #2c3e50;
+    padding: 10px 15px;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    border-radius: 0;
+}
+
+main {
+    padding-top: 70px; /* Ajuste para evitar que el contenido quede pegado a la navbar */
+    width: 100%;
+}
+
+/* Ajustar cualquier contenedor que esté pegado */
+.container, .content {
+    margin-top: 20px;
+}
+
+/* Estilos de los botones */
+.btn-custom {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.btn-custom-primary {
+    background-color: #3498db;
+    color: white;
+    border: none;
+}
+
+.btn-custom-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-custom-success {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+}
+
+.btn-custom-success:hover {
+    background-color: #27ae60;
+}

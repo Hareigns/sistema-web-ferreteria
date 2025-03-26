@@ -1,84 +1,7 @@
-<!-- Bootstrap 5 y Google Fonts -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
-<style>
-  body {
-    font-family: 'Inter', sans-serif;
-    background: url('/images/ferrete.webp') no-repeat center center fixed;
-    background-size: cover;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  .login-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    max-width: 400px;
-    width: 100%;
-  }
-
-  .login-container img {
-    width: 120px;
-    height: 120px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    /* Cuadrado con bordes suavizados */
-  }
-
-  .login-container h3 {
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 20px;
-  }
-
-  .input-group {
-    margin-bottom: 15px;
-  }
-
-  .form-control {
-    border-radius: 8px;
-  }
-
-  .input-group-text {
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px 0 0 8px;
-  }
-
-  .btn-success {
-    background: #28a745;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 16px;
-    font-weight: 700;
-    width: 100%;
-  }
-
-  .btn-success:hover {
-    background: #218838;
-  }
-
-  .forgot-password {
-    margin-top: 10px;
-    display: block;
-    font-size: 14px;
-    color: #007bff;
-    text-decoration: none;
-  }
-
-  .forgot-password:hover {
-    text-decoration: underline;
-  }
-</style>
+<link rel="stylesheet" href="/styles/login.css">
 
 <div class="login-container">
   <img src="/images/logo1.webp" alt="Logo de la Ferretería">
@@ -100,7 +23,7 @@
       <input type="text" name="apellido" placeholder="Apellido" class="form-control">
     </div>
 
-    <button class="btn btn-success">Iniciar Sesión</button>
+    <button id="boton" class="btn btn-success">Iniciar Sesión</button>
 
   </form>
-</div>
+</div>  

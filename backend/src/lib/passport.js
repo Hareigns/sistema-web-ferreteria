@@ -39,17 +39,17 @@ passport.use('local.login', new LocalStrategy({
 }));
 
 passport.serializeUser((empleado, done) => {
-    console.log('Serializando empleado con Cod_Empleado:', empleado.Cod_Empleado);
+    //console.log('Serializando empleado con Cod_Empleado:', empleado.Cod_Empleado);
     done(null, empleado.Cod_Empleado);
 });
 
 passport.deserializeUser(async (Cod_Empleado, done) => {
     try {
-        console.log('Deserializando empleado con Cod_Empleado:', Cod_Empleado);
+        //console.log('Deserializando empleado con Cod_Empleado:', Cod_Empleado);
 
         // Busca el empleado en la base de datos
         const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
-        console.log('Resultado de la deserialización:', rows);
+        //console.log('Resultado de la deserialización:', rows);
 
         if (rows.length > 0) {
             const empleado = rows[0]; // Accede directamente al primer registro
@@ -133,6 +133,3 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 */
-
-
-
