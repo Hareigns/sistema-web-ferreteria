@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Helper para validar datos del Empleado
 const validateEmpleadoData = (data) => {
-  const { nombre, apellido, direccion, telefono, compania } = data;
+  const { codigo_empleado, nombre, apellido, direccion, telefono, compania } = data;
   const errors = [];
 
   if (!nombre) errors.push("El nombre es requerido");
@@ -23,13 +23,26 @@ const validateEmpleadoData = (data) => {
 };
 
 // Mostrar formulario de añadir Empleado
-router.get("/add", isLoggedIn, (req, res) => {
-  res.render("Empleados/add", {
-    title: "Agregar Empleado",
-    Empleado: {},
-    messages: req.flash()
+router.get("/add", isLoggedIn, async (req, res) => {
+    try {
+      const [Empleados] = await pool.query(`
+        SELECT Cod_Empleado, Nombre, Apellido 
+        FROM Empleado
+        ORDER BY Nombre, Apellido
+      `);
+  
+      res.render("Empleados/add", {
+        title: "Agregar Empleado",
+        Empleado: Empleados, // Pasar la lista de empleados a la vista
+        messages: req.flash()
+      });
+    } catch (error) {
+      console.error("Error al obtener empleados:", error);
+      req.flash("error", "Error al cargar empleados");
+      res.redirect("/Empleados");
+    }
   });
-});
+  
 
 // Mostrar lista de Empleados
 router.get("/list", isLoggedIn, async (req, res) => {
@@ -56,7 +69,7 @@ router.get("/list", isLoggedIn, async (req, res) => {
 
 // Modificar la ruta '/add' para que devuelva los Empleados actualizados
 router.post('/add', isLoggedIn, async (req, res) => {
-    const { nombre, apellido, direccion, telefono, compania } = req.body;
+    const { codigo_empleado, nombre, apellido, direccion, telefono, compania } = req.body;
   
     const validationErrors = validateEmpleadoData(req.body);
     if (validationErrors.length > 0) {
@@ -69,7 +82,7 @@ router.post('/add', isLoggedIn, async (req, res) => {
       await connection.beginTransaction();
   
       // Insertar en Empleado
-      const EmpleadoData = { Nombre: nombre, Apellido: apellido, direccion: direccion };
+      const EmpleadoData = { Cod_Empleado: codigo_empleado, Nombre: nombre, Apellido: apellido, direccion: direccion };
       const [result] = await connection.query('INSERT INTO Empleado SET ?', [EmpleadoData]);
   
       // Obtener el ID generado automáticamente
@@ -119,5 +132,36 @@ router.get('/api/Empleados', isLoggedIn, async (req, res) => {
     res.status(500).json({ success: false, error: 'Error al obtener Empleados' });
   }
 });
+
+async function modificarEmpleado() {
+    const codigoEmpleado = document.getElementById("codigo_empleado").value;
+    const nombre = document.getElementById("nombre").value.trim();
+    const apellido = document.getElementById("apellido").value.trim();
+    const direccion = document.getElementById("direccion").value.trim();
+    const telefono = document.getElementById("telefono").value.trim();
+    const compania = document.getElementById("compania_telefonica").value;
+  
+    if (!codigoEmpleado || !nombre || !apellido || !direccion || !telefono || !compania) {
+      alert("Todos los campos son obligatorios.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/empleados/update/${codigoEmpleado}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, apellido, direccion, telefono, compania }),
+      });
+  
+      const data = await response.json();
+      if (data.success) {
+        alert("Empleado actualizado correctamente.");
+      } else {
+        alert("Error al actualizar empleado.");
+      }
+    } catch (error) {
+      console.error("Error al actualizar empleado:", error);
+    }
+  }  
 
 export { router };

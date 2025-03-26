@@ -9,16 +9,17 @@
     <div class="col-lg-7">
       <div class="card p-4">
         <div class="card-body">
-          <h3 class="text-center mb-4">Registro de Empleado</h3>
-          <form>
+          <h3 class="text-center mb-4">Modificar Empleados</h3>
+          <form action="/empleados/add" method="post" id="empleadoForm">
             <div class="mb-3">
-              <label for="codigo_empleado" class="form-label">Código Empleado</label>
-              <select class="form-select" id="codigo_empleado" required>
+              <label for="codigo_empleado" class="form-label">Empleado a Modificar</label>
+              <select name="codigo_empleado" class="form-select" id="codigo_empleado" required>
                 <option value="" disabled selected>Seleccione un empleado</option>
                 {{#each Empleado}}
-                <option value = {{this.Cod_Empleado}}>{{this.Nombre}} {{this.Apellido}}</option>
+                <option value="{{this.Cod_Empleado}}">{{this.Nombre}} {{this.Apellido}}</option>
                 {{/each}}
               </select>
+
             </div>
             <div class="row">
               <div class="col-md-6 mb-3">
@@ -49,7 +50,7 @@
               </div>
             </div>
             <div class="d-flex justify-content-between">
-              <button class="btn btn-primary btn-custom" type="button">
+              <button class="btn btn-primary btn-custom" type="button" onclick="modificarEmpleado()">
                 <i class="bi bi-pencil-square"></i> Modificar
               </button>
               <button class="btn btn-danger btn-custom" type="button" onclick="limpiarCampos()">

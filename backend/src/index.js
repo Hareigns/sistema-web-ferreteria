@@ -87,11 +87,17 @@ app.use('/empleados', empleadosRoutes);
 app.use('/productos', productosRoutes);
 app.use('/proveedores', proveedoresRoutes);
 app.use('/ventas', ventasRoutes);
+app.use('/api/empleados', empleadosRoutes);
 
 // Ruta correcta a los archivos estáticos
 const assetsPath = join(__dirname, '../../frontend/src/assets');
 app.use(express.static(assetsPath));
 app.set('assets', assetsPath);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
+});
 
 // Middleware para manejar errores 404
 app.use((req, res, next) => {
