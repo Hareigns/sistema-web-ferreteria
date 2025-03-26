@@ -15,9 +15,9 @@
               <label for="codigo_empleado" class="form-label">Código Empleado</label>
               <select class="form-select" id="codigo_empleado" required>
                 <option value="" disabled selected>Seleccione un empleado</option>
-                <option value="1">Empleado A</option>
-                <option value="2">Empleado B</option>
-                <option value="3">Empleado C</option>
+                {{#each Empleado}}
+                <option value = {{this.Cod_Empleado}}>{{this.Nombre}} {{this.Apellido}}</option>
+                {{/each}}
               </select>
             </div>
             <div class="row">
