@@ -1,4 +1,7 @@
 <link rel="stylesheet" href="/styles/productos.css">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Registro de Productos</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -134,57 +137,6 @@
       .catch(error => console.error("❌ Error en la solicitud:", error));
   });
 
-
-  //Ingresar
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector('form');
-
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-
-      const codigoProducto = document.getElementById("codigo_producto").value;
-      const nombre = document.getElementById("nombre").value;
-      const sector = document.getElementById("sector").value;
-      const codigoProveedor = document.getElementById("codigo_proveedor").value;
-      const precioCompra = parseFloat(document.getElementById("precio_compra").value);
-      const cantidad = parseInt(document.getElementById("cantidad").value);
-      const marca = document.getElementById("marca").value;
-      const fechaVencimiento = document.getElementById("fecha_vencimiento").value;
-
-      const data = {
-        codigo_producto: codigoProducto,
-        nombre: nombre,
-        marca: marca,
-        fecha_vencimiento: fechaVencimiento,
-        sector: sector,
-        codigo_proveedor: codigoProveedor,
-        precio_compra: precioCompra,
-        cantidad: cantidad
-      };
-
-      fetch("productos/api/productos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert("Producto ingresado correctamente");
-            form.reset(); // Limpiar formulario
-          } else {
-            alert("Error al ingresar producto: " + data.message);
-          }
-        })
-        .catch(error => {
-          console.error("❌ Error en la solicitud:", error);
-          alert("Hubo un error al guardar el producto");
-        });
-    });
-  });
-
   // Obtener la fecha actual del sistema
   let fechaActual = new Date();
 
@@ -194,7 +146,7 @@
   let dia = ("0" + fechaActual.getDate()).slice(-2); // Asegura que el día esté en dos dígitos
 
   // Formatear la fecha como YYYY-MM-DD
-  let fechaFormateada = `${anio}-${mes}-${dia}`;
+  let fechaFormateada = ${anio}-${mes}-${dia};
 
   // Asignar la fecha al campo de entrada
   document.getElementById('fecha_entrada').value = fechaFormateada;
