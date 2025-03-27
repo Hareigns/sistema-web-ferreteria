@@ -1,11 +1,6 @@
-CREATE DATABASE ferreteria
-
+CREATE DATABASE ferreteria;
 
 USE ferreteria;
-
-
-USE master;
-go
 
 CREATE TABLE users (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -18,45 +13,9 @@ SELECT * FROM users;
 
 -- DELETE FROM users;
 
-
-
-ALTER DATABASE ferreteria
-SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-GO
-
-DROP DATABASE ferreteria;
-GO
-
-
-DROP TABLE IF EXISTS Proveedor;  --eliminar la tabla si existe
--- tabla Proveedor
-CREATE TABLE Proveedor (
-    Cod_Proveedor INT PRIMARY KEY,
-    Nombre NVARCHAR(50),
-    Apellido NVARCHAR(50),
-	Sector VARCHAR(50)
-);
-
-DELETE FROM Proveedor;
-SELECT * FROM Proveedor;
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS Bodega;  --eliminar la tabla si existe
--- tabla Bodega
-CREATE TABLE Bodega (
-    Sector VARCHAR(50),
-    Cod_Producto INT,
-    Cantidad INT,
-    FechaEntrada DATE,
-    PRIMARY KEY (Sector, Cod_Producto),
-    FOREIGN KEY (Cod_Producto) REFERENCES Producto(Cod_Producto)
-);
-
-drop table Bodega
-DELETE FROM Bodega;
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS Producto;  --eliminar la tabla si existe
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- eliminar la tabla si existe
+DROP TABLE IF EXISTS Producto;  
 -- tabla Producto
 CREATE TABLE Producto (
     Cod_Producto INT PRIMARY KEY,
@@ -67,17 +26,44 @@ CREATE TABLE Producto (
 );
 
 ALTER TABLE Producto ADD Estado NVARCHAR(20) DEFAULT 'Activo';
+SELECT * FROM Producto;
 
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-drop table Producto
+-- ALTER DATABASE ferreteria
+-- SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+-- GO
 
-select * from Producto
-select * from Bodega
+-- eliminar la tabla si existe
+DROP TABLE IF EXISTS Proveedor;  
+-- tabla Proveedor
+CREATE TABLE Proveedor (
+    Cod_Proveedor INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre NVARCHAR(50),
+    Apellido NVARCHAR(50),
+	Sector VARCHAR(50)
+);
 
+SELECT * FROM Proveedor;
 
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- eliminar la tabla si existe
+DROP TABLE IF EXISTS Bodega;  
+-- tabla Bodega
+CREATE TABLE Bodega (
+    Sector VARCHAR(50),
+    Cod_Producto INT,
+    Cantidad INT,
+    FechaEntrada DATE,
+    PRIMARY KEY (Sector, Cod_Producto),
+    FOREIGN KEY (Cod_Producto) REFERENCES Producto(Cod_Producto)
+);
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS Empleado;  -- eliminar la tabla si existe
+SELECT * FROM Bodega;
+
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- eliminar la tabla si existe
+DROP TABLE IF EXISTS Empleado;  
 -- tabla Empleado
 CREATE TABLE Empleado (
     Cod_Empleado INT PRIMARY KEY,
@@ -87,31 +73,31 @@ CREATE TABLE Empleado (
 );
 
 
-
 INSERT INTO Empleado (Cod_Empleado, Nombre, Apellido, Direccion)
 VALUES 
     (1, 'Luis', 'Torres', 'Barrio San Luis'),
     (2, 'Tatiana', 'Mendoza', 'Colonia Centroam�rica'),
 	(3, 'Eduardo', 'Alvarado', 'El Rastro');
 
-select * from Empleado
+SELECT * FROM Empleado;
 
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS Venta;  -- eliminar la tabla si existe
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- eliminar la tabla si existe
+DROP TABLE IF EXISTS Venta;  
 -- tabla Venta
 CREATE TABLE Venta (
-    Cod_Venta INT PRIMARY KEY,
+    Cod_Venta INT AUTO_INCREMENT PRIMARY KEY,
 	Estado_Venta NVARCHAR(50),
 	Cod_Empleado INT,
     FOREIGN KEY (Cod_Empleado) REFERENCES Empleado(Cod_Empleado)
 );
 
-DELETE FROM Venta;
 SELECT * FROM Venta;
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS ProveProduct;  --eliminar la tabla si existe
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- eliminar la tabla si existe
+DROP TABLE IF EXISTS ProveProduct;  
 -- tabla ProveProduct (relaci�n M a M entre Proveedor y Producto)
 CREATE TABLE ProveProduct (
     Cod_Proveedor INT,
@@ -124,14 +110,11 @@ CREATE TABLE ProveProduct (
     FOREIGN KEY (Cod_Producto) REFERENCES Producto(Cod_Producto)
 );
 
---Consultar
 	SELECT * FROM ProveProduct;
 
-	drop table ProveProduct
-
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS ProductVenta;  -- para eliminar la tabla si existe
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- para eliminar la tabla si existe
+DROP TABLE IF EXISTS ProductVenta;  
 CREATE TABLE ProductVenta (
     Cod_Producto INT,
 	Cod_Venta INT,
@@ -145,10 +128,11 @@ CREATE TABLE ProductVenta (
 	FOREIGN KEY (Cod_Venta) REFERENCES Venta(Cod_Venta)
 );
 
-drop table ProductVenta
+SELECT * FROM ProductVenta;
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DROP TABLE IF EXISTS Telefono;  --eliminar la tabla si existe
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- eliminar la tabla si existe
+DROP TABLE IF EXISTS Telefono;  
 -- tabla Telefono
 CREATE TABLE Telefono (
     Numero VARCHAR(9) PRIMARY KEY, 
@@ -174,30 +158,6 @@ ADD CONSTRAINT CHK_Compania CHECK ([Compania] IN ('CLARO', 'TIGO'));
 ALTER TABLE Telefono
 ADD CONSTRAINT CHK_Telefono CHECK (numero LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]');
 
-
-
-----Observaciones---------------------------------
-
-drop table Telefono
-DELETE FROM Telefono;
-
-select * from Telefono
-select * from Proveedor
-
-select * from Producto
-select * from Bodega
-select * from ProveProduct
+-- delete constraint CHK_Telefono
 
 SELECT * FROM Telefono;
-SELECT * FROM Empleado;
-
-select * from Venta
-select * from ProductVenta
-select * from Bodega
-
-delete from ProductVenta
-
-delete from Proveer
-EXEC sp_help 'Proveedor';
-
-
