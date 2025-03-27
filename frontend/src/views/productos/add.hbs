@@ -1,166 +1,207 @@
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/styles/productos.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/styles/productos.css">
 
-<div class="container py-5">
+<div class="container mt-5 py-5">
   <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
+    <div class="col-lg-10"> <!-- Aumentamos el ancho -->
       <div class="card p-4">
         <div class="card-body">
           <h3 class="text-center mb-4">Registro de Producto</h3>
-            <form id="form-producto">
-              <div class="mb-3">
+          <form id="form-producto">
+            <div class="row g-3"> <!-- Añadimos gap entre filas -->
+              <div class="col-md-6">
                 <label for="codigo_producto" class="form-label">Código Producto</label>
                 <input type="text" id="codigo_producto" name="codigo_producto" class="form-control" required>
               </div>
-              <div class="mb-3">
+              <div class="col-md-6">
                 <label for="nombre" class="form-label">Nombre</label>
                 <input type="text" id="nombre" name="nombre" class="form-control" required>
               </div>
-              <div class="mb-3">
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
                 <label for="sector" class="form-label">Sector</label>
                 <select id="sector" name="sector" class="form-select" required>
                   <option value="" disabled selected>Seleccione un sector</option>
                   {{#each sectores}}
-                    <option value="{{this}}">{{this}}</option>
+                  <option value="{{this}}">{{this}}</option>
                   {{/each}}
                 </select>
               </div>
-              <div class="mb-3">
+              <div class="col-md-6">
                 <label for="codigo_proveedor" class="form-label">Proveedor</label>
                 <select id="codigo_proveedor" name="codigo_proveedor" class="form-select" required disabled>
                   <option value="" disabled selected>Seleccione un proveedor</option>
                 </select>
               </div>
-              <div class="mb-3">
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
                 <label for="precio_compra" class="form-label">Precio Compra</label>
-                <input type="number" id="precio_compra" name="precio_compra" class="form-control" step="0.01" min="0" required>
+                <input type="number" id="precio_compra" name="precio_compra" class="form-control" step="0.01" min="0"
+                  required>
               </div>
-              <div class="mb-3">
+              <div class="col-md-6">
                 <label for="cantidad" class="form-label">Cantidad</label>
                 <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
               </div>
-              <div class="mb-3">
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
                 <label for="marca" class="form-label">Marca</label>
                 <input type="text" id="marca" name="marca" class="form-control" required>
               </div>
-              <div class="mb-3">
+              <div class="col-md-6">
                 <label for="fecha_entrada" class="form-label">Fecha Entrada</label>
-                <input type="date" id="fecha_entrada" name="fecha_entrada" class="form-control" readonly>
+                <input type="date" id="fecha_entrada" name="fecha_entrada" class="form-control" disabled>
               </div>
               <div class="mb-3">
-                <label for="fecha_vencimiento" class="form-label">Fecha Vencimiento</label>
-                <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" class="form-control">
+                <div class="row">
+                  <!-- Columna para el checkbox a la izquierda -->
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="check_vencimiento">
+                      <label class="form-check-label" for="check_vencimiento">Ingresar Fecha de Vencimiento</label>
+                    </div>
+                  </div>
+                  <!-- Columna para el input de la fecha de vencimiento a la derecha -->
+                  <div class="col-md-6">
+                    <label for="fecha_vencimiento" class="form-label">Fecha Vencimiento</label>
+                    <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" class="form-control" disabled>
+                  </div>
+                </div>
               </div>
-              <div class="d-flex justify-content-between gap-2">
-                <button class="btn btn-primary flex-grow-1" type="submit">Ingresar</button>
-                <button class="btn btn-secondary flex-grow-1" type="reset">Limpiar</button>
+
+              <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-primary btn-custom" type="submit">Ingresar</button>
+                <button class="btn btn-danger btn-custom" type="reset">Limpiar</button>
               </div>
-            </form>
-          </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      // Configurar fecha actual
-      const fechaActual = new Date().toISOString().split('T')[0];
-      document.getElementById('fecha_entrada').value = fechaActual;
-      
-      // Cargar proveedores al cambiar sector
-      document.getElementById('sector').addEventListener('change', cargarProveedores);
-      
-      // Manejar envío del formulario
-      document.getElementById('form-producto').addEventListener('submit', guardarProducto);
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const fechaActual = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha_entrada').value = fechaActual;
+
+    document.getElementById('sector').addEventListener('change', cargarProveedores);
+    document.getElementById('form-producto').addEventListener('submit', function (e) {
+      e.preventDefault(); // Prevenir el envío inmediato del formulario
+
+      const form = e.target;
+
+      const codigoProducto = form.codigo_producto.value;
+      const nombre = form.nombre.value;
+      const marca = form.marca.value;
+      const fechaVencimiento = form.fecha_vencimiento.value;
+      const sector = form.sector.value;
+      const codigoProveedor = form.codigo_proveedor.value;
+      const precioCompra = parseFloat(form.precio_compra.value);
+      const cantidad = parseInt(form.cantidad.value);
+      const fechaEntrada = form.fecha_entrada.value;
+
+      // Mostrar SweetAlert2 para confirmar la acción
+      Swal.fire({
+        title: "¿Confirmar ingreso?",
+        text: "¿Está seguro que desea ingresar este producto?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, ingresar",
+        cancelButtonText: "Cancelar"
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await fetch('/productos/api/productos', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                codigo_producto: codigoProducto,
+                nombre: nombre,
+                marca: marca,
+                fecha_vencimiento: fechaVencimiento,
+                sector: sector,
+                codigo_proveedor: codigoProveedor,
+                precio_compra: precioCompra,
+                cantidad: cantidad,
+                fecha_entrada: fechaEntrada
+              })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              Swal.fire({
+                icon: "success",
+                title: "Producto ingresado",
+                text: "El producto ha sido registrado exitosamente.",
+                timer: 3000,
+                showConfirmButton: true
+              }).then(() => {
+                form.reset(); // Limpiar el formulario
+                document.getElementById('fecha_entrada').value = new Date().toISOString().split('T')[0];
+              });
+            } else {
+              Swal.fire("Error", data.message || "No se pudo ingresar el producto.", "error");
+            }
+          } catch (error) {
+            console.error("Error al ingresar producto:", error);
+            Swal.fire("Error", "Hubo un problema al ingresar el producto.", "error");
+          }
+        }
+      });
     });
 
-    async function cargarProveedores() {
-      const sector = this.value;
-      const selectProveedor = document.getElementById('codigo_proveedor');
-      
-      if (!sector) {
-        selectProveedor.disabled = true;
-        selectProveedor.innerHTML = '<option value="" disabled selected>Seleccione un sector primero</option>';
-        return;
-      }
-      
-      try {
-        selectProveedor.disabled = true;
-        selectProveedor.innerHTML = '<option value="" disabled selected>Cargando proveedores...</option>';
-        
-        const response = await fetch(`/productos/api/proveedores?sector=${encodeURIComponent(sector)}`);
-        const data = await response.json();
-        
-        if (data.success && data.data.length > 0) {
-          selectProveedor.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
-          data.data.forEach(proveedor => {
-            const option = document.createElement('option');
-            option.value = proveedor.Cod_Proveedor;
-            option.textContent = `${proveedor.Nombre} ${proveedor.Apellido || ''}`;
-            selectProveedor.appendChild(option);
-          });
-          selectProveedor.disabled = false;
-        } else {
-          selectProveedor.innerHTML = '<option value="" disabled>No hay proveedores para este sector</option>';
-        }
-      } catch (error) {
-        console.error('Error al cargar proveedores:', error);
-        selectProveedor.innerHTML = '<option value="" disabled>Error al cargar proveedores</option>';
-      }
+    document.getElementById("check_vencimiento").addEventListener("change", function () {
+      const fechaVencimientoInput = document.getElementById("fecha_vencimiento");
+      fechaVencimientoInput.disabled = !this.checked;
+      if (!this.checked) fechaVencimientoInput.value = "";
+    });
+  });
+
+  async function cargarProveedores() {
+    const sector = this.value;
+    const selectProveedor = document.getElementById('codigo_proveedor');
+
+    if (!sector) {
+      selectProveedor.disabled = true;
+      selectProveedor.innerHTML = '<option value="" disabled selected>Seleccione un sector primero</option>';
+      return;
     }
 
-    async function guardarProducto(e) {
-      e.preventDefault();
-      
-      const form = e.target;
-      const submitBtn = form.querySelector('button[type="submit"]');
-      const originalBtnText = submitBtn.textContent;
-      
-      try {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Guardando...';
-        
-        const formData = {
-          codigo_producto: form.codigo_producto.value,
-          nombre: form.nombre.value,
-          marca: form.marca.value,
-          fecha_vencimiento: form.fecha_vencimiento.value,
-          sector: form.sector.value,
-          codigo_proveedor: form.codigo_proveedor.value,
-          precio_compra: parseFloat(form.precio_compra.value),
-          cantidad: parseInt(form.cantidad.value),
-          fecha_entrada: form.fecha_entrada.value
-        };
-        
-        console.log('Datos a enviar:', formData); // Para depuración
-        
-        const response = await fetch('/productos/api/productos', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
+    try {
+      selectProveedor.disabled = true;
+      selectProveedor.innerHTML = '<option value="" disabled selected>Cargando proveedores...</option>';
+
+      const response = await fetch(`/productos/api/proveedores?sector=${encodeURIComponent(sector)}`);
+      const data = await response.json();
+
+      if (data.success && data.data.length > 0) {
+        selectProveedor.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
+        data.data.forEach(proveedor => {
+          const option = document.createElement('option');
+          option.value = proveedor.Cod_Proveedor;
+          option.textContent = `${proveedor.Nombre} ${proveedor.Apellido || ''}`;
+          selectProveedor.appendChild(option);
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          alert('Producto registrado correctamente');
-          form.reset();
-          // Restablecer la fecha actual después del reset
-          document.getElementById('fecha_entrada').value = new Date().toISOString().split('T')[0];
-        } else {
-          throw new Error(data.message || 'Error al guardar el producto');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert(`Error: ${error.message}`);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalBtnText;
+        selectProveedor.disabled = false;
+      } else {
+        selectProveedor.innerHTML = '<option value="" disabled>No hay proveedores para este sector</option>';
       }
+    } catch (error) {
+      console.error('Error al cargar proveedores:', error);
+      selectProveedor.innerHTML = '<option value="" disabled>Error al cargar proveedores</option>';
     }
-    
-  </script>
+  }
+</script>

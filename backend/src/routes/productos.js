@@ -33,7 +33,7 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
     codigo_producto, 
     nombre, 
     marca, 
-    fecha_vencimiento, 
+    fecha_vencimiento,  // <- Este dato viene del formulario
     sector, 
     codigo_proveedor, 
     precio_compra, 
@@ -41,13 +41,16 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
     fecha_entrada
   } = req.body;
 
-  // Validaciones
+  // Validaciones básicas
   if (!codigo_producto || !nombre || !codigo_proveedor) {
     return res.status(400).json({ 
       success: false, 
       message: "Datos incompletos" 
     });
   }
+
+  // Si el campo está vacío, almacenamos null en la base de datos
+  const fechaVencimientoValida = fecha_vencimiento ? fecha_vencimiento : null;
 
   // Asegurar que fecha_entrada tenga un valor válido
   const fechaEntradaValida = fecha_entrada || new Date().toISOString().split('T')[0];
@@ -70,11 +73,11 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
       });
     }
 
-    // Insertar producto
+    // Insertar producto con fecha de vencimiento opcional
     await connection.query(
       `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
        VALUES (?, ?, ?, ?, ?)`,
-      [codigo_producto, nombre, marca, fecha_vencimiento || null, sector]
+      [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
     );
 
     // Insertar relación con proveedor

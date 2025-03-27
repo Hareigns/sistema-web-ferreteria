@@ -1,33 +1,32 @@
 body {
-    background: url(/images/productosfondo.webp) no-repeat center center/cover;
+    background: url('/images/productosfondo.webp') no-repeat center center/cover;
     background-size: cover;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 0; /* Eliminar márgenes extra */
-    padding: 0; /* Eliminar padding extra */
+    padding-top: 80px;
 }
-
+.card {
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+}
+.btn-custom {
+    font-size: 1.3rem;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 .navbar {
     background: #2c3e50;
-    padding: 10px 15px; /* Reducir padding si es necesario */
+    padding: 15px;
     width: 100%;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1000;
     border-radius: 0;
-}
-
-main {
-    padding-top: 60px; /* Ajustar según la altura real de la navbar */
-    width: 100%;
-}
-
-/* Si hay un margen superior en el contenido, elimínalo */
-.container, .content {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
 }
