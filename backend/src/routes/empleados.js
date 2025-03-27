@@ -133,35 +133,30 @@ router.get('/api/Empleados', isLoggedIn, async (req, res) => {
   }
 });
 
-async function modificarEmpleado() {
-    const codigoEmpleado = document.getElementById("codigo_empleado").value;
-    const nombre = document.getElementById("nombre").value.trim();
-    const apellido = document.getElementById("apellido").value.trim();
-    const direccion = document.getElementById("direccion").value.trim();
-    const telefono = document.getElementById("telefono").value.trim();
-    const compania = document.getElementById("compania_telefonica").value;
+// Ruta para actualizar un empleado
+router.put('/api/empleados/:codigo_empleado', isLoggedIn, async (req, res) => {
+    const { codigo_empleado } = req.params;
+    const { nombre, apellido, direccion, telefono, compania } = req.body;
   
-    if (!codigoEmpleado || !nombre || !apellido || !direccion || !telefono || !compania) {
-      alert("Todos los campos son obligatorios.");
-      return;
+    if (!codigo_empleado || !nombre || !apellido || !direccion || !telefono || !compania) {
+      return res.status(400).json({ success: false, error: "Todos los campos son obligatorios" });
     }
   
     try {
-      const response = await fetch(`/empleados/update/${codigoEmpleado}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, apellido, direccion, telefono, compania }),
-      });
+      await pool.query(`
+        UPDATE Empleado SET Nombre = ?, Apellido = ?, direccion = ? WHERE Cod_Empleado = ?
+      `, [nombre, apellido, direccion, codigo_empleado]);
   
-      const data = await response.json();
-      if (data.success) {
-        alert("Empleado actualizado correctamente.");
-      } else {
-        alert("Error al actualizar empleado.");
-      }
+      await pool.query(`
+        UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Empleado = ?
+      `, [telefono, compania, codigo_empleado]);
+  
+      res.json({ success: true, message: "Empleado actualizado correctamente" });
     } catch (error) {
       console.error("Error al actualizar empleado:", error);
+      res.status(500).json({ success: false, error: "Error al actualizar empleado" });
     }
-  }  
+  });
+   
 
 export { router };
