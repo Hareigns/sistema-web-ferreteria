@@ -116,28 +116,32 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
   }
 });
 
-// Ruta para obtener productos
+
 // Ruta para obtener todos los productos
 router.get("/api/productos", isLoggedIn, async (req, res) => {
-    try {
-      const [productos] = await pool.query(`
-        SELECT p.*, pp.Precio as Precio_Compra, pp.Cantidad 
-        FROM Producto p
-        JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
-      `);
-      
-      res.json({
-        success: true,
-        data: productos
-      });
-    } catch (error) {
-      console.error("Error al obtener productos:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error al obtener productos"
-      });
-    }
-  });
+  try {
+    const [productos] = await pool.query(`
+      SELECT 
+        p.Cod_Producto, 
+        p.Nombre, 
+        p.Marca, 
+        p.FechaVencimiento, 
+        p.Sector, 
+        pp.Precio AS Precio_Compra, 
+        pp.Cantidad
+      FROM Producto p
+      JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
+    `);
+
+    console.log("Datos enviados desde la API:", productos);
+
+    res.json({ success: true, data: productos });
+  } catch (error) {
+    console.error("Error al obtener productos:", error);
+    res.status(500).json({ success: false, message: "Error al obtener productos" });
+  }
+});
+
 
 
 // Ruta para obtener proveedores

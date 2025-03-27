@@ -14,7 +14,7 @@
                 <input type="text" id="codigo_producto" name="codigo_producto" class="form-control" required>
               </div>
               <div class="col-md-6">
-                <label for="nombre" class="form-label">Nombre</label>
+                <label for="nombre" class="form-label">Nombre del Producto</label>
                 <input type="text" id="nombre" name="nombre" class="form-control" required>
               </div>
             </div>
@@ -86,9 +86,38 @@
   </div>
 </div>
 
+<div class="container mt-5">
+  <div class="card mb-4" style="border: 1px solid #ddd;">
+    <div class="card-body text-center">
+      <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Productos</h3>
+      <div class="card p-4 table-responsive">
+        <div class="card-body">
+          <table class="table align-middle mb-0 bg-white" id="productosTable">
+            <thead class="bg-light">
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Sector</th>
+                <th>Marca</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Fecha de Vencimiento</th>
+              </tr>
+            </thead>
+            <tbody id="productos-table-body">
+              <!-- Aquí se insertarán los productos dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+
   document.addEventListener("DOMContentLoaded", function () {
     const fechaActual = new Date().toISOString().split('T')[0];
     document.getElementById('fecha_entrada').value = fechaActual;
@@ -151,6 +180,7 @@
               }).then(() => {
                 form.reset(); // Limpiar el formulario
                 document.getElementById('fecha_entrada').value = new Date().toISOString().split('T')[0];
+                cargarProductos(); // Recargar la tabla con los productos actualizados
               });
             } else {
               Swal.fire("Error", data.message || "No se pudo ingresar el producto.", "error");
@@ -163,12 +193,56 @@
       });
     });
 
-    document.getElementById("check_vencimiento").addEventListener("change", function () {
-      const fechaVencimientoInput = document.getElementById("fecha_vencimiento");
-      fechaVencimientoInput.disabled = !this.checked;
-      if (!this.checked) fechaVencimientoInput.value = "";
-    });
+    // Cargar la tabla de productos al iniciar la página
+    cargarProductos();
   });
+
+
+
+  async function cargarProductos() {
+    try {
+      const response = await fetch("/productos/api/productos");
+      const data = await response.json();
+
+      // Verifica los datos obtenidos desde la API
+      console.log("Datos obtenidos desde la API:", data);
+
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        const tbody = document.getElementById("productos-table-body");
+        tbody.innerHTML = ""; // Limpiar la tabla antes de agregar datos
+
+        data.data.forEach(producto => {
+          // Ajuste para manejar valores null o undefined de manera segura
+          const precioCompra = producto.Precio_Compra ? producto.Precio_Compra.toFixed(2) : "0.00";
+          const fechaVencimiento = producto.FechaVencimiento ? producto.FechaVencimiento : "N/A";
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+          <td>${producto.Cod_Producto || "Sin código"}</td>
+          <td>${producto.Nombre || "Desconocido"}</td>
+          <td>${producto.Sector || "No asignado"}</td>
+          <td>${producto.Marca || "No especificada"}</td>
+          <td>${producto.Cantidad || 0}</td>
+          <td>${precioCompra}</td>
+          <td>${fechaVencimiento}</td>
+        `;
+          tbody.appendChild(row);
+        });
+      } else {
+        // Si no hay productos o los datos están vacíos
+        document.getElementById("productos-table-body").innerHTML = `
+        <tr><td colspan="7" class="text-center">No hay productos registrados</td></tr>
+      `;
+      }
+    } catch (error) {
+      console.error("Error al cargar productos:", error);
+      document.getElementById("productos-table-body").innerHTML = `
+      <tr><td colspan="7" class="text-center text-danger">Error al cargar datos</td></tr>
+    `;
+    }
+  }
+
+
 
   async function cargarProveedores() {
     const sector = this.value;
@@ -204,4 +278,11 @@
       selectProveedor.innerHTML = '<option value="" disabled>Error al cargar proveedores</option>';
     }
   }
+
+  document.getElementById("check_vencimiento").addEventListener("change", function () {
+    const fechaVencimientoInput = document.getElementById("fecha_vencimiento");
+    fechaVencimientoInput.disabled = !this.checked;
+    if (!this.checked) fechaVencimientoInput.value = "";
+  });
+
 </script>
