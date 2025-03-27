@@ -1,6 +1,57 @@
 import express from 'express';
-const router = express.Router();
+import pool from "../database.js";
 import { isLoggedIn } from "../lib/auth.js";
+
+
+const router = express.Router();
+
+
+// Ruta para agregar productos
+router.post("/api/productos", isLoggedIn, async (req, res) => {
+    const { codigo_producto, nombre, marca, fecha_vencimiento, sector, codigo_proveedor, precio_compra, cantidad } = req.body;
+
+    const precio = parseFloat(precio_compra);
+    const cantidadProducto = parseInt(cantidad);
+
+    if (isNaN(precio) || isNaN(cantidadProducto)) {
+        return res.status(400).json({ success: false, message: "Precio o cantidad inválidos" });
+    }
+
+    try {
+        const client = await pool.connect();
+
+        try {
+            await client.query('BEGIN');
+
+            // Insertar en la tabla Producto
+            const resultProducto = await client.query(
+                `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
+                 VALUES ($1, $2, $3, $4, $5) RETURNING Cod_Producto`,
+                [codigo_producto, nombre, marca, fecha_vencimiento, sector]
+            );
+            const codProducto = resultProducto.rows[0].Cod_Producto;
+
+            // Insertar en la tabla ProveProduct
+            await client.query(
+                `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [codigo_proveedor, codProducto, new Date(), precio, cantidadProducto]
+            );
+
+            await client.query('COMMIT');
+            res.status(200).json({ success: true, message: 'Producto ingresado correctamente' });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error("❌ Error al insertar producto:", error);
+            res.status(500).json({ success: false, message: 'Error al guardar el producto' });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("❌ Error en la transacción:", error);
+        res.status(500).json({ success: false, message: 'Error en la base de datos' });
+    }
+});
 
 // Definir rutas
 router.get("/add", isLoggedIn,  (req, res) => {
@@ -33,34 +84,6 @@ router.get("/add", isLoggedIn, async (req, res) => {
     }
 });
 
-
-
-
-// Ruta para obtener proveedores por sector
-/* router.get("/api/proveedores/:sector", async (req, res) => {
-    const { sector } = req.params;
-
-    try {
-        const [proveedores] = await pool.query(
-            `SELECT p.Cod_Proveedor, p.Nombre 
-             FROM Proveedor p
-             JOIN ProveProduct pp ON p.Cod_Proveedor = pp.Cod_Proveedor
-             JOIN Producto pr ON pp.Cod_Producto = pr.Cod_Producto
-             WHERE pr.Sector = ?`,
-            [sector]
-        );
-
-        if (proveedores.length > 0) {
-            res.json({ success: true, data: proveedores });
-        } else {
-            res.json({ success: false, message: "No hay proveedores disponibles." });
-        }
-    } catch (error) {
-        console.error("Error al obtener proveedores:", error);
-        res.status(500).json({ success: false, message: "Error interno del servidor" });
-    }
-});
-*/
 
 // Exportar el router
 export { router }; // Exportación nombrada
