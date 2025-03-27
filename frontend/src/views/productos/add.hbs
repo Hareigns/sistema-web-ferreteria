@@ -17,17 +17,32 @@
               <input type="text" id="codigo_producto" class="form-control" required>
             </div>
             <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input type="text" id="nombre" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="sector" class="form-label">Sector</label>
+              <select id="sector" class="form-select" required>
+                <option value="" disabled selected>Seleccione un sector</option>
+                <% if (sectores && sectores.length> 0) { %>
+                  <% sectores.forEach(sector=> { %>
+                    <option value="<%= sector %>">
+                      <%= sector %>
+                    </option>
+                    <% }) %>
+                      <% } else { %>
+                        <option value="" disabled>No hay sectores disponibles</option>
+                        <% } %>
+              </select>
               <label for="codigo_proveedor" class="form-label">Código Proveedor</label>
               <select id="codigo_proveedor" class="form-select" required>
                 <option value="" disabled selected>Seleccione un proveedor</option>
-                <option value="1">Proveedor A</option>
-                <option value="2">Proveedor B</option>
-                <option value="3">Proveedor C</option>
+                <% proveedores.forEach(proveedor=> { %>
+                  <option value="<%= proveedor.Cod_Proveedor %>">
+                    <%= proveedor.Nombre %>
+                  </option>
+                  <% }) %>
               </select>
-            </div>
-            <div class="mb-3">
-              <label for="nombre" class="form-label">Nombre</label>
-              <input type="text" id="nombre" class="form-control" required>
             </div>
             <div class="mb-3">
               <label for="precio_compra" class="form-label">Precio Compra</label>
@@ -36,38 +51,23 @@
             <div class="mb-3">
               <label for="cantidad" class="form-label">Cantidad</label>
               <input type="number" id="cantidad" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label for="sector" class="form-label">Sector</label>
-              <select id="sector" class="form-select" required>
-                <option value="" disabled selected>Seleccione un sector</option>
-                <option value="Herramientas manuales">Herramientas manuales</option>
-                <option value="Herramientas eléctricas">Herramientas eléctricas</option>
-                <option value="Materiales de construcción">Materiales de construcción</option>
-                <option value="Pinturas o accesorios">Pinturas o accesorios</option>
-                <option value="Tuberías y plomería">Tuberías y plomería</option>
-                <option value="Electricidad e iluminación">Electricidad e iluminación</option>
-                <option value="Seguridad industrial">Seguridad industrial</option>
-                <option value="Productos de ferretería general">Productos de ferretería general</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="marca" class="form-label">Marca</label>
-              <input type="text" id="marca" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label for="fecha_entrada" class="form-label">Fecha Entrada</label>
-              <input type="date" id="fecha_entrada" class="form-control" disabled value="2024-03-15">
-            </div>
-            <div class="mb-3">
-              <label for="fecha_vencimiento" class="form-label">Fecha Vencimiento</label>
-              <input type="date" id="fecha_vencimiento" class="form-control" required>
-            </div>
-            <div class="d-flex justify-content-between">
-              <button class="btn btn-primary btn-custom w-45" type="submit">Ingresar</button>
-              <button class="btn btn-warning btn-custom w-45" type="button">Modificar</button>
-              <button class="btn btn-danger btn-custom w-45" type="button">Eliminar</button>
-            </div>
+              <div class="mb-3">
+                <label for="marca" class="form-label">Marca</label>
+                <input type="text" id="marca" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label for="fecha_entrada" class="form-label">Fecha Entrada</label>
+                <input type="date" id="fecha_entrada" class="form-control" disabled value="2024-03-15">
+              </div>
+              <div class="mb-3">
+                <label for="fecha_vencimiento" class="form-label">Fecha Vencimiento</label>
+                <input type="date" id="fecha_vencimiento" class="form-control" required>
+              </div>
+              <div class="d-flex justify-content-between">
+                <button class="btn btn-primary btn-custom w-45" type="submit">Ingresar</button>
+                <button class="btn btn-warning btn-custom w-45" type="button">Modificar</button>
+                <button class="btn btn-danger btn-custom w-45" type="button">Eliminar</button>
+              </div>
           </form>
         </div>
       </div>
@@ -76,6 +76,67 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const sectorSelect = document.getElementById("sector");
+
+      // Hacer una solicitud AJAX para obtener los proveedores
+      fetch("http://localhost:4000/proveedores/api/proveedores")
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  // Obtener una lista única de sectores
+                  const sectoresUnicos = [...new Set(data.data.map(proveedor => proveedor.Sector))];
+
+                  // Limpiar opciones previas y agregar una por defecto
+                  sectorSelect.innerHTML = '<option value="" disabled selected>Seleccione un sector</option>';
+
+                  // Agregar los sectores únicos al <select>
+                  sectoresUnicos.forEach(sector => {
+                      const option = document.createElement("option");
+                      option.value = sector;
+                      option.textContent = sector;
+                      sectorSelect.appendChild(option);
+                  });
+              } else {
+                  console.error("❌ No se pudieron cargar los sectores");
+              }
+          })
+          .catch(error => console.error("❌ Error en la solicitud:", error));
+  });
+
+  document.getElementById("sector").addEventListener("change", function () {
+      const sectorSeleccionado = this.value;
+      const proveedoresSelect = document.getElementById("codigo_proveedor");
+
+      // Limpiar las opciones previas en el select de proveedores
+      proveedoresSelect.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
+
+      fetch("http://localhost:4000/proveedores/api/proveedores")
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  // Filtrar los proveedores que pertenecen al sector seleccionado
+                  const proveedoresFiltrados = data.data.filter(proveedor => proveedor.Sector === sectorSeleccionado);
+
+                  // Agregar los proveedores al select
+                  proveedoresFiltrados.forEach(proveedor => {
+                      const option = document.createElement("option");
+                      option.value = proveedor.Cod_Proveedor;
+                      option.textContent = proveedor.Nombre + " " + proveedor.Apellido;
+                      proveedoresSelect.appendChild(option);
+                  });
+
+                  // Si no hay proveedores en ese sector, mostrar mensaje en consola
+                  if (proveedoresFiltrados.length === 0) {
+                      console.warn("⚠️ No hay proveedores para el sector:", sectorSeleccionado);
+                  }
+              } else {
+                  console.error("❌ No se pudieron cargar los proveedores");
+              }
+          })
+          .catch(error => console.error("❌ Error en la solicitud:", error));
+  });
+
   const navbar = document.querySelector(".navbar");
 
   window.addEventListener("scroll", function () {
