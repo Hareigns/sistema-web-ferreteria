@@ -9,15 +9,11 @@
                     <input type="text" id="codigoVenta" class="form-control" placeholder="Código de Venta" disabled>
                 </div>
                 <div class="col-md-4">
-                    <select id="sector" class="form-select">
-                        <option value="Herramientas manuales">Herramientas manuales</option>
-                        <option value="Herramientas eléctricas">Herramientas eléctricas</option>
-                        <option value="Materiales de construcción">Materiales de construcción</option>
-                        <option value="Pinturas o accesorios">Pinturas o accesorios</option>
-                        <option value="Tuberías y plomería">Tuberías y plomería</option>
-                        <option value="Electricidad e iluminación">Electricidad e iluminación</option>
-                        <option value="Seguridad industrial">Seguridad industrial</option>
-                        <option value="Productos de ferretería general">Productos de ferretería general</option>
+                    <select id="sector" name="sector" class="form-select" required>
+                        <option value="" disabled selected>Seleccione un sector</option>
+                        {{#each sectores}}
+                        <option value="{{this}}">{{this}}</option>
+                        {{/each}}
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -25,10 +21,7 @@
                 </div>
                 <div class="col-md-4">
                     <select id="nombreProducto" class="form-select">
-                        <option value="" disabled selected>Seleccione Producto</option>
-                        <option value="1">Producto A</option>
-                        <option value="2">Producto B</option>
-                        <option value="3">Producto C</option>
+                        <option value="" disabled selected>Seleccione un producto</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -215,20 +208,80 @@
 
 
     // Obtener los datos del empleado logueado
-   fetch('/api/empleados')
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const empleado = data.empleado; // Obtiene los datos del empleado
-            // Asigna el nombre y apellido del empleado al input de texto
-            const empleadoInput = document.getElementById('empleado');
-            empleadoInput.value = `${empleado.Nombre} ${empleado.Apellido}`;
-        } else {
-            console.log(data.message);  // Si no está autenticado, muestra el mensaje
-        }
-    })
-    .catch(error => console.error('Error al obtener datos del empleado:', error));
+    fetch('/api/empleados')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const empleado = data.empleado; // Obtiene los datos del empleado
+                // Asigna el nombre y apellido del empleado al input de texto
+                const empleadoInput = document.getElementById('empleado');
+                empleadoInput.value = `${empleado.Nombre} ${empleado.Apellido}`;
+            } else {
+                console.log(data.message);  // Si no está autenticado, muestra el mensaje
+            }
+        })
+        .catch(error => console.error('Error al obtener datos del empleado:', error));
 
+    async function cargarSectores() {
+        try {
+            const response = await fetch("http://localhost:4000/productos/api/productos");
+            const data = await response.json();
+
+            if (data.success) {
+                const sectoresUnicos = [...new Set(data.data.map(producto => producto.Sector))]; // Obtener sectores únicos
+                const selectSector = document.getElementById("sector");
+
+                selectSector.innerHTML = `<option value="" disabled selected>Seleccione un sector</option>`; // Limpiar select
+
+                sectoresUnicos.forEach(sector => {
+                    const option = document.createElement("option");
+                    option.value = sector;
+                    option.textContent = sector;
+                    selectSector.appendChild(option);
+                });
+
+                console.log("Sectores cargados:", sectoresUnicos);
+            }
+        } catch (error) {
+            console.error("Error al cargar sectores:", error);
+        }
+    }
+
+    // Llamar a la función cuando cargue la página
+    document.addEventListener("DOMContentLoaded", cargarSectores);
+
+
+
+    async function cargarProductosPorSector(sectorSeleccionado) {
+        try {
+            const response = await fetch("http://localhost:4000/productos/api/productos");
+            const data = await response.json();
+
+            if (data.success) {
+                const productosFiltrados = data.data.filter(producto => producto.Sector === sectorSeleccionado);
+                const selectProducto = document.getElementById("nombreProducto");
+
+                selectProducto.innerHTML = `<option value="" disabled selected>Seleccione un producto</option>`;
+
+                productosFiltrados.forEach(producto => {
+                    const option = document.createElement("option");
+                    option.value = producto.Cod_Producto;
+                    option.textContent = producto.Nombre;
+                    selectProducto.appendChild(option);
+                });
+
+                console.log(`Productos en el sector "${sectorSeleccionado}":`, productosFiltrados);
+            }
+        } catch (error) {
+            console.error("Error al cargar productos por sector:", error);
+        }
+    }
+
+    // Detectar cambio en el select de sectores
+    document.getElementById("sector").addEventListener("change", function () {
+        const sectorSeleccionado = this.value;
+        cargarProductosPorSector(sectorSeleccionado);
+    });
 
 
 </script>

@@ -4,6 +4,14 @@ import { isLoggedIn } from "../lib/auth.js";
 
 const router = express.Router();
 
+// Datos de sectores
+const SECTORES = [
+  "Herramientas manuales", "Herramientas eléctricas", 
+  "Materiales de construcción", "Pinturas o accesorios",
+  "Tuberías y plomería", "Electricidad e iluminación",
+  "Seguridad industrial", "Productos de ferretería general"
+];
+
 // Helper para validar datos de la venta
 const validateVentaData = (data) => {
   const { codigo_producto, cantidad, metodo_pago, precio_venta, sector } = data;
@@ -124,6 +132,32 @@ router.get('/empleados/api/empleados', isLoggedIn, async (req, res) => {
         res.status(500).json({ success: false, message: "Error en la solicitud" });
     }
 });
+
+// Ruta para obtener productos filtrados por sector
+router.get("/api/productos", isLoggedIn, async (req, res) => {
+  try {
+    const [productos] = await pool.query(`
+      SELECT 
+        p.Cod_Producto, 
+        p.Nombre, 
+        p.Marca, 
+        p.Fecha_Vencimiento, 
+        pv.Sector, 
+        p.Precio_Compra, 
+        p.Cantidad
+      FROM Producto p
+      JOIN ProductVenta pv ON p.Cod_Producto = pv.Cod_Producto
+    `);
+
+    console.log("Datos enviados desde la API:", productos);
+
+    res.json({ success: true, data: productos });
+  } catch (error) {
+    console.error("Error al obtener productos:", error);
+    res.status(500).json({ success: false, message: "Error al obtener productos" });
+  }
+});
+
 
 
 
