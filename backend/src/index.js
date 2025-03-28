@@ -88,6 +88,8 @@ app.use('/productos', productosRoutes);
 app.use('/proveedores', proveedoresRoutes);
 app.use('/ventas', ventasRoutes);
 app.use('/api/empleados', empleadosRoutes);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Ruta correcta a los archivos estáticos
 const assetsPath = join(__dirname, '../../frontend/src/assets');
@@ -114,3 +116,20 @@ app.use((err, req, res, next) => {
 app.listen(app.get('port'), () => {
     console.log(`Servidor corriendo en el puerto ${app.get('port')}`);
 });
+
+// Ruta para obtener los datos del empleado logueado
+app.get('/empleados', (req, res) => {
+    console.log(req.user);  // Verifica si los datos del empleado están disponibles
+    if (req.isAuthenticated()) {
+        res.json({
+            success: true,
+            empleado: req.user  // Enviar los datos del empleado logueado
+        });
+    } else {
+        res.json({
+            success: false,
+            message: 'Empleado no autenticado'
+        });
+    }
+});
+

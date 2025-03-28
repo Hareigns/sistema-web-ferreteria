@@ -112,7 +112,29 @@ router.post('/add', isLoggedIn, async (req, res) => {
     }
   });
   
-  
+  // Endpoint que envía los datos del empleado logueado
+router.get('/empleados/api/empleados', isLoggedIn, (req, res) => {
+  const empleado = req.user;  // El empleado logueado está en req.user gracias a la deserialización
+  res.json({
+      success: true,
+      data: [empleado]  // Solo enviamos el empleado logueado
+  });
+});
+
+// Ruta para obtener los datos del empleado logueado
+router.get('/', (req, res) => {
+  if (req.isAuthenticated()) {
+      return res.json({
+          success: true,
+          empleado: req.user // Suponiendo que el empleado está en la sesión
+      });
+  } else {
+      return res.json({
+          success: false,
+          message: 'Empleado no autenticado'
+      });
+  }
+});
   
 
 

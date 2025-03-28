@@ -20,8 +20,10 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
 
 // Ruta del dashboard (requiere autenticación)
 router.get('/dashboard', isLoggedIn, (req, res) => {
+  console.log(req.user); // Verifica si contiene los datos del usuario
   res.render('dashboard');
 });
+
 
 // Ruta para cerrar sesión
 router.get('/logout', (req, res, next) => {

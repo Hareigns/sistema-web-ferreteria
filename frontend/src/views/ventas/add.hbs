@@ -21,15 +21,15 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <input type="text" id="codigoEmpleado" class="form-control" placeholder="Código de Empleado"
-                        value="EMP123" disabled>
+                    <label for="empleado">Empleado:</label>
+                    <input type="text" id="empleado" class="form-control" disabled />
                 </div>
                 <div class="col-md-4">
                     <select id="nombreProducto" class="form-select">
                         <option value="" disabled selected>Seleccione Producto</option>
-                        <option>Producto A</option>
-                        <option>Producto B</option>
-                        <option>Producto C</option>
+                        <option value="1">Producto A</option>
+                        <option value="2">Producto B</option>
+                        <option value="3">Producto C</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -73,44 +73,163 @@
             </div>
 
             <div class="d-flex justify-content-between mt-3">
-                <button class="btn btn-custom btn-custom-success">💾 Guardar Venta</button>
+                <button id="guardarVenta" class="btn btn-custom btn-custom-success">💾 Guardar Venta</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+
+    // Obtener el último código de venta almacenado o inicializar en 1
+    let codigoVenta = localStorage.getItem("codigoVenta") ? parseInt(localStorage.getItem("codigoVenta")) : 1;
+
+    // Mostrar el código de venta actual en la caja de texto
+    document.getElementById("codigoVenta").value = codigoVenta;
+
+    document.getElementById("guardarVenta").addEventListener("click", async function () {
+        if (productos.length === 0) {
+            alert("No se han agregado productos.");
+            return;
+        }
+
+        // Datos de la venta
+        const ventaData = {
+            codigo_venta: codigoVenta,  // Agregar el código de venta a los datos
+            productos: productos,
+            codigo_empleado: "EMP123"
+        };
+
+        // Enviar la venta al backend
+        const response = await fetch("/api/ventas", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(ventaData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Venta registrada correctamente.");
+            // Incrementar el código de venta y almacenarlo en localStorage
+            codigoVenta++;
+            localStorage.setItem("codigoVenta", codigoVenta);
+            document.getElementById("codigoVenta").value = codigoVenta;
+
+            // Limpiar la lista de productos y la tabla
+            productos = [];
+            document.getElementById("tablaProductos").innerHTML = "";
+        } else {
+            alert("Error al registrar la venta: " + data.message);
+        }
+    });
+
+
+    // Lista de productos agregados
+    let productos = [];
+
+    // Agregar un producto a la lista de productos
     document.getElementById("agregarProducto").addEventListener("click", function () {
         let nombre = document.getElementById("nombreProducto").value;
         let cantidad = document.getElementById("cantidad").value;
         let precio = document.getElementById("precio").value;
         let metodoPago = document.getElementById("metodoPago").value;
+        let sector = document.getElementById("sector").value;
 
-        if (nombre === "Seleccione Producto" || cantidad === "" || precio === "" || metodoPago === "Seleccione Método de Pago") {
+        if (nombre === "" || cantidad === "" || precio === "" || metodoPago === "") {
             alert("Por favor, complete todos los campos antes de agregar.");
             return;
         }
 
+        // Agregar producto a la lista
+        productos.push({
+            codigo_producto: nombre,
+            cantidad: cantidad,
+            precio: precio,
+            metodo_pago: metodoPago,
+            sector: sector
+        });
+
+        // Agregar fila a la tabla
         let tabla = document.getElementById("tablaProductos");
         let fila = document.createElement("tr");
 
         fila.innerHTML = `
-        <td>${nombre}</td>
-        <td>${cantidad}</td>
-        <td>${precio}</td>
-        <td>${metodoPago}</td>
-        <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
-    `;
+            <td>${nombre}</td>
+            <td>${cantidad}</td>
+            <td>${precio}</td>
+            <td>${metodoPago}</td>
+            <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
+        `;
 
         tabla.appendChild(fila);
 
-        document.getElementById("nombreProducto").value = "Seleccione Producto";
+        // Limpiar los campos
+        document.getElementById("nombreProducto").value = "";
         document.getElementById("cantidad").value = "";
         document.getElementById("precio").value = "";
-        document.getElementById("metodoPago").value = "Seleccione Método de Pago";
+        document.getElementById("metodoPago").value = "";
 
+        // Eliminar producto de la tabla
         fila.querySelector(".eliminar").addEventListener("click", function () {
+            productos = productos.filter(p => p.codigo_producto !== nombre);
             fila.remove();
         });
     });
+
+    // Guardar venta
+    document.getElementById("guardarVenta").addEventListener("click", async function () {
+        if (productos.length === 0) {
+            alert("No se han agregado productos.");
+            return;
+        }
+
+        // Datos de la venta
+        const ventaData = {
+            productos: productos,
+            codigo_empleado: "EMP123" // Aquí puedes poner el código del empleado logueado
+        };
+
+        // Enviar la venta al backend
+        const response = await fetch("/api/ventas", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(ventaData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Venta registrada correctamente.");
+            // Limpiar la lista de productos y el formulario
+            productos = [];
+            document.getElementById("tablaProductos").innerHTML = "";
+        } else {
+            alert("Error al registrar la venta: " + data.message);
+        }
+    });
+
+
+
+    // Obtener los datos del empleado logueado
+   fetch('/api/empleados')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const empleado = data.empleado; // Obtiene los datos del empleado
+            // Asigna el nombre y apellido del empleado al input de texto
+            const empleadoInput = document.getElementById('empleado');
+            empleadoInput.value = `${empleado.Nombre} ${empleado.Apellido}`;
+        } else {
+            console.log(data.message);  // Si no está autenticado, muestra el mensaje
+        }
+    })
+    .catch(error => console.error('Error al obtener datos del empleado:', error));
+
+
+
 </script>
