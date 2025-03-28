@@ -211,8 +211,4 @@ router.get("/api/productos", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
-
-
 export { router };

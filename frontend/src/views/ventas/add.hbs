@@ -138,37 +138,41 @@
     });
 
 
-    document.getElementById("guardarVenta").addEventListener("click", async function () {
-        if (productos.length === 0) {
-            alert("No se han agregado productos.");
-            return;
-        }
+document.getElementById("guardarVenta").addEventListener("click", async function () {
+    if (productos.length === 0) {
+        alert("No se han agregado productos.");
+        return;
+    }
 
-        const ventaData = {
-            productos: productos,
-            codigo_empleado: "EMP123" // Aquí puedes poner el código del empleado logueado
-        };
+    const ventaData = {
+        codigo_venta: document.getElementById("codigoVenta").value, // Debes asignarle un valor válido
+        fecha_venta: new Date().toISOString().split('T')[0], // Fecha actual si no hay en el formulario
+        codigo_cliente: "CL123", // Debes obtenerlo correctamente
+        total_venta: productos.reduce((acc, p) => acc + (p.cantidad * p.precio_venta), 0),
+        detalles_venta: productos, // Asegurar que este array se envíe correctamente
+    };
 
-        const response = await fetch("http://localhost:4000/ventas/api/ventas/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(ventaData)
-        });
+    console.log("Enviando datos:", ventaData); // Para depuración
 
-        const data = await response.json();
-
-        if (data.success) {
-            alert("Venta registrada correctamente.");
-            productos = [];
-            document.getElementById("tablaProductos").innerHTML = "";
-        } else {
-            alert("Error al registrar la venta: " + data.message);
-        }
+    const response = await fetch("http://localhost:4000/ventas/api/ventas/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(ventaData)
     });
 
+    const data = await response.json();
 
+    if (data.success) {
+        alert("Venta registrada correctamente.");
+        productos = [];
+        document.getElementById("tablaProductos").innerHTML = "";
+        localStorage.setItem("codigoVenta", ventaData.codigo_venta + 1); // Incrementar para la siguiente venta
+    } else {
+        alert("Error al registrar la venta: " + data.message);
+    }
+});
     fetch("http://localhost:4000/ventas/api/ventas/")
         .then(response => {
             if (!response.ok) {
