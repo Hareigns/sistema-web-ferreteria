@@ -66,6 +66,8 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
     detalles_venta, // Puede ser un array de productos con cantidades y precios
   } = req.body;
 
+  console.log("Datos recibidos en el servidor (ventas):", req.body);
+
   // Validaciones básicas
   if (!codigo_venta || !codigo_cliente || !total_venta || !detalles_venta) {
     return res.status(400).json({ 
