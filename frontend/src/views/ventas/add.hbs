@@ -28,7 +28,7 @@
                     <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                 </div>
                 <div class="col-md-2">
-                    <input type="text" id="precio" class="form-control" placeholder="Precio">
+                    <input type="text" id="precio" class="form-control" placeholder="Precio" disabled>
                 </div>
                 <div class="col-md-4">
                     <select id="metodoPago" class="form-select">
@@ -267,6 +267,7 @@
                     const option = document.createElement("option");
                     option.value = producto.Cod_Producto;
                     option.textContent = producto.Nombre;
+                    option.dataset.precio = producto.Precio_Compra;  // Guardamos el precio en el atributo `data`
                     selectProducto.appendChild(option);
                 });
 
@@ -276,6 +277,19 @@
             console.error("Error al cargar productos por sector:", error);
         }
     }
+
+    document.getElementById("nombreProducto").addEventListener("change", function () {
+        const productoSeleccionado = this.selectedOptions[0];  // Obtener la opción seleccionada
+        const precio = productoSeleccionado.dataset.precio;  // Obtener el precio desde el atributo `data`
+
+        // Multiplicar el precio por 1.25
+        const precioConIVA = (precio * 1.25).toFixed(2);  // Multiplicamos y redondeamos a 2 decimales
+
+        // Actualizar el campo de precio
+        document.getElementById("precio").value = precioConIVA;
+    });
+
+
 
     // Detectar cambio en el select de sectores
     document.getElementById("sector").addEventListener("change", function () {
