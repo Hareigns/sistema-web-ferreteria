@@ -50,7 +50,7 @@ passport.deserializeUser(async (Cod_Empleado, done) => {
         const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
         if (rows.length > 0) {
             const empleado = rows[0];
-            console.log("Empleado encontrado:", empleado);  // Verifica si los datos del empleado están correctos
+            //console.log("Empleado encontrado:", empleado);  // Verifica si los datos del empleado están correctos
             done(null, empleado);
         } else {
             done(new Error('Empleado no encontrado'));
