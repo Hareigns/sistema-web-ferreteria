@@ -198,26 +198,32 @@
   });
 
 
+async function cargarProductos() {
+  try {
+    const response = await fetch("/productos/api/productos");
+    const data = await response.json();
 
-  async function cargarProductos() {
-    try {
-      const response = await fetch("/productos/api/productos");
-      const data = await response.json();
+    // Verifica los datos obtenidos desde la API
+    console.log("Datos obtenidos desde la API:", data);
 
-      // Verifica los datos obtenidos desde la API
-      console.log("Datos obtenidos desde la API:", data);
+    if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+      const tbody = document.getElementById("productos-table-body");
+      tbody.innerHTML = ""; // Limpiar la tabla antes de agregar datos
 
-      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-        const tbody = document.getElementById("productos-table-body");
-        tbody.innerHTML = ""; // Limpiar la tabla antes de agregar datos
+      data.data.forEach(producto => {
+        // Ajuste para manejar valores null o undefined de manera segura
+        const precioCompra = producto.Precio_Compra ? producto.Precio_Compra.toFixed(2) : "0.00";
 
-        data.data.forEach(producto => {
-          // Ajuste para manejar valores null o undefined de manera segura
-          const precioCompra = producto.Precio_Compra ? producto.Precio_Compra.toFixed(2) : "0.00";
-          const fechaVencimiento = producto.FechaVencimiento ? producto.FechaVencimiento : "N/A";
+        // Formatear la fecha de vencimiento
+        let fechaVencimiento = producto.FechaVencimiento ? new Date(producto.FechaVencimiento) : null;
+        if (fechaVencimiento) {
+          fechaVencimiento = `${fechaVencimiento.getDate().toString().padStart(2, '0')}/${(fechaVencimiento.getMonth() + 1).toString().padStart(2, '0')}/${fechaVencimiento.getFullYear().toString().slice(-2)}`;
+        } else {
+          fechaVencimiento = "N/A";
+        }
 
-          const row = document.createElement("tr");
-          row.innerHTML = `
+        const row = document.createElement("tr");
+        row.innerHTML = `
           <td>${producto.Cod_Producto || "Sin código"}</td>
           <td>${producto.Nombre || "Desconocido"}</td>
           <td>${producto.Sector || "No asignado"}</td>
@@ -226,21 +232,21 @@
           <td>${precioCompra}</td>
           <td>${fechaVencimiento}</td>
         `;
-          tbody.appendChild(row);
-        });
-      } else {
-        // Si no hay productos o los datos están vacíos
-        document.getElementById("productos-table-body").innerHTML = `
+        tbody.appendChild(row);
+      });
+    } else {
+      // Si no hay productos o los datos están vacíos
+      document.getElementById("productos-table-body").innerHTML = `
         <tr><td colspan="7" class="text-center">No hay productos registrados</td></tr>
       `;
-      }
-    } catch (error) {
-      console.error("Error al cargar productos:", error);
-      document.getElementById("productos-table-body").innerHTML = `
+    }
+  } catch (error) {
+    console.error("Error al cargar productos:", error);
+    document.getElementById("productos-table-body").innerHTML = `
       <tr><td colspan="7" class="text-center text-danger">Error al cargar datos</td></tr>
     `;
-    }
   }
+}
 
 
 

@@ -56,51 +56,102 @@ router.get("/list", isLoggedIn, async (req, res) => {
   }
 });
 
-// Agregar venta
-router.post("/add", isLoggedIn, async (req, res) => {
-  const { codigo_producto, cantidad, metodo_pago, precio_venta, sector, fecha_venta } = req.body;
+// API para guardar ventas
+router.post("/api/ventas", isLoggedIn, async (req, res) => {
+  const { 
+    codigo_venta, 
+    fecha_venta,  // Este dato viene del formulario
+    codigo_cliente, 
+    total_venta,
+    detalles_venta, // Puede ser un array de productos con cantidades y precios
+  } = req.body;
 
-  const validationErrors = validateVentaData(req.body);
-  if (validationErrors.length > 0) {
-    return res.status(400).json({ success: false, errors: validationErrors });
+  // Validaciones básicas
+  if (!codigo_venta || !codigo_cliente || !total_venta || !detalles_venta) {
+    return res.status(400).json({ 
+      success: false, 
+      message: "Datos incompletos" 
+    });
   }
+
+  // Asegurarse de que la fecha_venta sea válida
+  const fechaVentaValida = fecha_venta || new Date().toISOString().split('T')[0];
 
   let connection;
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Insertar en la tabla de Venta
-    const ventaData = { Fecha_Venta: fecha_venta || new Date().toISOString().split('T')[0] };  // Si no hay fecha, tomamos la fecha actual
-    const [resultVenta] = await connection.query('INSERT INTO Venta SET ?', [ventaData]);
+    // Verificar si la venta ya existe
+    const [ventaExistente] = await connection.query(
+      'SELECT Cod_Venta FROM Venta WHERE Cod_Venta = ?',
+      [codigo_venta]
+    );
 
-    // Obtener el ID generado para la venta
-    const nuevoCodVenta = resultVenta.insertId;
+    if (ventaExistente.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "El código de venta ya existe"
+      });
+    }
 
-    // Insertar en la tabla ProductVenta
-    const productVentaData = {
-      Cod_Producto: codigo_producto,
-      Cod_Venta: nuevoCodVenta,
-      Metodo_Pago: metodo_pago,
-      Precio_Venta: precio_venta,
-      Cantidad_Venta: cantidad,
-      Sector: sector,
-      Fecha_salida: fecha_venta || new Date().toISOString().split('T')[0]
-    };
-    await connection.query('INSERT INTO ProductVenta SET ?', [productVentaData]);
+    // Insertar la venta
+    await connection.query(
+      `INSERT INTO Venta (Cod_Venta, Fecha_Venta, Cod_Cliente, Total_Venta)
+       VALUES (?, ?, ?, ?)`,
+      [codigo_venta, fechaVentaValida, codigo_cliente, total_venta]
+    );
+
+    // Insertar detalles de la venta (productos vendidos)
+    for (const detalle of detalles_venta) {
+      const { codigo_producto, cantidad, precio_unitario } = detalle;
+      
+      // Validación para cada producto
+      if (!codigo_producto || !cantidad || !precio_unitario) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Datos de detalles incompletos"
+        });
+      }
+
+      await connection.query(
+        `INSERT INTO DetallesVenta (Cod_Venta, Cod_Producto, Cantidad, PrecioUnitario)
+         VALUES (?, ?, ?, ?)`,
+        [codigo_venta, codigo_producto, cantidad, precio_unitario]
+      );
+    }
 
     await connection.commit();
-
-    res.json({ success: true, message: "Venta registrada correctamente", codigo_venta: nuevoCodVenta });
+    
+    return res.json({ 
+      success: true, 
+      message: 'Venta registrada correctamente',
+      codigo: codigo_venta
+    });
 
   } catch (error) {
-    if (connection) await connection.rollback();
-    console.error("Error al agregar venta:", error);
-    res.status(500).json({ success: false, error: 'Error al agregar venta' });
+    await connection?.rollback();
+    console.error("Error al registrar la venta:", error);
+
+    let message = 'Error al registrar la venta';
+    if (error.code === 'ER_DUP_ENTRY') {
+      message = 'El código de venta ya existe';
+    } else if (error.code === 'ER_TRUNCATED_WRONG_VALUE') {
+      message = 'Formato de fecha incorrecto';
+    }
+
+    return res.status(500).json({ 
+      success: false, 
+      message,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   } finally {
-    if (connection) connection.release();
+    connection?.release();
   }
 });
+
+
 
 // API para obtener ventas (JSON)
 router.get('/api/ventas', isLoggedIn, async (req, res) => {
