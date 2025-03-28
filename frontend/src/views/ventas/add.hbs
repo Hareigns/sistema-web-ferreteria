@@ -6,9 +6,11 @@
             <h3 class="text-center" style="color: #000000;">Ventas</h3>
             <div class="row g-3">
                 <div class="col-md-4">
+                    <label for="codigoVenta" class="form-label">Código de Venta:</label>
                     <input type="text" id="codigoVenta" class="form-control" placeholder="Código de Venta" disabled>
                 </div>
                 <div class="col-md-4">
+                    <label for="sector" class="form-label">Sector:</label>
                     <select id="sector" name="sector" class="form-select" required>
                         <option value="" disabled selected>Seleccione un sector</option>
                         {{#each sectores}}
@@ -17,20 +19,25 @@
                     </select>
                 </div>
                 <div class="col-md-4">
+                    <label for="empleado" class="form-label">Empleado:</label>
                     <input type="text" id="empleado" class="form-control" placeholder="Empleado:" disabled />
                 </div>
                 <div class="col-md-4">
+                    <label for="nombreProducto" class="form-label">Producto:</label>
                     <select id="nombreProducto" class="form-select">
                         <option value="" disabled selected>Seleccione un producto</option>
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="cantidad" class="form-label">Cantidad:</label>
                     <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                 </div>
                 <div class="col-md-2">
-                    <input type="text" id="precio" class="form-control" placeholder="Precio">
+                    <label for="precio" class="form-label">Precio:</label>
+                    <input type="text" id="precio" class="form-control" placeholder="Precio" disabled>
                 </div>
                 <div class="col-md-4">
+                    <label for="metodoPago" class="form-label">Método de Pago:</label>
                     <select id="metodoPago" class="form-select">
                         <option value="" disabled selected>Seleccione Método de Pago</option>
                         <option>Efectivo</option>
@@ -73,54 +80,14 @@
 
 <script>
 
+    // Lista de productos agregados
+    let productos = [];
+
     // Obtener el último código de venta almacenado o inicializar en 1
     let codigoVenta = localStorage.getItem("codigoVenta") ? parseInt(localStorage.getItem("codigoVenta")) : 1;
 
     // Mostrar el código de venta actual en la caja de texto
     document.getElementById("codigoVenta").value = codigoVenta;
-
-    document.getElementById("guardarVenta").addEventListener("click", async function () {
-        if (productos.length === 0) {
-            alert("No se han agregado productos.");
-            return;
-        }
-
-        // Datos de la venta
-        const ventaData = {
-            codigo_venta: codigoVenta,  // Agregar el código de venta a los datos
-            productos: productos,
-            codigo_empleado: "EMP123"
-        };
-
-        // Enviar la venta al backend
-        const response = await fetch("/api/ventas", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(ventaData)
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            alert("Venta registrada correctamente.");
-            // Incrementar el código de venta y almacenarlo en localStorage
-            codigoVenta++;
-            localStorage.setItem("codigoVenta", codigoVenta);
-            document.getElementById("codigoVenta").value = codigoVenta;
-
-            // Limpiar la lista de productos y la tabla
-            productos = [];
-            document.getElementById("tablaProductos").innerHTML = "";
-        } else {
-            alert("Error al registrar la venta: " + data.message);
-        }
-    });
-
-
-    // Lista de productos agregados
-    let productos = [];
 
     // Agregar un producto a la lista de productos
     document.getElementById("agregarProducto").addEventListener("click", function () {
@@ -130,16 +97,15 @@
         let metodoPago = document.getElementById("metodoPago").value;
         let sector = document.getElementById("sector").value;
 
-        if (nombre === "" || cantidad === "" || precio === "" || metodoPago === "") {
+        if (nombre === "" || cantidad === "" || precio === "" || metodoPago === "" || sector === "") {
             alert("Por favor, complete todos los campos antes de agregar.");
             return;
         }
 
-        // Agregar producto a la lista
         productos.push({
             codigo_producto: nombre,
             cantidad: cantidad,
-            precio: precio,
+            precio_venta: precio,  // Asegúrate de usar el nombre correcto aquí
             metodo_pago: metodoPago,
             sector: sector
         });
@@ -149,12 +115,12 @@
         let fila = document.createElement("tr");
 
         fila.innerHTML = `
-            <td>${nombre}</td>
-            <td>${cantidad}</td>
-            <td>${precio}</td>
-            <td>${metodoPago}</td>
-            <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
-        `;
+    <td>${nombre}</td>
+    <td>${cantidad}</td>
+    <td>${precio}</td>
+    <td>${metodoPago}</td>
+    <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
+  `;
 
         tabla.appendChild(fila);
 
@@ -171,21 +137,19 @@
         });
     });
 
-    // Guardar venta
+
     document.getElementById("guardarVenta").addEventListener("click", async function () {
         if (productos.length === 0) {
             alert("No se han agregado productos.");
             return;
         }
 
-        // Datos de la venta
         const ventaData = {
             productos: productos,
             codigo_empleado: "EMP123" // Aquí puedes poner el código del empleado logueado
         };
 
-        // Enviar la venta al backend
-        const response = await fetch("/api/ventas", {
+        const response = await fetch("http://localhost:4000/ventas/api/ventas/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -197,7 +161,6 @@
 
         if (data.success) {
             alert("Venta registrada correctamente.");
-            // Limpiar la lista de productos y el formulario
             productos = [];
             document.getElementById("tablaProductos").innerHTML = "";
         } else {
@@ -205,6 +168,21 @@
         }
     });
 
+
+    fetch("http://localhost:4000/ventas/api/ventas/")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);  // Aquí deberías ver el JSON
+            // Aquí maneja los datos obtenidos (como actualizar la UI o almacenar los datos)
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
 
 
     // Obtener los datos del empleado logueado
@@ -222,6 +200,7 @@
         })
         .catch(error => console.error('Error al obtener datos del empleado:', error));
 
+    // Cargar los sectores
     async function cargarSectores() {
         try {
             const response = await fetch("http://localhost:4000/productos/api/productos");
@@ -250,8 +229,7 @@
     // Llamar a la función cuando cargue la página
     document.addEventListener("DOMContentLoaded", cargarSectores);
 
-
-
+    // Cargar productos por sector
     async function cargarProductosPorSector(sectorSeleccionado) {
         try {
             const response = await fetch("http://localhost:4000/productos/api/productos");
@@ -267,6 +245,7 @@
                     const option = document.createElement("option");
                     option.value = producto.Cod_Producto;
                     option.textContent = producto.Nombre;
+                    option.dataset.precio = producto.Precio_Compra;  // Guardamos el precio en el atributo `data`
                     selectProducto.appendChild(option);
                 });
 
@@ -276,6 +255,18 @@
             console.error("Error al cargar productos por sector:", error);
         }
     }
+
+    // Evento para detectar cambio en el select de productos
+    document.getElementById("nombreProducto").addEventListener("change", function () {
+        const productoSeleccionado = this.selectedOptions[0];  // Obtener la opción seleccionada
+        const precio = productoSeleccionado.dataset.precio;  // Obtener el precio desde el atributo `data`
+
+        // Multiplicar el precio por 1.25
+        const precioConIVA = (precio * 1.25).toFixed(2);  // Multiplicamos y redondeamos a 2 decimales
+
+        // Actualizar el campo de precio
+        document.getElementById("precio").value = precioConIVA;
+    });
 
     // Detectar cambio en el select de sectores
     document.getElementById("sector").addEventListener("change", function () {
