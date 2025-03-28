@@ -9,7 +9,7 @@ passport.use('local.login', new LocalStrategy({
     passReqToCallback: true
 }, async (req, codigo_empleado, nombre, done) => {
     try {
-        console.log('Autenticando empleado:', codigo_empleado);
+        //console.log('Autenticando empleado:', codigo_empleado);
 
         // Busca el empleado en la base de datos
         const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [codigo_empleado]);
@@ -17,7 +17,7 @@ passport.use('local.login', new LocalStrategy({
 
         if (rows.length > 0) {
             const empleado = rows[0]; // Accede directamente al primer registro
-            console.log('Empleado encontrado:', empleado);
+            //console.log('Empleado encontrado:', empleado);
 
             // Verifica que el nombre y apellido coincidan sin importar mayúsculas o minúsculas
             if (empleado.Nombre.toLowerCase() === req.body.nombre.toLowerCase() && 
@@ -46,7 +46,7 @@ passport.serializeUser((empleado, done) => {
 // Deserialización del usuario (se busca el empleado por Cod_Empleado para restaurar los datos en la sesión)
 passport.deserializeUser(async (Cod_Empleado, done) => {
     try {
-        console.log("Deserializando empleado con Cod_Empleado:", Cod_Empleado);  // Verifica el Cod_Empleado
+        //console.log("Deserializando empleado con Cod_Empleado:", Cod_Empleado);  // Verifica el Cod_Empleado
         const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
         if (rows.length > 0) {
             const empleado = rows[0];
