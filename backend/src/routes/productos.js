@@ -133,7 +133,7 @@ router.get("/api/productos", isLoggedIn, async (req, res) => {
       JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
     `);
 
-    console.log("Datos enviados desde la API:", productos);
+    //console.log("Datos enviados desde la API:", productos);
 
     res.json({ success: true, data: productos });
   } catch (error) {

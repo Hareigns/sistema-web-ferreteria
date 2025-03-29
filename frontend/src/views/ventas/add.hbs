@@ -139,22 +139,119 @@
 
 
 document.getElementById("guardarVenta").addEventListener("click", async function () {
+    // Validación de productos
     if (productos.length === 0) {
         alert("No se han agregado productos.");
         return;
     }
 
+    try {
+        // 1. Obtener el empleado logueado
+        const empleadoResponse = await fetch('/empleados/api/empleados');
+        if (!empleadoResponse.ok) throw new Error('Error al obtener datos del empleado');
+        
+        const empleadoData = await empleadoResponse.json();
+        console.log("Datos del empleado:", empleadoData); // Para depuración
+        
+        // Validación de respuesta
+        if (!empleadoData.success || !empleadoData.data || empleadoData.data.length === 0) {
+            throw new Error('No se encontró información del empleado');
+        }
+
+        // 2. Obtener el código del empleado (usando tu estructura exacta)
+        const empleadoLogueado = empleadoData.data[0]; // Primer empleado del array
+        const codigoEmpleado = empleadoLogueado.Cod_Empleado; // Campo numérico según tu API
+        
+        // Validación del código
+        if (typeof codigoEmpleado !== 'number') {
+            throw new Error('El código de empleado debe ser numérico');
+        }
+
+        // 3. Preparar detalles de la venta con conversión de tipos
+        const detallesVenta = productos.map(producto => ({
+            codigo_producto: producto.codigo_producto,
+            cantidad: parseInt(producto.cantidad, 10),
+            precio_unitario: parseFloat(producto.precio_venta),
+            metodo_pago: producto.metodo_pago,
+            sector: producto.sector
+        }));
+
+        // 4. Calcular total con precisión decimal
+        const totalVenta = detallesVenta.reduce((total, producto) => {
+            return total + (producto.cantidad * producto.precio_unitario);
+        }, 0).toFixed(2); // 2 decimales para moneda
+
+        // 5. Estructurar datos para el backend
+        const ventaData = {
+            codigo_empleado: codigoEmpleado, // Número (1, 2, 3...)
+            total_venta: parseFloat(totalVenta), // Convertir a número
+            detalles_venta: detallesVenta
+        };
+
+        console.log("Datos completos de venta:", ventaData);
+
+        // 6. Enviar al backend
+        const response = await fetch("http://localhost:4000/ventas/api/ventas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(ventaData)
+        });
+
+        // 7. Procesar respuesta
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        // 8. Éxito - limpiar y notificar
+        alert(`✅ Venta registrada exitosamente\nCódigo: ${result.codigo || 'N/A'}`);
+        
+        // Resetear el formulario
+        productos = [];
+        document.getElementById("tablaProductos").innerHTML = "";
+        
+        // Actualizar código de venta si viene en la respuesta
+        if (result.codigo) {
+            document.getElementById("codigoVenta").value = result.codigo;
+            localStorage.setItem("ultimaVenta", result.codigo);
+        }
+
+    } catch (error) {
+        console.error("Error en el proceso:", error);
+        alert(`❌ Error al registrar venta:\n${error.message}`);
+    }
+});
+
+
+/*
+document.getElementById("guardarVenta").addEventListener("click", async function () {
+    if (productos.length === 0) {
+        alert("No se han agregado productos.");
+        return;
+    }
+
+    // Convertir strings a números donde sea necesario
+    const detallesVenta = productos.map(p => ({
+        codigo_producto: p.codigo_producto,
+        cantidad: Number(p.cantidad),
+        precio_unitario: Number(p.precio_venta), // Cambiar nombre a precio_unitario
+        metodo_pago: p.metodo_pago,
+        sector: p.sector
+    }));
+
     const ventaData = {
-        codigo_venta: document.getElementById("codigoVenta").value, // Debes asignarle un valor válido
-        fecha_venta: new Date().toISOString().split('T')[0], // Fecha actual si no hay en el formulario
-        codigo_cliente: "CL123", // Debes obtenerlo correctamente
-        total_venta: productos.reduce((acc, p) => acc + (p.cantidad * p.precio_venta), 0),
-        detalles_venta: productos, // Asegurar que este array se envíe correctamente
+        // No enviar codigo_venta ya que es autoincremental
+        codigo_empleado: "CL123", // Cambiar nombre a codigo_cliente
+        total_venta: detallesVenta.reduce((acc, p) => acc + (p.cantidad * p.precio_unitario), 0),
+        detalles_venta: detallesVenta
     };
 
-    console.log("Enviando datos:", ventaData); // Para depuración
+    console.log("Enviando datos:", ventaData);
 
-    const response = await fetch("http://localhost:4000/ventas/api/ventas/", {
+    // Quitar la barra final del endpoint
+    const response = await fetch("http://localhost:4000/ventas/api/ventas", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -173,6 +270,7 @@ document.getElementById("guardarVenta").addEventListener("click", async function
         alert("Error al registrar la venta: " + data.message);
     }
 });
+*/
     fetch("http://localhost:4000/ventas/api/ventas/")
         .then(response => {
             if (!response.ok) {
