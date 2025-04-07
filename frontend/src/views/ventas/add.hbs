@@ -71,45 +71,57 @@
                     </tbody>
                 </table>
             </div>
-
-            <div class="d-flex justify-content-between mt-3">
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <label for="subtotal" class="form-label">Subtotal:</label>
+                    <input type="text" id="subtotal" class="form-control" placeholder="Subtotal" disabled>
+                </div>
+                <div class="col-md-4">
+                    <label for="iva" class="form-label">IVA (15%):</label>
+                    <input type="text" id="iva" class="form-control" placeholder="IVA" disabled>
+                </div>
+                <div class="col-md-4">
+                    <label for="total" class="form-label">Total:</label>
+                    <input type="text" id="total" class="form-control" placeholder="Total" disabled>
+                </div>
+            </div>
+             <div class="d-flex justify-content-between mt-3">
                 <button id="guardarVenta" class="btn btn-custom btn-custom-success">💾 Guardar Venta</button>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    let productos = [];
+    <script>
+        let productos = [];
 
-    document.getElementById("agregarProducto").addEventListener("click", function () {
-        let nombre = document.getElementById("nombreProducto").value;
-        let cantidad = document.getElementById("cantidad").value;
-        let precio = document.getElementById("precio").value;
-        let metodoPago = document.getElementById("metodoPago").value;
-        let sector = document.getElementById("sector").value;
+        document.getElementById("agregarProducto").addEventListener("click", function () {
+            let nombre = document.getElementById("nombreProducto").value;
+            let cantidad = document.getElementById("cantidad").value;
+            let precio = document.getElementById("precio").value;
+            let metodoPago = document.getElementById("metodoPago").value;
+            let sector = document.getElementById("sector").value;
 
-        if (nombre === "" || cantidad === "" || precio === "" || metodoPago === "" || sector === "") {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Campos incompletos',
-                text: 'Por favor, complete todos los campos antes de agregar.'
+            if (nombre === "" || cantidad === "" || precio === "" || metodoPago === "" || sector === "") {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos incompletos',
+                    text: 'Por favor, complete todos los campos antes de agregar.'
+                });
+                return;
+            }
+
+            productos.push({
+                codigo_producto: nombre,
+                cantidad: cantidad,
+                precio_venta: precio,
+                metodo_pago: metodoPago,
+                sector: sector
             });
-            return;
-        }
 
-        productos.push({
-            codigo_producto: nombre,
-            cantidad: cantidad,
-            precio_venta: precio,
-            metodo_pago: metodoPago,
-            sector: sector
-        });
+            let tabla = document.getElementById("tablaProductos");
+            let fila = document.createElement("tr");
 
-        let tabla = document.getElementById("tablaProductos");
-        let fila = document.createElement("tr");
-
-        fila.innerHTML = `
+            fila.innerHTML = `
             <td>${nombre}</td>
             <td>${cantidad}</td>
             <td>${precio}</td>
@@ -117,231 +129,252 @@
             <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
         `;
 
-        tabla.appendChild(fila);
+            tabla.appendChild(fila);
 
-        document.getElementById("nombreProducto").value = "";
-        document.getElementById("cantidad").value = "";
-        document.getElementById("precio").value = "";
-        document.getElementById("metodoPago").value = "";
+            document.getElementById("nombreProducto").value = "";
+            document.getElementById("cantidad").value = "";
+            document.getElementById("precio").value = "";
+            document.getElementById("metodoPago").value = "";
 
-        fila.querySelector(".eliminar").addEventListener("click", function () {
-            Swal.fire({
-                title: '¿Está seguro?',
-                text: "Este producto será eliminado de la lista.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    productos = productos.filter(p => p.codigo_producto !== nombre);
-                    fila.remove();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Eliminado',
-                        text: 'El producto ha sido eliminado.'
+            actualizarTotales();
+
+            fila.querySelector(".eliminar").addEventListener("click", function () {
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: "Este producto será eliminado de la lista.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, eliminar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        productos = productos.filter(p => p.codigo_producto !== nombre);
+                        fila.remove();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Eliminado',
+                            text: 'El producto ha sido eliminado.'
+                        });
+                    }
+                });
+            });
+        });
+
+        document.getElementById("guardarVenta").addEventListener("click", async function () {
+            if (productos.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin productos',
+                    text: 'No se han agregado productos.'
+                });
+                return;
+            }
+
+            try {
+                const empleadoResponse = await fetch('/empleados/api/empleados');
+                if (!empleadoResponse.ok) throw new Error('Error al obtener datos del empleado');
+
+                const empleadoData = await empleadoResponse.json();
+                if (!empleadoData.success || !empleadoData.data || empleadoData.data.length === 0) {
+                    throw new Error('No se encontró información del empleado');
+                }
+
+                const empleadoLogueado = empleadoData.data[0];
+                const codigoEmpleado = empleadoLogueado.Cod_Empleado;
+
+                if (typeof codigoEmpleado !== 'number') {
+                    throw new Error('El código de empleado debe ser numérico');
+                }
+
+                const detallesVenta = productos.map(producto => ({
+                    codigo_producto: producto.codigo_producto,
+                    cantidad: parseInt(producto.cantidad, 10),
+                    precio_unitario: parseFloat(producto.precio_venta),
+                    metodo_pago: producto.metodo_pago,
+                    sector: producto.sector
+                }));
+
+                const totalVenta = detallesVenta.reduce((total, producto) => {
+                    return total + (producto.cantidad * producto.precio_unitario);
+                }, 0).toFixed(2);
+
+                const ventaData = {
+                    codigo_empleado: codigoEmpleado,
+                    total_venta: parseFloat(totalVenta),
+                    detalles_venta: detallesVenta
+                };
+
+                const response = await fetch("http://localhost:4000/ventas/api/ventas", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(ventaData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Venta registrada',
+                    text: `✅ Venta registrada exitosamente\nCódigo: ${result.codigo || 'N/A'}`
+                });
+
+                productos = [];
+                document.getElementById("tablaProductos").innerHTML = "";
+
+                if (result.codigo) {
+                    localStorage.setItem("ultimaVenta", result.codigo);
+                    cargarCodigoVenta(); // ⚡ Actualiza automáticamente el campo con el nuevo código
+                }
+
+
+            } catch (error) {
+                console.error("Error en el proceso:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al registrar venta',
+                    text: error.message
+                });
+            }
+        });
+
+        fetch("http://localhost:4000/ventas/api/ventas/")
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+
+        fetch('/api/empleados')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const empleado = data.empleado;
+                    const empleadoInput = document.getElementById('empleado');
+                    empleadoInput.value = `${empleado.Nombre} ${empleado.Apellido}`;
+                } else {
+                    console.log(data.message);
+                }
+            })
+            .catch(error => console.error('Error al obtener datos del empleado:', error));
+
+        function actualizarTotales() {
+            let subtotal = 0;
+
+            // Calcular subtotal sumando todos los productos
+            productos.forEach(producto => {
+                subtotal += parseFloat(producto.precio_venta) * parseInt(producto.cantidad);
+            });
+
+            const iva = subtotal * 0.15;
+            const total = subtotal + iva;
+
+            // Actualizar los campos
+            document.getElementById("subtotal").value = subtotal.toFixed(2);
+            document.getElementById("iva").value = iva.toFixed(2);
+            document.getElementById("total").value = total.toFixed(2);
+        }
+
+
+
+        async function cargarCodigoVenta() {
+            try {
+                const response = await fetch('http://localhost:4000/ventas/api/ventas/');
+                const data = await response.json();
+
+                if (data.success && Array.isArray(data.data)) {
+                    const ventas = data.data;
+
+                    // Buscar el código máximo (asumiendo que la clave es Cod_Venta)
+                    const ultimoCodigo = ventas.reduce((max, venta) => {
+                        return venta.Cod_Venta > max ? venta.Cod_Venta : max;
+                    }, 0);
+
+                    const nuevoCodigo = ultimoCodigo + 1;
+                    document.getElementById("codigoVenta").value = nuevoCodigo;
+                    localStorage.setItem("codigoVenta", nuevoCodigo); // Si deseas guardarlo
+                } else {
+                    throw new Error("No se pudo obtener la lista de ventas");
+                }
+            } catch (error) {
+                console.error("Error al cargar el código de venta:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo obtener el código de venta desde el servidor'
+                });
+            }
+        }
+
+        async function cargarSectores() {
+            try {
+                const response = await fetch("http://localhost:4000/productos/api/productos");
+                const data = await response.json();
+
+                if (data.success) {
+                    const sectoresUnicos = [...new Set(data.data.map(producto => producto.Sector))];
+                    const selectSector = document.getElementById("sector");
+
+                    selectSector.innerHTML = `<option value="" disabled selected>Seleccione un sector</option>`;
+                    sectoresUnicos.forEach(sector => {
+                        const option = document.createElement("option");
+                        option.value = sector;
+                        option.textContent = sector;
+                        selectSector.appendChild(option);
                     });
                 }
-            });
-        });
-    });
-
-    document.getElementById("guardarVenta").addEventListener("click", async function () {
-        if (productos.length === 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin productos',
-                text: 'No se han agregado productos.'
-            });
-            return;
+            } catch (error) {
+                console.error("Error al cargar sectores:", error);
+            }
         }
 
-        try {
-            const empleadoResponse = await fetch('/empleados/api/empleados');
-            if (!empleadoResponse.ok) throw new Error('Error al obtener datos del empleado');
-
-            const empleadoData = await empleadoResponse.json();
-            if (!empleadoData.success || !empleadoData.data || empleadoData.data.length === 0) {
-                throw new Error('No se encontró información del empleado');
-            }
-
-            const empleadoLogueado = empleadoData.data[0];
-            const codigoEmpleado = empleadoLogueado.Cod_Empleado;
-
-            if (typeof codigoEmpleado !== 'number') {
-                throw new Error('El código de empleado debe ser numérico');
-            }
-
-            const detallesVenta = productos.map(producto => ({
-                codigo_producto: producto.codigo_producto,
-                cantidad: parseInt(producto.cantidad, 10),
-                precio_unitario: parseFloat(producto.precio_venta),
-                metodo_pago: producto.metodo_pago,
-                sector: producto.sector
-            }));
-
-            const totalVenta = detallesVenta.reduce((total, producto) => {
-                return total + (producto.cantidad * producto.precio_unitario);
-            }, 0).toFixed(2);
-
-            const ventaData = {
-                codigo_empleado: codigoEmpleado,
-                total_venta: parseFloat(totalVenta),
-                detalles_venta: detallesVenta
-            };
-
-            const response = await fetch("http://localhost:4000/ventas/api/ventas", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(ventaData)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Venta registrada',
-                text: `✅ Venta registrada exitosamente\nCódigo: ${result.codigo || 'N/A'}`
-            });
-
-            productos = [];
-            document.getElementById("tablaProductos").innerHTML = "";
-
-            if (result.codigo) {
-                localStorage.setItem("ultimaVenta", result.codigo);
-                cargarCodigoVenta(); // ⚡ Actualiza automáticamente el campo con el nuevo código
-            }
-
-
-        } catch (error) {
-            console.error("Error en el proceso:", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al registrar venta',
-                text: error.message
-            });
-        }
-    });
-
-    fetch("http://localhost:4000/ventas/api/ventas/")
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-        })
-        .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
+        // Llamar al cargar la página
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarCodigoVenta();
+            cargarSectores(); // Esto ya lo tienes
+            actualizarTotales();
         });
 
-    fetch('/api/empleados')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const empleado = data.empleado;
-                const empleadoInput = document.getElementById('empleado');
-                empleadoInput.value = `${empleado.Nombre} ${empleado.Apellido}`;
-            } else {
-                console.log(data.message);
+        async function cargarProductosPorSector(sectorSeleccionado) {
+            try {
+                const response = await fetch("http://localhost:4000/productos/api/productos");
+                const data = await response.json();
+
+                if (data.success) {
+                    const productosFiltrados = data.data.filter(producto => producto.Sector === sectorSeleccionado);
+                    const selectProducto = document.getElementById("nombreProducto");
+
+                    selectProducto.innerHTML = `<option value="" disabled selected>Seleccione un producto</option>`;
+
+                    productosFiltrados.forEach(producto => {
+                        const option = document.createElement("option");
+                        option.value = producto.Cod_Producto;
+                        option.textContent = producto.Nombre;
+                        option.dataset.precio = producto.Precio_Compra;
+                        selectProducto.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar productos por sector:", error);
             }
-        })
-        .catch(error => console.error('Error al obtener datos del empleado:', error));
-
-
-    async function cargarCodigoVenta() {
-        try {
-            const response = await fetch('http://localhost:4000/ventas/api/ventas/');
-            const data = await response.json();
-
-            if (data.success && Array.isArray(data.data)) {
-                const ventas = data.data;
-
-                // Buscar el código máximo (asumiendo que la clave es Cod_Venta)
-                const ultimoCodigo = ventas.reduce((max, venta) => {
-                    return venta.Cod_Venta > max ? venta.Cod_Venta : max;
-                }, 0);
-
-                const nuevoCodigo = ultimoCodigo + 1;
-                document.getElementById("codigoVenta").value = nuevoCodigo;
-                localStorage.setItem("codigoVenta", nuevoCodigo); // Si deseas guardarlo
-            } else {
-                throw new Error("No se pudo obtener la lista de ventas");
-            }
-        } catch (error) {
-            console.error("Error al cargar el código de venta:", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo obtener el código de venta desde el servidor'
-            });
         }
-    }
 
-    async function cargarSectores() {
-        try {
-            const response = await fetch("http://localhost:4000/productos/api/productos");
-            const data = await response.json();
+        document.getElementById("nombreProducto").addEventListener("change", function () {
+            const productoSeleccionado = this.selectedOptions[0];
+            const precio = productoSeleccionado.dataset.precio;
+            const precioConIVA = (precio * 1.25).toFixed(2);
+            document.getElementById("precio").value = precioConIVA;
+        });
 
-            if (data.success) {
-                const sectoresUnicos = [...new Set(data.data.map(producto => producto.Sector))];
-                const selectSector = document.getElementById("sector");
-
-                selectSector.innerHTML = `<option value="" disabled selected>Seleccione un sector</option>`;
-                sectoresUnicos.forEach(sector => {
-                    const option = document.createElement("option");
-                    option.value = sector;
-                    option.textContent = sector;
-                    selectSector.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error("Error al cargar sectores:", error);
-        }
-    }
-
-    // Llamar al cargar la página
-    document.addEventListener("DOMContentLoaded", () => {
-        cargarCodigoVenta();
-        cargarSectores(); // Esto ya lo tienes
-    });
-
-    async function cargarProductosPorSector(sectorSeleccionado) {
-        try {
-            const response = await fetch("http://localhost:4000/productos/api/productos");
-            const data = await response.json();
-
-            if (data.success) {
-                const productosFiltrados = data.data.filter(producto => producto.Sector === sectorSeleccionado);
-                const selectProducto = document.getElementById("nombreProducto");
-
-                selectProducto.innerHTML = `<option value="" disabled selected>Seleccione un producto</option>`;
-
-                productosFiltrados.forEach(producto => {
-                    const option = document.createElement("option");
-                    option.value = producto.Cod_Producto;
-                    option.textContent = producto.Nombre;
-                    option.dataset.precio = producto.Precio_Compra;
-                    selectProducto.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error("Error al cargar productos por sector:", error);
-        }
-    }
-
-    document.getElementById("nombreProducto").addEventListener("change", function () {
-        const productoSeleccionado = this.selectedOptions[0];
-        const precio = productoSeleccionado.dataset.precio;
-        const precioConIVA = (precio * 1.25).toFixed(2);
-        document.getElementById("precio").value = precioConIVA;
-    });
-
-    document.getElementById("sector").addEventListener("change", function () {
-        const sectorSeleccionado = this.value;
-        cargarProductosPorSector(sectorSeleccionado);
-    });
-</script>
+        document.getElementById("sector").addEventListener("change", function () {
+            const sectorSeleccionado = this.value;
+            cargarProductosPorSector(sectorSeleccionado);
+        });
+    </script>

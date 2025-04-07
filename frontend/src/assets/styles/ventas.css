@@ -59,3 +59,9 @@ main {
 .btn-custom-success:hover {
     background-color: #27ae60;
 }
+
+.input#subtotal, .input#iva, .input#total {
+    font-weight: bold;
+    text-align: right;
+    background-color: #6c6c6d;
+}
