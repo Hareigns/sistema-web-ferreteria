@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="/styles/ventas.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="container mt-4">
     <div class="card">
@@ -79,17 +80,8 @@
 </div>
 
 <script>
-
-    // Lista de productos agregados
     let productos = [];
 
-    // Obtener el último código de venta almacenado o inicializar en 1
-    let codigoVenta = localStorage.getItem("codigoVenta") ? parseInt(localStorage.getItem("codigoVenta")) : 1;
-
-    // Mostrar el código de venta actual en la caja de texto
-    document.getElementById("codigoVenta").value = codigoVenta;
-
-    // Agregar un producto a la lista de productos
     document.getElementById("agregarProducto").addEventListener("click", function () {
         let nombre = document.getElementById("nombreProducto").value;
         let cantidad = document.getElementById("cantidad").value;
@@ -98,240 +90,225 @@
         let sector = document.getElementById("sector").value;
 
         if (nombre === "" || cantidad === "" || precio === "" || metodoPago === "" || sector === "") {
-            alert("Por favor, complete todos los campos antes de agregar.");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos incompletos',
+                text: 'Por favor, complete todos los campos antes de agregar.'
+            });
             return;
         }
 
         productos.push({
             codigo_producto: nombre,
             cantidad: cantidad,
-            precio_venta: precio,  // Asegúrate de usar el nombre correcto aquí
+            precio_venta: precio,
             metodo_pago: metodoPago,
             sector: sector
         });
 
-        // Agregar fila a la tabla
         let tabla = document.getElementById("tablaProductos");
         let fila = document.createElement("tr");
 
         fila.innerHTML = `
-    <td>${nombre}</td>
-    <td>${cantidad}</td>
-    <td>${precio}</td>
-    <td>${metodoPago}</td>
-    <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
-  `;
+            <td>${nombre}</td>
+            <td>${cantidad}</td>
+            <td>${precio}</td>
+            <td>${metodoPago}</td>
+            <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
+        `;
 
         tabla.appendChild(fila);
 
-        // Limpiar los campos
         document.getElementById("nombreProducto").value = "";
         document.getElementById("cantidad").value = "";
         document.getElementById("precio").value = "";
         document.getElementById("metodoPago").value = "";
 
-        // Eliminar producto de la tabla
         fila.querySelector(".eliminar").addEventListener("click", function () {
-            productos = productos.filter(p => p.codigo_producto !== nombre);
-            fila.remove();
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: "Este producto será eliminado de la lista.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    productos = productos.filter(p => p.codigo_producto !== nombre);
+                    fila.remove();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: 'El producto ha sido eliminado.'
+                    });
+                }
+            });
         });
     });
 
-
-document.getElementById("guardarVenta").addEventListener("click", async function () {
-    // Validación de productos
-    if (productos.length === 0) {
-        alert("No se han agregado productos.");
-        return;
-    }
-
-    try {
-        // 1. Obtener el empleado logueado
-        const empleadoResponse = await fetch('/empleados/api/empleados');
-        if (!empleadoResponse.ok) throw new Error('Error al obtener datos del empleado');
-        
-        const empleadoData = await empleadoResponse.json();
-        console.log("Datos del empleado:", empleadoData); // Para depuración
-        
-        // Validación de respuesta
-        if (!empleadoData.success || !empleadoData.data || empleadoData.data.length === 0) {
-            throw new Error('No se encontró información del empleado');
+    document.getElementById("guardarVenta").addEventListener("click", async function () {
+        if (productos.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin productos',
+                text: 'No se han agregado productos.'
+            });
+            return;
         }
 
-        // 2. Obtener el código del empleado (usando tu estructura exacta)
-        const empleadoLogueado = empleadoData.data[0]; // Primer empleado del array
-        const codigoEmpleado = empleadoLogueado.Cod_Empleado; // Campo numérico según tu API
-        
-        // Validación del código
-        if (typeof codigoEmpleado !== 'number') {
-            throw new Error('El código de empleado debe ser numérico');
-        }
+        try {
+            const empleadoResponse = await fetch('/empleados/api/empleados');
+            if (!empleadoResponse.ok) throw new Error('Error al obtener datos del empleado');
 
-        // 3. Preparar detalles de la venta con conversión de tipos
-        const detallesVenta = productos.map(producto => ({
-            codigo_producto: producto.codigo_producto,
-            cantidad: parseInt(producto.cantidad, 10),
-            precio_unitario: parseFloat(producto.precio_venta),
-            metodo_pago: producto.metodo_pago,
-            sector: producto.sector
-        }));
-
-        // 4. Calcular total con precisión decimal
-        const totalVenta = detallesVenta.reduce((total, producto) => {
-            return total + (producto.cantidad * producto.precio_unitario);
-        }, 0).toFixed(2); // 2 decimales para moneda
-
-        // 5. Estructurar datos para el backend
-        const ventaData = {
-            codigo_empleado: codigoEmpleado, // Número (1, 2, 3...)
-            total_venta: parseFloat(totalVenta), // Convertir a número
-            detalles_venta: detallesVenta
-        };
-
-        console.log("Datos completos de venta:", ventaData);
-
-        // 6. Enviar al backend
-        const response = await fetch("http://localhost:4000/ventas/api/ventas", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(ventaData)
-        });
-
-        // 7. Procesar respuesta
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        // 8. Éxito - limpiar y notificar
-        alert(`✅ Venta registrada exitosamente\nCódigo: ${result.codigo || 'N/A'}`);
-        
-        // Resetear el formulario
-        productos = [];
-        document.getElementById("tablaProductos").innerHTML = "";
-        
-        // Actualizar código de venta si viene en la respuesta
-        if (result.codigo) {
-            document.getElementById("codigoVenta").value = result.codigo;
-            localStorage.setItem("ultimaVenta", result.codigo);
-        }
-
-    } catch (error) {
-        console.error("Error en el proceso:", error);
-        alert(`❌ Error al registrar venta:\n${error.message}`);
-    }
-});
-
-
-/*
-document.getElementById("guardarVenta").addEventListener("click", async function () {
-    if (productos.length === 0) {
-        alert("No se han agregado productos.");
-        return;
-    }
-
-    // Convertir strings a números donde sea necesario
-    const detallesVenta = productos.map(p => ({
-        codigo_producto: p.codigo_producto,
-        cantidad: Number(p.cantidad),
-        precio_unitario: Number(p.precio_venta), // Cambiar nombre a precio_unitario
-        metodo_pago: p.metodo_pago,
-        sector: p.sector
-    }));
-
-    const ventaData = {
-        // No enviar codigo_venta ya que es autoincremental
-        codigo_empleado: "CL123", // Cambiar nombre a codigo_cliente
-        total_venta: detallesVenta.reduce((acc, p) => acc + (p.cantidad * p.precio_unitario), 0),
-        detalles_venta: detallesVenta
-    };
-
-    console.log("Enviando datos:", ventaData);
-
-    // Quitar la barra final del endpoint
-    const response = await fetch("http://localhost:4000/ventas/api/ventas", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(ventaData)
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-        alert("Venta registrada correctamente.");
-        productos = [];
-        document.getElementById("tablaProductos").innerHTML = "";
-        localStorage.setItem("codigoVenta", ventaData.codigo_venta + 1); // Incrementar para la siguiente venta
-    } else {
-        alert("Error al registrar la venta: " + data.message);
-    }
-});
-*/
-    fetch("http://localhost:4000/ventas/api/ventas/")
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            const empleadoData = await empleadoResponse.json();
+            if (!empleadoData.success || !empleadoData.data || empleadoData.data.length === 0) {
+                throw new Error('No se encontró información del empleado');
             }
-            return response.json();
-        })
+
+            const empleadoLogueado = empleadoData.data[0];
+            const codigoEmpleado = empleadoLogueado.Cod_Empleado;
+
+            if (typeof codigoEmpleado !== 'number') {
+                throw new Error('El código de empleado debe ser numérico');
+            }
+
+            const detallesVenta = productos.map(producto => ({
+                codigo_producto: producto.codigo_producto,
+                cantidad: parseInt(producto.cantidad, 10),
+                precio_unitario: parseFloat(producto.precio_venta),
+                metodo_pago: producto.metodo_pago,
+                sector: producto.sector
+            }));
+
+            const totalVenta = detallesVenta.reduce((total, producto) => {
+                return total + (producto.cantidad * producto.precio_unitario);
+            }, 0).toFixed(2);
+
+            const ventaData = {
+                codigo_empleado: codigoEmpleado,
+                total_venta: parseFloat(totalVenta),
+                detalles_venta: detallesVenta
+            };
+
+            const response = await fetch("http://localhost:4000/ventas/api/ventas", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(ventaData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Venta registrada',
+                text: `✅ Venta registrada exitosamente\nCódigo: ${result.codigo || 'N/A'}`
+            });
+
+            productos = [];
+            document.getElementById("tablaProductos").innerHTML = "";
+
+            if (result.codigo) {
+                localStorage.setItem("ultimaVenta", result.codigo);
+                cargarCodigoVenta(); // ⚡ Actualiza automáticamente el campo con el nuevo código
+            }
+
+
+        } catch (error) {
+            console.error("Error en el proceso:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al registrar venta',
+                text: error.message
+            });
+        }
+    });
+
+    fetch("http://localhost:4000/ventas/api/ventas/")
+        .then(response => response.json())
         .then(data => {
-            console.log(data);  // Aquí deberías ver el JSON
-            // Aquí maneja los datos obtenidos (como actualizar la UI o almacenar los datos)
+            console.log(data);
         })
         .catch(error => {
             console.error('There was a problem with the fetch operation:', error);
         });
 
-
-    // Obtener los datos del empleado logueado
     fetch('/api/empleados')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const empleado = data.empleado; // Obtiene los datos del empleado
-                // Asigna el nombre y apellido del empleado al input de texto
+                const empleado = data.empleado;
                 const empleadoInput = document.getElementById('empleado');
                 empleadoInput.value = `${empleado.Nombre} ${empleado.Apellido}`;
             } else {
-                console.log(data.message);  // Si no está autenticado, muestra el mensaje
+                console.log(data.message);
             }
         })
         .catch(error => console.error('Error al obtener datos del empleado:', error));
 
-    // Cargar los sectores
+
+    async function cargarCodigoVenta() {
+        try {
+            const response = await fetch('http://localhost:4000/ventas/api/ventas/');
+            const data = await response.json();
+
+            if (data.success && Array.isArray(data.data)) {
+                const ventas = data.data;
+
+                // Buscar el código máximo (asumiendo que la clave es Cod_Venta)
+                const ultimoCodigo = ventas.reduce((max, venta) => {
+                    return venta.Cod_Venta > max ? venta.Cod_Venta : max;
+                }, 0);
+
+                const nuevoCodigo = ultimoCodigo + 1;
+                document.getElementById("codigoVenta").value = nuevoCodigo;
+                localStorage.setItem("codigoVenta", nuevoCodigo); // Si deseas guardarlo
+            } else {
+                throw new Error("No se pudo obtener la lista de ventas");
+            }
+        } catch (error) {
+            console.error("Error al cargar el código de venta:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo obtener el código de venta desde el servidor'
+            });
+        }
+    }
+
     async function cargarSectores() {
         try {
             const response = await fetch("http://localhost:4000/productos/api/productos");
             const data = await response.json();
 
             if (data.success) {
-                const sectoresUnicos = [...new Set(data.data.map(producto => producto.Sector))]; // Obtener sectores únicos
+                const sectoresUnicos = [...new Set(data.data.map(producto => producto.Sector))];
                 const selectSector = document.getElementById("sector");
 
-                selectSector.innerHTML = `<option value="" disabled selected>Seleccione un sector</option>`; // Limpiar select
-
+                selectSector.innerHTML = `<option value="" disabled selected>Seleccione un sector</option>`;
                 sectoresUnicos.forEach(sector => {
                     const option = document.createElement("option");
                     option.value = sector;
                     option.textContent = sector;
                     selectSector.appendChild(option);
                 });
-
-                console.log("Sectores cargados:", sectoresUnicos);
             }
         } catch (error) {
             console.error("Error al cargar sectores:", error);
         }
     }
 
-    // Llamar a la función cuando cargue la página
-    document.addEventListener("DOMContentLoaded", cargarSectores);
+    // Llamar al cargar la página
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarCodigoVenta();
+        cargarSectores(); // Esto ya lo tienes
+    });
 
-    // Cargar productos por sector
     async function cargarProductosPorSector(sectorSeleccionado) {
         try {
             const response = await fetch("http://localhost:4000/productos/api/productos");
@@ -347,34 +324,24 @@ document.getElementById("guardarVenta").addEventListener("click", async function
                     const option = document.createElement("option");
                     option.value = producto.Cod_Producto;
                     option.textContent = producto.Nombre;
-                    option.dataset.precio = producto.Precio_Compra;  // Guardamos el precio en el atributo `data`
+                    option.dataset.precio = producto.Precio_Compra;
                     selectProducto.appendChild(option);
                 });
-
-                console.log(`Productos en el sector "${sectorSeleccionado}":`, productosFiltrados);
             }
         } catch (error) {
             console.error("Error al cargar productos por sector:", error);
         }
     }
 
-    // Evento para detectar cambio en el select de productos
     document.getElementById("nombreProducto").addEventListener("change", function () {
-        const productoSeleccionado = this.selectedOptions[0];  // Obtener la opción seleccionada
-        const precio = productoSeleccionado.dataset.precio;  // Obtener el precio desde el atributo `data`
-
-        // Multiplicar el precio por 1.25
-        const precioConIVA = (precio * 1.25).toFixed(2);  // Multiplicamos y redondeamos a 2 decimales
-
-        // Actualizar el campo de precio
+        const productoSeleccionado = this.selectedOptions[0];
+        const precio = productoSeleccionado.dataset.precio;
+        const precioConIVA = (precio * 1.25).toFixed(2);
         document.getElementById("precio").value = precioConIVA;
     });
 
-    // Detectar cambio en el select de sectores
     document.getElementById("sector").addEventListener("change", function () {
         const sectorSeleccionado = this.value;
         cargarProductosPorSector(sectorSeleccionado);
     });
-
-
 </script>
