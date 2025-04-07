@@ -30,3 +30,15 @@ body {
     z-index: 1000;
     border-radius: 0;
 }
+
+.text-success {
+    color: #28a745 !important;
+  }
+  
+  .text-danger {
+    color: #dc3545 !important;
+  }
+  
+  .fw-bold {
+    font-weight: bold !important;
+  }

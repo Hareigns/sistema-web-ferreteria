@@ -151,7 +151,6 @@ router.get('/api/empleados', isLoggedIn, async (req, res) => {
   }
 });
 
-// Ruta PUT para actualizar un empleado y su teléfono (versión mejorada)
 router.put('/api/empleados/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, direccion, estado, telefono, compania } = req.body;
@@ -166,73 +165,61 @@ router.put('/api/empleados/:id', async (req, res) => {
       });
     }
 
-    // Verificar existencia del empleado
-    const [empleado] = await pool.query(
-      'SELECT * FROM Empleado WHERE Cod_Empleado = ?', 
-      [id]
-    );
-    
-    if (!empleado.length) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Empleado no encontrado.' 
-      });
-    }
-
     // Iniciar transacción
     await pool.query('START TRANSACTION');
 
-    // Actualizar el empleado
-    await pool.query(
-      `UPDATE Empleado 
-       SET Nombre = ?, Apellido = ?, Direccion = ?, Estado = ? 
-       WHERE Cod_Empleado = ?`, 
-      [nombre, apellido, direccion, estado, id]
-    );
+    try {
+      // 1. Actualizar datos del empleado
+      await pool.query(
+        `UPDATE Empleado 
+         SET Nombre = ?, Apellido = ?, Direccion = ?, Estado = ?
+         WHERE Cod_Empleado = ?`,
+        [nombre, apellido, direccion, estado, id]
+      );
 
-    // Actualizar o insertar el teléfono
-    await pool.query(
-      `INSERT INTO Telefono (Cod_Empleado, Numero, Compania) 
-       VALUES (?, ?, ?) 
-       ON DUPLICATE KEY UPDATE Numero = ?, Compania = ?`, 
-      [id, telefono, compania, telefono, compania]
-    );
+      // 2. Buscar teléfono actual del empleado
+      const [telefonoActual] = await pool.query(
+        `SELECT Numero FROM Telefono WHERE Cod_Empleado = ?`,
+        [id]
+      );
 
-    // Confirmar transacción
-    await pool.query('COMMIT');
+      // 3. Manejar el teléfono según exista o no
+      if (telefonoActual.length > 0) {
+        // Si el número cambió, eliminar el antiguo primero
+        if (telefonoActual[0].Numero !== telefono) {
+          await pool.query(
+            `DELETE FROM Telefono WHERE Numero = ?`,
+            [telefonoActual[0].Numero]
+          );
+        }
+        // Insertar/actualizar el nuevo número
+        await pool.query(
+          `INSERT INTO Telefono (Numero, Compania, Cod_Empleado, Cod_Proveedor)
+           VALUES (?, ?, ?, NULL)
+           ON DUPLICATE KEY UPDATE Compania = ?, Cod_Empleado = ?`,
+          [telefono, compania, id, compania, id]
+        );
+      } else {
+        // Si no tenía teléfono, insertar nuevo
+        await pool.query(
+          `INSERT INTO Telefono (Numero, Compania, Cod_Empleado, Cod_Proveedor)
+           VALUES (?, ?, ?, NULL)`,
+          [telefono, compania, id]
+        );
+      }
 
-    // Log para desarrollo
-    console.log("Empleado actualizado:", {
-      id,
-      nombre,
-      apellido,
-      direccion,
-      estado,
-      telefono,
-      compania,
-      timestamp: new Date().toISOString()
-    });
-
-    res.json({ 
-      success: true, 
-      message: 'Empleado y teléfono actualizados correctamente.' 
-    });
+      await pool.query('COMMIT');
+      res.json({ success: true, message: 'Empleado actualizado correctamente' });
+    } catch (error) {
+      await pool.query('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
-    console.error("Error en PUT /api/empleados:", error);
-    
-    // Asegurar respuesta JSON incluso en errores
-    res.status(500).json({ 
-      success: false,
-      error: error.message || "Error interno del servidor"
-    });
-  /*} catch (error) {
-    // Revertir transacción en caso de error
-    await pool.query('ROLLBACK');
     console.error("Error al actualizar empleado:", error);
     res.status(500).json({ 
-      success: false, 
-      error: 'Hubo un error al actualizar el empleado y su teléfono.' 
-    });*/
+      success: false,
+      error: error.message || "Error al actualizar empleado"
+    });
   }
 });
 
