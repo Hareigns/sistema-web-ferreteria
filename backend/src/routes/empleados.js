@@ -27,28 +27,26 @@ const validateEmpleadoData = (data) => {
   return errors;
 };
 
-
 // Mostrar formulario de añadir Empleado
 router.get("/add", isLoggedIn, async (req, res) => {
-    try {
-      const [Empleados] = await pool.query(`
-        SELECT Cod_Empleado, Nombre, Apellido 
-        FROM Empleado
-        ORDER BY Nombre, Apellido
-      `);
-  
-      res.render("Empleados/add", {
-        title: "Agregar Empleado",
-        Empleado: Empleados, // Pasar la lista de empleados a la vista
-        messages: req.flash()
-      });
-    } catch (error) {
-      console.error("Error al obtener empleados:", error);
-      req.flash("error", "Error al cargar empleados");
-      res.redirect("/Empleados");
-    }
-  });
-  
+  try {
+    const [Empleados] = await pool.query(`
+      SELECT Cod_Empleado, Nombre, Apellido 
+      FROM Empleado
+      ORDER BY Nombre, Apellido
+    `);
+
+    res.render("Empleados/add", {
+      title: "Agregar Empleado",
+      Empleado: Empleados,
+      messages: req.flash()
+    });
+  } catch (error) {
+    console.error("Error al obtener empleados:", error);
+    req.flash("error", "Error al cargar empleados");
+    res.redirect("/Empleados");
+  }
+});
 
 // Mostrar lista de Empleados
 router.get("/list", isLoggedIn, async (req, res) => {
@@ -73,118 +71,178 @@ router.get("/list", isLoggedIn, async (req, res) => {
   }
 });
 
-
 // Ruta para agregar un empleado
 router.post("/api/empleados", async (req, res) => {
   const { nombre, apellido, direccion, estado, telefono, compania } = req.body;
 
   try {
+    // Validación adicional
+    const validationErrors = validateEmpleadoData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        errors: validationErrors 
+      });
+    }
+
     // Insertar en Empleado
     const [empleadoResult] = await pool.query(
       'INSERT INTO Empleado (Nombre, Apellido, Direccion, Estado) VALUES (?, ?, ?, ?)', 
       [nombre, apellido, direccion, estado]
     );
 
-    const codEmpleado = empleadoResult.insertId; // Obtener el ID generado
+    const codEmpleado = empleadoResult.insertId;
 
-    // Insertar en Telefono si se proporciona
-    if (telefono) {
-      await pool.query(
-        'INSERT INTO Telefono (Numero, Compania, Cod_Empleado) VALUES (?, ?, ?)', 
-        [telefono, compania, codEmpleado]
-      );
-    }
+    // Insertar en Telefono
+    await pool.query(
+      'INSERT INTO Telefono (Numero, Compania, Cod_Empleado) VALUES (?, ?, ?)', 
+      [telefono, compania, codEmpleado]
+    );
 
-    res.status(201).json({ message: 'Empleado agregado correctamente', codEmpleado });
+    res.status(201).json({ 
+      success: true,
+      message: 'Empleado agregado correctamente', 
+      codEmpleado 
+    });
 
   } catch (error) {
     console.error('Error al agregar el empleado:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Error interno del servidor' 
+    });
   }
 });
-
-
-
 
 // Ruta para obtener los datos del empleado logueado
 router.get('/', (req, res) => {
   if (req.isAuthenticated()) {
-      return res.json({
-          success: true,
-          empleado: req.user // Suponiendo que el empleado está en la sesión
-      });
-  } else {
-      return res.json({
-          success: false,
-          message: 'Empleado no autenticado'
-      });
+    return res.json({
+      success: true,
+      empleado: req.user
+    });
   }
+  return res.json({
+    success: false,
+    message: 'Empleado no autenticado'
+  });
 });
-
 
 // API para obtener Empleados (JSON)
 router.get('/api/empleados', isLoggedIn, async (req, res) => {
   try {
     const [empleados] = await pool.query(`
-      SELECT e.Cod_Empleado, e.Nombre, e.Apellido, e.Direccion, 
+      SELECT e.Cod_Empleado, e.Nombre, e.Apellido, e.Direccion, e.Estado,
              t.Numero AS Telefono, t.Compania
       FROM Empleado e
       LEFT JOIN Telefono t ON e.Cod_Empleado = t.Cod_Empleado
     `);
 
-    res.json({ success: true, data: empleados });
+    res.json({ 
+      success: true, 
+      data: empleados 
+    });
   } catch (error) {
     console.error("Error al obtener empleados:", error);
-    res.status(500).json({ success: false, error: 'Error al obtener empleados' });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error al obtener empleados' 
+    });
   }
 });
 
-
-
-
-// Ruta PUT para actualizar un empleado y su teléfono
-router.put('/empleados/add', async (req, res) => {
-  const { codigoEmpleado, nombre, apellido, direccion, estado, telefono, compania } = req.body;
+// Ruta PUT para actualizar un empleado y su teléfono (versión mejorada)
+router.put('/api/empleados/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre, apellido, direccion, estado, telefono, compania } = req.body;
 
   try {
     // Validación de datos
-    if (!codigoEmpleado || !nombre || !apellido || !direccion || !estado || !telefono || !compania) {
-      return res.status(400).json({ success: false, error: "Todos los campos son obligatorios" });
+    const validationErrors = validateEmpleadoData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        errors: validationErrors 
+      });
     }
 
-    // Buscar el empleado en la base de datos
-    const [empleado] = await pool.query(`
-      SELECT * FROM Empleado WHERE Cod_Empleado = ?`, [codigoEmpleado]);
+    // Verificar existencia del empleado
+    const [empleado] = await pool.query(
+      'SELECT * FROM Empleado WHERE Cod_Empleado = ?', 
+      [id]
+    );
     
-    if (!empleado) {
-      return res.status(404).json({ success: false, error: 'Empleado no encontrado.' });
+    if (!empleado.length) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Empleado no encontrado.' 
+      });
     }
+
+    // Iniciar transacción
+    await pool.query('START TRANSACTION');
 
     // Actualizar el empleado
-    await pool.query(`
-      UPDATE Empleado SET Nombre = ?, Apellido = ?, Direccion = ?, Estado = ? 
-      WHERE Cod_Empleado = ?`, 
-      [nombre, apellido, direccion, estado, codigoEmpleado]
+    await pool.query(
+      `UPDATE Empleado 
+       SET Nombre = ?, Apellido = ?, Direccion = ?, Estado = ? 
+       WHERE Cod_Empleado = ?`, 
+      [nombre, apellido, direccion, estado, id]
     );
 
     // Actualizar o insertar el teléfono
-    await pool.query(`
-      INSERT INTO Telefono (Cod_Empleado, Numero, Compania) 
-      VALUES (?, ?, ?) 
-      ON DUPLICATE KEY UPDATE Numero = ?, Compania = ?`, 
-      [codigoEmpleado, telefono, compania, telefono, compania]
+    await pool.query(
+      `INSERT INTO Telefono (Cod_Empleado, Numero, Compania) 
+       VALUES (?, ?, ?) 
+       ON DUPLICATE KEY UPDATE Numero = ?, Compania = ?`, 
+      [id, telefono, compania, telefono, compania]
     );
 
-    res.json({ success: true, message: 'Empleado y teléfono actualizados correctamente.' });
+    // Confirmar transacción
+    await pool.query('COMMIT');
+
+    // Log para desarrollo
+    console.log("Empleado actualizado:", {
+      id,
+      nombre,
+      apellido,
+      direccion,
+      estado,
+      telefono,
+      compania,
+      timestamp: new Date().toISOString()
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Empleado y teléfono actualizados correctamente.' 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, error: 'Hubo un error al actualizar el empleado y su teléfono.' });
+    console.error("Error en PUT /api/empleados:", error);
+    
+    // Asegurar respuesta JSON incluso en errores
+    res.status(500).json({ 
+      success: false,
+      error: error.message || "Error interno del servidor"
+    });
+  /*} catch (error) {
+    // Revertir transacción en caso de error
+    await pool.query('ROLLBACK');
+    console.error("Error al actualizar empleado:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Hubo un error al actualizar el empleado y su teléfono.' 
+    });*/
   }
 });
 
-
-
-
-   
+// Mantenemos la ruta original para compatibilidad
+router.put('/empleados/add', async (req, res) => {
+  // Redirigir a la nueva ruta API
+  const { codigoEmpleado, ...rest } = req.body;
+  req.params = { id: codigoEmpleado };
+  req.body = rest;
+  return router.handle(req, res);
+});
 
 export { router };

@@ -53,8 +53,7 @@
               <select name="codigo_empleado" class="form-select" id="codigo_empleado" required>
                 <option value="" disabled selected>Seleccione un empleado</option>
               </select>
-              <button class="btn btn-success mt-2" type="button" id="modificarButton"
-                onclick="modificarEmpleado()">Modificar</button>
+              <button class="btn btn-success mt-2" type="button" id="modificarButton" onclick="modificarEmpleado()">Modificar</button>
             </div>
           </form>
         </div>
@@ -87,12 +86,10 @@
   </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-
   // Cargar empleados en el select
   async function cargarEmpleadosEnSelect() {
     try {
@@ -101,9 +98,8 @@
 
       if (data.success) {
         const selectEmpleado = document.getElementById("codigo_empleado");
-        selectEmpleado.innerHTML = `<option value="" disabled selected>Seleccione un empleado</option>`; // Limpiar el select
+        selectEmpleado.innerHTML = `<option value="" disabled selected>Seleccione un empleado</option>`;
 
-        // Iterar sobre los empleados y agregar opciones al select
         data.data.forEach(empleado => {
           const option = document.createElement("option");
           option.value = empleado.Cod_Empleado;
@@ -135,6 +131,7 @@
           document.getElementById("nombre").value = empleado.Nombre;
           document.getElementById("apellido").value = empleado.Apellido;
           document.getElementById("direccion").value = empleado.Direccion;
+          document.getElementById("estado").value = empleado.Estado || "Activo";
           document.getElementById("telefono").value = empleado.Telefono || "";
           document.getElementById("compania_telefonica").value = empleado.Compania || "";
         } else {
@@ -151,39 +148,34 @@
 
   // Cargar empleados en la tabla
   async function cargarEmpleadosEnTabla() {
-  try {
-    const response = await fetch("/empleados/api/empleados");
-    const data = await response.json();
-    
-    console.log("Datos de empleados recibidos:", data); // 📌 Verifica los datos
+    try {
+      const response = await fetch("/empleados/api/empleados");
+      const data = await response.json();
 
-    if (data.success && Array.isArray(data.data)) {
-      const tablaBody = document.getElementById("empleados-table-body");
-      tablaBody.innerHTML = ""; // Limpiar tabla
+      if (data.success && Array.isArray(data.data)) {
+        const tablaBody = document.getElementById("empleados-table-body");
+        tablaBody.innerHTML = "";
 
-      data.data.forEach(empleado => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${empleado.Cod_Empleado}</td>
-          <td>${empleado.Nombre}</td>
-          <td>${empleado.Apellido}</td>
-          <td>${empleado.Direccion}</td>
-          <td>${empleado.Telefono || "No disponible"}</td>
-          <td>${empleado.Compania || "No disponible"}</td>
-        `;
-        tablaBody.appendChild(row);
-      });
-
-      console.log("Tabla actualizada con éxito");
-    } else {
-      Swal.fire("Error", "No se pudieron cargar los empleados.", "error");
+        data.data.forEach(empleado => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${empleado.Cod_Empleado}</td>
+            <td>${empleado.Nombre}</td>
+            <td>${empleado.Apellido}</td>
+            <td>${empleado.Direccion}</td>
+            <td>${empleado.Telefono || "No disponible"}</td>
+            <td>${empleado.Compania || "No disponible"}</td>
+          `;
+          tablaBody.appendChild(row);
+        });
+      } else {
+        Swal.fire("Error", "No se pudieron cargar los empleados.", "error");
+      }
+    } catch (error) {
+      console.error("Error al obtener empleados:", error);
+      Swal.fire("Error", "Hubo un problema al obtener la lista de empleados.", "error");
     }
-  } catch (error) {
-    console.error("Error al obtener empleados:", error);
-    Swal.fire("Error", "Hubo un problema al obtener la lista de empleados.", "error");
   }
-  }
-
 
   // Llamar la función cuando la página cargue
   document.addEventListener("DOMContentLoaded", function () {
@@ -192,114 +184,175 @@
   });
 
 
-  async function modificarEmpleado() {
+
+  // Función para modificar empleado (mejorada)
+    async function modificarEmpleado() {
+    // Obtener valores del formulario
     const codigoEmpleado = document.getElementById("codigo_empleado").value;
     const nombre = document.getElementById("nombre").value.trim();
     const apellido = document.getElementById("apellido").value.trim();
     const direccion = document.getElementById("direccion").value.trim();
-    const estado = document.getElementById("estado").value; // Asegúrate de tener un campo de estado (Activo/Inactivo)
+    const estado = document.getElementById("estado").value;
     const telefono = document.getElementById("telefono").value.trim();
     const compania = document.getElementById("compania_telefonica").value;
 
-    // Validar campos
+    // Validación mejorada de campos
     if (!codigoEmpleado || !nombre || !apellido || !direccion || !estado || !telefono || !compania) {
+        await Swal.fire({
+            title: "Campos incompletos",
+            text: "Todos los campos son obligatorios para modificar un empleado",
+            icon: "warning",
+            confirmButtonColor: "#3085d6"
+        });
+        return;
+    }
+
+    try {
+        // Confirmación con SweetAlert2 mejorada
+        const confirmacion = await Swal.fire({
+            title: `¿Actualizar empleado ${codigoEmpleado}?`,
+            html: `<b>${nombre} ${apellido}</b><br>¿Confirmas la modificación?`,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#dc3545",
+            confirmButtonText: '<i class="fas fa-check"></i> Confirmar',
+            cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const response = await fetch(`/empleados/api/empleados/${codigoEmpleado}`, {
+                    method: "PUT",
+                    headers: { 
+                      "Content-Type": "application/json",
+                      "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                      nombre,
+                      apellido,
+                      direccion,
+                      estado,
+                      telefono,
+                      compania
+                    }),
+                  });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    Swal.showValidationMessage(`Request failed: ${error.message}`);
+                }
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        });
+
+        // Procesar respuesta después de la confirmación
+        if (confirmacion.isConfirmed) {
+            const data = confirmacion.value;
+            
+            if (data && data.success) {
+                // Notificación de éxito con autocierre
+                await Swal.fire({
+                    title: "¡Actualizado!",
+                    text: `Empleado ${nombre} ${apellido} modificado correctamente`,
+                    icon: "success",
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+
+                // Actualización optimizada de la UI
+                await Promise.all([
+                    cargarEmpleadosEnSelect(),
+                    cargarEmpleadosEnTabla()
+                ]);
+                
+                // Limpieza mejorada del formulario
+                limpiarCampos();
+                document.getElementById("codigo_empleado").selectedIndex = 0;
+            } else {
+                throw new Error(data?.error || "La modificación no tuvo éxito");
+            }
+        }
+    } catch (error) {
+        console.error("Error en modificarEmpleado:", error);
+        await Swal.fire({
+            title: "Error",
+            html: `<b>No se pudo modificar el empleado</b><br><small>${error.message}</small>`,
+            icon: "error",
+            confirmButtonColor: "#007bff"
+        });
+    }
+}
+
+
+  // Función para ingresar empleado
+  async function ingresarEmpleado() {
+    const nombre = document.getElementById("nombre").value.trim();
+    const apellido = document.getElementById("apellido").value.trim();
+    const direccion = document.getElementById("direccion").value.trim();
+    const estado = document.getElementById("estado").value;
+    const telefono = document.getElementById("telefono").value.trim();
+    const compania = document.getElementById("compania_telefonica").value;
+
+    if (!nombre || !apellido || !direccion || !telefono || !compania) {
       Swal.fire("Advertencia", "Todos los campos son obligatorios.", "warning");
       return;
     }
 
+    const confirmacion = await Swal.fire({
+      title: "¿Confirmar ingreso?",
+      text: `¿Está seguro que desea ingresar a ${nombre} ${apellido}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, ingresar",
+      cancelButtonText: "Cancelar"
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
     try {
-      // Enviar los datos al servidor para actualizar el empleado
-      const response = await fetch('/empleados/add', {
-        method: "PUT",
+      const response = await fetch("/empleados/api/empleados", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          codigoEmpleado, // ID del empleado
-          nombre,
-          apellido,
-          direccion,
-          estado,
-          telefono,
-          compania
-        }),
+        body: JSON.stringify({ nombre, apellido, direccion, estado, telefono, compania })
       });
 
       const data = await response.json();
+
       if (data.success) {
-        Swal.fire("Éxito", "Empleado y teléfono actualizados correctamente.", "success");
-        location.reload(); // Recargar la página para ver los cambios
+        await Swal.fire({
+          title: "¡Éxito!",
+          text: "Empleado ingresado correctamente",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false
+        });
+        
+        cargarEmpleadosEnTabla();
+        cargarEmpleadosEnSelect();
+        limpiarCampos();
       } else {
-        Swal.fire("Error", data.error || "No se pudo modificar el empleado.", "error");
+        Swal.fire("Error", data.message || "No se pudo ingresar el empleado", "error");
       }
     } catch (error) {
-      console.error("Error al modificar empleado:", error);
-      Swal.fire("Error", "Hubo un problema al modificar el empleado.", "error");
+      console.error("Error al ingresar empleado:", error);
+      Swal.fire("Error", "Hubo un problema al ingresar el empleado", "error");
     }
   }
 
-
-async function ingresarEmpleado() {
-  const nombre = document.getElementById("nombre").value.trim();
-  const apellido = document.getElementById("apellido").value.trim();
-  const direccion = document.getElementById("direccion").value.trim();
-  const estado = document.getElementById("estado").value;
-  const telefono = document.getElementById("telefono").value.trim();
-  const compania = document.getElementById("compania_telefonica").value;
-
-  if (!nombre || !apellido || !direccion || !telefono || !compania) {
-    Swal.fire("Advertencia", "Todos los campos son obligatorios.", "warning");
-    return;
-  }
-
-  Swal.fire({
-    title: "¿Confirmar ingreso?",
-    text: "¿Está seguro que desea ingresar este empleado?",
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Sí, ingresar",
-    cancelButtonText: "Cancelar"
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        const response = await fetch("api/empleados/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre, apellido, direccion, estado, telefono, compania })
-        });
-
-        const data = await response.json();
-        console.log("📢 Respuesta del servidor:", data); // 📌 Muestra la respuesta en la consola
-
-        // 🔹 Verifica si la API realmente está devolviendo "success: true"
-        if (data.success === true) { 
-          Swal.fire("✅ Éxito", "Empleado ingresado correctamente", "success");
-          
-          // 🔄 Recargar la tabla sin hacer reload
-          cargarEmpleadosEnTabla(); 
-          limpiarCampos();
-        } else {
-          Swal.fire("❌ Error", data.message || "No se pudo ingresar el empleado", "error");
-        }
-      } catch (error) {
-        console.error("❌ Error al ingresar empleado:", error);
-        Swal.fire("❌ Error", "Hubo un problema al ingresar el empleado", "error");
-      }
-    }
-  });
-}
-
-
-
+  // Función para limpiar campos
   function limpiarCampos() {
-    const campos = ["nombre", "apellido", "direccion", "estado", "telefono", "compania_telefonica"];
-
-    campos.forEach(id => {
-      const input = document.getElementById(id);
-      if (input) {
-        input.value = "";  // Limpia el campo si existe
-      }
-    });
+    const campos = ["nombre", "apellido", "direccion", "telefono"];
+    campos.forEach(id => document.getElementById(id).value = "");
+    
+    document.getElementById("estado").value = "Activo";
+    document.getElementById("compania_telefonica").value = "Tigo";
+    document.getElementById("codigo_empleado").value = "";
   }
-
 </script>
