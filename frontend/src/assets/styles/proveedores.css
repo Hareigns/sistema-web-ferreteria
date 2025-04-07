@@ -27,8 +27,10 @@ body {
   background-color: #0056b3;
 }
 
-.btn-danger:hover {
-  background-color: #b30000;
+
+
+.btn-secondary:hover {
+  background-color: #7e7b7a;
 }
 
 .navbar {

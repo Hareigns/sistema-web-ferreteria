@@ -30,3 +30,59 @@ body {
     z-index: 1000;
     border-radius: 0;
 }
+
+/* Estilos personalizados para los botones */
+  .btn-agregar {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    transition: all 0.3s;
+  }
+  
+  .btn-agregar:hover {
+    background-color: #45a049; /* Verde oscuro */
+    transform: scale(1.05);
+  }
+  
+  .btn-guardar {
+    background-color: #2196F3; /* Azul */
+    color: white;
+    font-weight: bold;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    transition: all 0.3s;
+  }
+  
+  .btn-guardar:hover {
+    background-color: #0b7dda; /* Azul oscuro */
+    transform: scale(1.05);
+  }
+  
+  .btn-limpiar {
+    background-color: #968f8e; /* Rojo */
+    color: white;
+    font-weight: bold;
+    padding: 8px 16px; /* Más pequeño que los otros */
+    border: none;
+    border-radius: 5px;
+    transition: all 0.3s;
+    font-size: 0.9em;
+  }
+  
+  .btn-limpiar:hover {
+    background-color: #7e7b7a; /* Rojo oscuro */
+    transform: scale(1.05);
+  }
+  
+  /* Estilo para los botones de eliminar en la tabla */
+  .btn-eliminar {
+    background-color: #ff5252;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+  }

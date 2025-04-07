@@ -29,92 +29,65 @@ router.get("/add", isLoggedIn, async (req, res) => {
 
 // API para guardar productos
 router.post("/api/productos", isLoggedIn, async (req, res) => {
-  const { 
-    codigo_producto, 
-    nombre, 
-    marca, 
-    fecha_vencimiento,  // <- Este dato viene del formulario
-    sector, 
-    codigo_proveedor, 
-    precio_compra, 
-    cantidad,
-    fecha_entrada
-  } = req.body;
+  const { productos } = req.body;
 
-  // Validaciones básicas
-  if (!codigo_producto || !nombre || !codigo_proveedor) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Datos incompletos" 
-    });
+  if (!Array.isArray(productos) || productos.length === 0) {
+    return res.status(400).json({ success: false, message: "No se recibieron productos." });
   }
-
-  // Si el campo está vacío, almacenamos null en la base de datos
-  const fechaVencimientoValida = fecha_vencimiento ? fecha_vencimiento : null;
-
-  // Asegurar que fecha_entrada tenga un valor válido
-  const fechaEntradaValida = fecha_entrada || new Date().toISOString().split('T')[0];
 
   let connection;
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Verificar si el producto existe
-    const [productoExistente] = await connection.query(
-      'SELECT Cod_Producto FROM Producto WHERE Cod_Producto = ?',
-      [codigo_producto]
-    );
+    for (const producto of productos) {
+      const { 
+        codigo_producto, nombre, marca, fecha_vencimiento, 
+        sector, codigo_proveedor, precio_compra, 
+        cantidad, fecha_entrada 
+      } = producto;
 
-    if (productoExistente.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "El código de producto ya existe"
-      });
+      if (!codigo_producto || !nombre || !codigo_proveedor) {
+        throw new Error("Producto con datos incompletos");
+      }
+
+      const fechaVencimientoValida = fecha_vencimiento || null;
+      const fechaEntradaValida = fecha_entrada || new Date().toISOString().split('T')[0];
+
+      const [productoExistente] = await connection.query(
+        'SELECT Cod_Producto FROM Producto WHERE Cod_Producto = ?',
+        [codigo_producto]
+      );
+
+      if (productoExistente.length > 0) {
+        throw new Error(`Producto con código ${codigo_producto} ya existe`);
+      }
+
+      await connection.query(
+        `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
+         VALUES (?, ?, ?, ?, ?)`,
+        [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
+      );
+
+      await connection.query(
+        `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
+         VALUES (?, ?, ?, ?, ?)`,
+        [codigo_proveedor, codigo_producto, fechaEntradaValida, precio_compra, cantidad]
+      );
     }
 
-    // Insertar producto con fecha de vencimiento opcional
-    await connection.query(
-      `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
-       VALUES (?, ?, ?, ?, ?)`,
-      [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
-    );
-
-    // Insertar relación con proveedor
-    await connection.query(
-      `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
-       VALUES (?, ?, ?, ?, ?)`,
-      [codigo_proveedor, codigo_producto, fechaEntradaValida, precio_compra, cantidad]
-    );
-
     await connection.commit();
-    
-    return res.json({ 
-      success: true, 
-      message: 'Producto registrado correctamente',
-      codigo: codigo_producto
-    });
+    res.json({ success: true, message: "Productos registrados exitosamente" });
 
   } catch (error) {
     await connection?.rollback();
-    console.error("Error al registrar producto:", error);
-    
-    let message = 'Error al registrar el producto';
-    if (error.code === 'ER_DUP_ENTRY') {
-      message = 'El código de producto ya existe';
-    } else if (error.code === 'ER_TRUNCATED_WRONG_VALUE') {
-      message = 'Formato de fecha incorrecto';
-    }
-
-    return res.status(500).json({ 
-      success: false, 
-      message,
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    console.error("Error al registrar productos:", error);
+    res.status(500).json({ success: false, message: error.message });
   } finally {
     connection?.release();
   }
 });
+
 
 
 // Ruta para obtener todos los productos
