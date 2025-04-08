@@ -52,8 +52,18 @@
                 </select>
               </div>
               <div class="col-12 d-flex justify-content-between mt-3">
-                <button class="btn btn-primary" type="submit">Ingresar</button>
-                <button class="btn btn-secondary" type="reset">Limpiar</button>
+                <button class="btn btn-primary" type="submit" id="registrarButton">Ingresar</button>
+                <button class="btn btn-secondary" type="button" onclick="limpiarFormulario()">Limpiar</button>
+              </div>
+              <div class="card-body">
+                <h5 class="text-center mb-3">Modificar Proveedor</h5>
+                <select id="codigo_proveedor" class="form-select" id="codigo_proveedor"
+                  onchange="cargarDatosProveedor(this.value)">
+                  <option value="" disabled selected>Seleccione un proveedor</option>
+                  <!-- Las opciones se llenarán con JavaScript -->
+                </select>
+                <button class="btn btn-success" type="button" id="modificarButton" onclick="modificarProveedor()"
+                  disabled>Modificar</button>
               </div>
             </div>
           </form>
@@ -89,6 +99,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
   document.getElementById('proveedorForm').addEventListener('submit', async function (event) {
     event.preventDefault();
 
@@ -155,6 +166,7 @@
     });
   });
 
+  // Función para cargar la tabla de proveedores
   async function cargarProveedores() {
     try {
       const response = await fetch('/proveedores/api/proveedores');
@@ -168,14 +180,14 @@
         proveedores.forEach((proveedor) => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${proveedor.Cod_Proveedor}</td>
-            <td>${proveedor.Nombre}</td>
-            <td>${proveedor.Apellido}</td>
-            <td>${proveedor.Telefono}</td>
-            <td>${proveedor.Compania}</td>
-            <td>${proveedor.Sector}</td>
-            <td><span class="badge ${proveedor.Estado === 'Activo' ? 'bg-success' : 'bg-secondary'}">${proveedor.Estado}</span></td>
-          `;
+          <td>${proveedor.Cod_Proveedor}</td>
+          <td>${proveedor.Nombre}</td>
+          <td>${proveedor.Apellido}</td>
+          <td>${proveedor.Telefono}</td>
+          <td>${proveedor.Compania}</td>
+          <td>${proveedor.Sector}</td>
+          <td><span class="badge ${proveedor.Estado === 'Activo' ? 'bg-success' : 'bg-secondary'}">${proveedor.Estado}</span></td>
+        `;
           tableBody.appendChild(row);
         });
       }
@@ -184,5 +196,255 @@
     }
   }
 
-  window.onload = cargarProveedores;
+  // Función para cargar datos del proveedor seleccionado
+  async function cargarDatosProveedor(codigoProveedor) {
+    // Elementos del formulario
+    const elements = {
+      nombre: document.getElementById('nombre'),
+      apellido: document.getElementById('apellido'),
+      telefono: document.getElementById('telefono'),
+      compania: document.getElementById('compania'),
+      sector: document.getElementById('sector'), // Este es el select
+      estado: document.getElementById('estado'),
+      modificarButton: document.getElementById('modificarButton'),
+      registrarButton: document.getElementById('registrarButton')
+    };
+
+    // Validar que todos los elementos existan
+    for (const [key, element] of Object.entries(elements)) {
+      if (!element) {
+        console.error(`Elemento no encontrado: ${key}`);
+        return;
+      }
+    }
+
+    if (!codigoProveedor) {
+      elements.modificarButton.disabled = true;
+      return;
+    }
+
+    try {
+      const response = await fetch(`/proveedores/api/proveedor/${codigoProveedor}`);
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        const proveedor = data.data;
+
+        // Llenar los campos del formulario
+        elements.nombre.value = proveedor.Nombre || '';
+        elements.apellido.value = proveedor.Apellido || '';
+        elements.telefono.value = proveedor.Telefono || '';
+        elements.compania.value = proveedor.Compania || '';
+        elements.sector.value = proveedor.Sector || ''; // Establecer valor del select
+        elements.estado.value = proveedor.Estado || 'Activo';
+
+        // Deshabilitar campos que no se pueden modificar
+        elements.nombre.readOnly = true;
+        elements.apellido.readOnly = true;
+        elements.sector.disabled = true; // Deshabilitar el select (no readOnly)
+
+        // Cambiar visibilidad de botones
+        elements.registrarButton.style.display = 'none';
+        elements.modificarButton.disabled = false;
+        elements.modificarButton.style.display = 'block';
+      }
+    } catch (error) {
+      console.error('Error al cargar datos del proveedor:', error);
+      Swal.fire('Error', 'No se pudieron cargar los datos del proveedor', 'error');
+    }
+  }
+
+  // Función para limpiar el formulario
+  function limpiarFormulario() {
+    const elements = {
+      nombre: document.getElementById('nombre'),
+      apellido: document.getElementById('apellido'),
+      sector: document.getElementById('sector'), // Select de sector
+      modificarButton: document.getElementById('modificarButton'),
+      registrarButton: document.getElementById('registrarButton'),
+      form: document.getElementById('proveedorForm')
+    };
+
+    // Resetear formulario
+    if (elements.form) elements.form.reset();
+
+    // Habilitar campos deshabilitados
+    if (elements.nombre) elements.nombre.readOnly = false;
+    if (elements.apellido) elements.apellido.readOnly = false;
+    if (elements.sector) elements.sector.disabled = false; // Habilitar el select
+
+    // Restablecer botones
+    if (elements.modificarButton) {
+      elements.modificarButton.disabled = true;
+      elements.modificarButton.style.display = 'none';
+    }
+    if (elements.registrarButton) {
+      elements.registrarButton.style.display = 'block';
+    }
+  }
+
+  // Al cargar la página
+  window.onload = function () {
+    // Configuración inicial
+    document.getElementById('modificarButton').style.display = 'none';
+
+    // Cargar datos
+    cargarSelectProveedores();
+    cargarProveedores();
+  };
+
+
+  async function cargarSelectProveedores() {
+    try {
+      const response = await fetch('/proveedores/api/proveedores');
+      const data = await response.json();
+      const select = document.getElementById('codigo_proveedor');
+
+      if (!select) {
+        console.error('Elemento select no encontrado');
+        return;
+      }
+
+      if (data.success) {
+        // Limpiar opciones excepto la primera
+        while (select.options.length > 1) {
+          select.remove(1);
+        }
+
+        // Agregar opciones
+        data.data.forEach(proveedor => {
+          const option = document.createElement('option');
+          option.value = proveedor.Cod_Proveedor;
+          option.textContent = `${proveedor.Cod_Proveedor} - ${proveedor.Nombre} ${proveedor.Apellido}`;
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar proveedores:', error);
+    }
+  }
+
+  // Función para modificar el proveedor
+  async function modificarProveedor() {
+    const codigoProveedor = document.getElementById('codigo_proveedor').value;
+
+    if (!codigoProveedor) {
+      Swal.fire('Error', 'Debe seleccionar un proveedor', 'error');
+      return;
+    }
+
+    // Recopilar datos del formulario
+    const datosProveedor = {
+      nombre: document.getElementById('nombre').value.trim(),
+      apellido: document.getElementById('apellido').value.trim(),
+      telefono: document.getElementById('telefono').value.trim(),
+      compania: document.getElementById('compania').value,
+      sector: document.getElementById('sector').value,
+      estado: document.getElementById('estado').value
+    };
+
+    // Validaciones (puedes reutilizar las que ya tienes)
+    if (!datosProveedor.nombre || !datosProveedor.apellido || !datosProveedor.telefono ||
+      !datosProveedor.compania || !datosProveedor.sector || !datosProveedor.estado) {
+      Swal.fire('Error', 'Todos los campos son requeridos', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: '¿Confirmar modificación?',
+      text: '¿Está seguro que desea modificar este proveedor?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, modificar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`api/proveedores/${codigoProveedor}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosProveedor)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            Swal.fire('Éxito', 'Proveedor modificado correctamente', 'success')
+              .then(() => {
+                // Recargar los datos
+                cargarSelectProveedores();
+                cargarProveedores();
+                // Limpiar formulario
+                document.getElementById('proveedorForm').reset();
+                document.getElementById('modificarButton').disabled = true;
+              });
+          } else {
+            Swal.fire('Error', result.error || 'No se pudo modificar el proveedor', 'error');
+          }
+        } catch (error) {
+          console.error('Error al modificar proveedor:', error);
+          Swal.fire('Error', 'Error al modificar el proveedor', 'error');
+        }
+      }
+    });
+  }
+
+  // Llamar a esta función cuando la página cargue
+  window.onload = function () {
+    // Verificar elementos esenciales
+    const essentialElements = [
+      'codigo_proveedor',
+      'modificarButton',
+      'registrarButton',
+      'proveedorForm'
+    ];
+    for (const id of essentialElements) {
+      if (!document.getElementById(id)) {
+        console.error(`Elemento esencial no encontrado: ${id}`);
+        return;
+      }
+    }
+
+    // Configuración inicial de botones
+    document.getElementById('modificarButton').style.display = 'none';
+    document.getElementById('registrarButton').style.display = 'block';
+
+    // Cargar datos de proveedores en select y tabla
+    cargarSelectProveedores();
+    cargarProveedores();
+  };
+
+
+
+  function limpiarFormulario() {
+  const elements = {
+    form: document.getElementById('proveedorForm'),
+    nombre: document.getElementById('nombre'),
+    apellido: document.getElementById('apellido'),
+    sector: document.getElementById('sector'),
+    modificarButton: document.getElementById('modificarButton'),
+    registrarButton: document.getElementById('registrarButton')
+  };
+
+  if (!elements.form || !elements.modificarButton || !elements.registrarButton) {
+    console.error('Elementos críticos no encontrados al limpiar formulario');
+    return;
+  }
+
+  elements.form.reset();
+
+  // Asegurarse de que se puedan editar
+  if (elements.nombre) elements.nombre.readOnly = false;
+  if (elements.apellido) elements.apellido.readOnly = false;
+  if (elements.sector) elements.sector.disabled = false; // Habilita el select
+
+  elements.modificarButton.disabled = true;
+  elements.modificarButton.style.display = 'none';
+  elements.registrarButton.style.display = 'block';
+}
+
 </script>

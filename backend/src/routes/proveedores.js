@@ -98,8 +98,9 @@ router.post('/add', isLoggedIn, async (req, res) => {
              t.Numero AS Telefono, t.Compania
       FROM Proveedor p
       LEFT JOIN Telefono t ON p.Cod_Proveedor = t.Cod_Proveedor
+      WHERE p.Estado = 'Activo'
     `);
-
+    
     res.json({ success: true, data: proveedores });
   } catch (error) {
     if (connection) await connection.rollback();
@@ -112,7 +113,7 @@ router.post('/add', isLoggedIn, async (req, res) => {
 
   
 
-// API para obtener proveedores (JSON)
+// API para obtener proveedores activos (JSON)
 router.get('/api/proveedores', isLoggedIn, async (req, res) => {
   try {
     const [proveedores] = await pool.query(`
@@ -120,6 +121,7 @@ router.get('/api/proveedores', isLoggedIn, async (req, res) => {
              t.Numero AS Telefono, t.Compania
       FROM Proveedor p
       LEFT JOIN Telefono t ON p.Cod_Proveedor = t.Cod_Proveedor
+      WHERE p.Estado = 'Activo'
     `);
 
     res.json({ success: true, data: proveedores });
@@ -128,5 +130,65 @@ router.get('/api/proveedores', isLoggedIn, async (req, res) => {
     res.status(500).json({ success: false, error: 'Error al obtener proveedores' });
   }
 });
+
+
+// Nueva ruta para obtener un solo proveedor
+router.get('/api/proveedor/:id', isLoggedIn, async (req, res) => {
+  try {
+    const [proveedores] = await pool.query(`
+      SELECT p.Cod_Proveedor, p.Nombre, p.Apellido, p.Sector, p.Estado,
+             t.Numero AS Telefono, t.Compania
+      FROM Proveedor p
+      LEFT JOIN Telefono t ON p.Cod_Proveedor = t.Cod_Proveedor
+      WHERE p.Cod_Proveedor = ?
+    `, [req.params.id]);
+
+    if (proveedores.length === 0) {
+      return res.status(404).json({ success: false, error: 'Proveedor no encontrado' });
+    }
+
+    res.json({ success: true, data: proveedores[0] });
+  } catch (error) {
+    console.error("Error al obtener proveedor:", error);
+    res.status(500).json({ success: false, error: 'Error al obtener proveedor' });
+  }
+});
+
+// Nueva ruta para actualizar un proveedor
+router.put('/api/proveedores/:id', isLoggedIn, async (req, res) => {
+  const codProveedor = req.params.id;
+  const { nombre, apellido, sector, telefono, compania, estado } = req.body;
+
+  const validationErrors = validateProveedorData(req.body);
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ success: false, errors: validationErrors });
+  }
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    await connection.query(
+      `UPDATE Proveedor SET Estado = ? WHERE Cod_Proveedor = ?`,
+      [estado, codProveedor]
+    );
+
+    await connection.query(
+      `UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Proveedor = ?`,
+      [telefono, compania, codProveedor]
+    );
+
+    await connection.commit();
+    res.json({ success: true });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error("Error al modificar proveedor:", error);
+    res.status(500).json({ success: false, error: 'Error al modificar proveedor' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 
 export { router };
