@@ -86,3 +86,18 @@ body {
     border-radius: 4px;
     font-size: 0.8em;
   }
+
+  /* En tu archivo productos.css */
+input[readonly], select:disabled {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Resaltar campos editables */
+#precio_compra:not([readonly]), 
+#cantidad:not([readonly]) {
+  background-color: #fff;
+  border-color: #80c7e0;
+}

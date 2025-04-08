@@ -104,11 +104,30 @@
                 <button id="guardarProductos" type="button" class="btn-guardar">💾 Guardar Productos</button>
                 <button type="reset" class="btn-limpiar">Limpiar</button>
               </div>
+            </div>
           </form>
+        </div>
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="text-center mb-3">Modificar Producto</h5>
+            <div class="row">
+              <div class="col-md-8">
+                <select id="select_producto_modificar" class="form-select" onchange="cargarDatosProducto(this.value)">
+                  <option value="" disabled selected>Seleccione un producto</option>
+                  <!-- Las opciones se llenarán con JavaScript -->
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-success w-100" type="button" id="modificarProductoButton"
+                  onclick="modificarProducto()" disabled>Modificar</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <div class="container mt-5">
@@ -202,6 +221,308 @@
       this.disabled = false;
     }
   }
+
+  // Función para cargar el select de productos a modificar
+  async function cargarSelectProductos() {
+    try {
+      const response = await fetch('/productos/api/productos');
+      const data = await response.json();
+      const select = document.getElementById('select_producto_modificar');
+
+      if (!select) {
+        console.error('Elemento select no encontrado');
+        return;
+      }
+
+      if (data.success) {
+        // Limpiar opciones excepto la primera
+        while (select.options.length > 1) {
+          select.remove(1);
+        }
+
+        // Agregar opciones
+        data.data.forEach(producto => {
+          const option = document.createElement('option');
+          option.value = producto.Cod_Producto;
+          option.textContent = `${producto.Cod_Producto} - ${producto.Nombre} (${producto.Marca})`;
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+      Swal.fire('Error', 'No se pudieron cargar los productos para modificación', 'error');
+    }
+  }
+
+  // Función auxiliar para formatear fechas
+  function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  }
+
+  // Función para cargar datos del producto seleccionado
+  async function cargarDatosProducto(codigoProducto) {
+    // Obtener elementos de forma segura
+    const getElement = (id) => document.getElementById(id) || console.error(`Elemento no encontrado: ${id}`);
+
+    const elements = {
+      codigo_producto: getElement('codigo_producto'),
+      nombre: getElement('nombre'),
+      sector: getElement('sector'),
+      codigo_proveedor: getElement('codigo_proveedor'),
+      precio_compra: getElement('precio_compra'),
+      cantidad: getElement('cantidad'),
+      marca: getElement('marca'),
+      fecha_entrada: getElement('fecha_entrada'),
+      check_vencimiento: getElement('check_vencimiento'),
+      fecha_vencimiento: getElement('fecha_vencimiento'),
+      modificarButton: getElement('modificarProductoButton'),
+      agregarButton: getElement('agregarProducto'),
+      guardarButton: getElement('guardarProductos')
+    };
+
+    // Verificar que los elementos esenciales existan
+    if (!elements.codigo_producto || !elements.modificarButton || !elements.agregarButton) {
+      console.error('Elementos críticos no encontrados');
+      return;
+    }
+
+    if (!codigoProducto) {
+      elements.modificarButton.disabled = true;
+      return;
+    }
+
+    try {
+      const response = await fetch(`/productos/api/productos/${codigoProducto}`);
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        const producto = data.data;
+
+        // Llenar los campos del formulario
+        elements.codigo_producto.value = producto.Cod_Producto || '';
+        elements.nombre.value = producto.Nombre || '';
+        elements.marca.value = producto.Marca || '';
+        elements.sector.value = producto.Sector || '';
+        elements.codigo_proveedor.value = producto.Cod_Proveedor || '';
+        elements.precio_compra.value = producto.Precio_Compra || '';
+        elements.cantidad.value = producto.Cantidad || '';
+        elements.fecha_entrada.value = formatDateForInput(producto.Fecha_Entrada) || fechaActual;
+
+        // Manejar fecha de vencimiento
+        if (producto.FechaVencimiento) {
+          elements.check_vencimiento.checked = true;
+          elements.fecha_vencimiento.disabled = false;
+          elements.fecha_vencimiento.value = formatDateForInput(producto.FechaVencimiento);
+        } else {
+          elements.check_vencimiento.checked = false;
+          elements.fecha_vencimiento.disabled = true;
+          elements.fecha_vencimiento.value = '';
+        }
+
+        // Bloquear campos (solo permitir editar precio y cantidad)
+        elements.codigo_producto.readOnly = true;
+        elements.nombre.readOnly = true;
+        elements.marca.readOnly = true;
+        elements.sector.disabled = true;
+        elements.codigo_proveedor.disabled = true;
+        elements.fecha_entrada.readOnly = true;
+        elements.check_vencimiento.disabled = true;
+        elements.fecha_vencimiento.disabled = true;
+
+        // Habilitar solo precio y cantidad
+        elements.precio_compra.readOnly = false;
+        elements.cantidad.readOnly = false;
+
+        // Cambiar visibilidad de botones (de forma segura)
+        if (elements.agregarButton) elements.agregarButton.style.display = 'none';
+        if (elements.guardarButton) elements.guardarButton.style.display = 'none';
+        if (elements.modificarButton) {
+          elements.modificarButton.disabled = false;
+          elements.modificarButton.style.display = 'block';
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar datos del producto:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron cargar los datos del producto'
+      });
+    }
+  }
+
+  // Función para modificar el producto
+  async function modificarProducto() {
+  const codigoProducto = document.getElementById('select_producto_modificar').value;
+  
+  if (!codigoProducto) {
+    Swal.fire('Error', 'Debe seleccionar un producto', 'error');
+    return;
+  }
+
+  // Obtener solo los campos editables (precio y cantidad)
+  const precio_compra = parseFloat(document.getElementById('precio_compra').value);
+  const cantidad = parseInt(document.getElementById('cantidad').value);
+
+  // Validaciones básicas
+  if (isNaN(precio_compra)) {
+    Swal.fire('Error', 'El precio debe ser un número válido', 'error');
+    return;
+  }
+
+  if (isNaN(cantidad)) {
+    Swal.fire('Error', 'La cantidad debe ser un número válido', 'error');
+    return;
+  }
+
+  Swal.fire({
+    title: '¿Confirmar modificación?',
+    text: `¿Desea actualizar el precio a ${precio_compra.toFixed(2)} y la cantidad a ${cantidad}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, modificar',
+    cancelButtonText: 'Cancelar'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/productos/api/productos/${codigoProducto}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            precio_compra: precio_compra,
+            cantidad: cantidad
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          Swal.fire('Éxito', 'Producto modificado correctamente', 'success')
+            .then(() => {
+              cargarSelectProductos();
+              cargarProductos();
+              limpiarFormularioProducto();
+            });
+        } else {
+          Swal.fire('Error', result.message || 'No se pudo modificar el producto', 'error');
+        }
+      } catch (error) {
+        console.error('Error al modificar producto:', error);
+        Swal.fire('Error', 'Error al conectar con el servidor', 'error');
+      }
+    }
+  });
+}
+
+  // Función para limpiar el formulario de producto
+  function limpiarFormularioProducto() {
+    const elements = {
+      form: document.getElementById('form-producto'),
+      codigo_producto: document.getElementById('codigo_producto'),
+      nombre: document.getElementById('nombre'),
+      sector: document.getElementById('sector'),
+      codigo_proveedor: document.getElementById('codigo_proveedor'),
+      precio_compra: document.getElementById('precio_compra'),
+      cantidad: document.getElementById('cantidad'),
+      marca: document.getElementById('marca'),
+      fecha_entrada: document.getElementById('fecha_entrada'),
+      check_vencimiento: document.getElementById('check_vencimiento'),
+      fecha_vencimiento: document.getElementById('fecha_vencimiento'),
+      modificarButton: document.getElementById('modificarProductoButton'),
+      agregarButton: document.getElementById('agregarProducto'),
+      guardarButton: document.getElementById('guardarProductos')
+    };
+
+    // Resetear formulario
+    elements.form.reset();
+    elements.fecha_entrada.value = fechaActual;
+
+    // Habilitar todos los campos (excepto fecha_entrada que siempre está deshabilitada)
+    elements.codigo_producto.readOnly = false;
+    elements.nombre.readOnly = false;
+    elements.marca.readOnly = false;
+    elements.sector.disabled = false;
+    elements.codigo_proveedor.disabled = true; // Se habilita al seleccionar sector
+    elements.precio_compra.readOnly = false;
+    elements.cantidad.readOnly = false;
+    elements.fecha_entrada.readOnly = true;
+    elements.check_vencimiento.disabled = false;
+    elements.fecha_vencimiento.disabled = true;
+
+    // Restablecer botones
+    elements.modificarButton.disabled = true;
+    elements.modificarButton.style.display = 'none';
+    elements.agregarButton.style.display = 'block';
+    elements.guardarButton.style.display = 'block';
+
+    // Limpiar selección del select de modificación
+    document.getElementById('select_producto_modificar').value = '';
+    const form = document.getElementById('form-producto');
+    if (form) form.reset();
+
+    // Restablecer campos especiales
+    const fechaEntrada = document.getElementById('fecha_entrada');
+    if (fechaEntrada) fechaEntrada.value = new Date().toISOString().split('T')[0];
+
+    // Habilitar selectores
+    const sector = document.getElementById('sector');
+    if (sector) sector.disabled = false;
+
+    // Restablecer botones
+    const modificarBtn = document.getElementById('modificarProductoButton');
+    if (modificarBtn) {
+      modificarBtn.disabled = true;
+      modificarBtn.style.display = 'none';
+    }
+
+    const agregarBtn = document.getElementById('agregarProducto');
+    if (agregarBtn) agregarBtn.style.display = 'block';
+
+    const guardarBtn = document.getElementById('guardarProductos');
+    if (guardarBtn) guardarBtn.style.display = 'block';
+
+    // Limpiar selección
+    const selectModificar = document.getElementById('select_producto_modificar');
+    if (selectModificar) selectModificar.value = '';
+
+  }
+
+  // Modificar el event listener del DOMContentLoaded para incluir la carga de productos
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById('fecha_entrada').value = fechaActual;
+    document.getElementById('sector').addEventListener('change', async function () {
+      await cargarProveedores.call(this);
+      this.disabled = true;
+    });
+    document.getElementById('check_vencimiento').addEventListener('change', toggleFechaVencimiento);
+    document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
+    document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
+
+    // Configuración inicial de botones de modificación
+    document.getElementById('modificarProductoButton').style.display = 'none';
+
+    // Cargar datos
+    cargarProductos();
+    cargarSelectProductos();
+  });
+
+  // Modificar la función de limpieza del formulario para que llame a limpiarFormularioProducto
+  document.getElementById('form-producto').addEventListener('reset', function () {
+    limpiarFormularioProducto();
+    productosTemp = [];
+    document.getElementById('tablaProductosTemp').innerHTML = '';
+  });
 
 
   // Función para agregar producto a la lista temporal

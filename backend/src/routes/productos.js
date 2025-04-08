@@ -89,6 +89,90 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
 });
 
 
+// Ruta para obtener un producto específico por su código
+router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    
+    const [producto] = await pool.query(`
+      SELECT 
+        p.Cod_Producto, 
+        p.Nombre, 
+        p.Marca, 
+        p.FechaVencimiento, 
+        p.Sector, 
+        pp.Precio AS Precio_Compra, 
+        pp.Cantidad,
+        pp.Fecha_Entrada,
+        pp.Cod_Proveedor
+      FROM Producto p
+      JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
+      WHERE p.Cod_Producto = ?
+    `, [codigo]);
+
+    if (producto.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Producto no encontrado" 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      data: producto[0] 
+    });
+  } catch (error) {
+    console.error("Error al obtener producto:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error al obtener producto" 
+    });
+  }
+});
+
+// Ruta para actualizar un producto
+router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
+  const { codigo } = req.params;
+  const { precio_compra, cantidad } = req.body;
+
+  // Validaciones mínimas
+  if (typeof precio_compra !== 'number' || typeof cantidad !== 'number') {
+    return res.status(400).json({ 
+      success: false, 
+      message: "Precio y cantidad deben ser números" 
+    });
+  }
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    // Solo actualizamos precio y cantidad
+    await connection.query(
+      `UPDATE ProveProduct
+       SET Precio = ?, Cantidad = ?
+       WHERE Cod_Producto = ?`,
+      [precio_compra, cantidad, codigo]
+    );
+
+    await connection.commit();
+    res.json({ 
+      success: true, 
+      message: "Producto actualizado correctamente" 
+    });
+  } catch (error) {
+    await connection?.rollback();
+    console.error("Error al actualizar producto:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error al actualizar producto" 
+    });
+  } finally {
+    connection?.release();
+  }
+});
+
 
 // Ruta para obtener todos los productos
 router.get("/api/productos", isLoggedIn, async (req, res) => {
