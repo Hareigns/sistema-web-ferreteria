@@ -33,6 +33,7 @@ router.get("/add", isLoggedIn, async (req, res) => {
     const [Empleados] = await pool.query(`
       SELECT Cod_Empleado, Nombre, Apellido 
       FROM Empleado
+      WHERE Estado = 'Activo'
       ORDER BY Nombre, Apellido
     `);
 
@@ -142,6 +143,7 @@ function getLocalDate() {
 const fechaActual = getLocalDate();
 
 // API para obtener Empleados (JSON)
+// En tu archivo de rutas (router.js), modifica el endpoint API
 router.get('/api/empleados', isLoggedIn, async (req, res) => {
   try {
     const [empleados] = await pool.query(`
@@ -158,6 +160,7 @@ router.get('/api/empleados', isLoggedIn, async (req, res) => {
         t.Compania
       FROM Empleado e
       LEFT JOIN Telefono t ON e.Cod_Empleado = t.Cod_Empleado
+      WHERE e.Estado = 'Activo'
     `);
     
     res.json({ 
