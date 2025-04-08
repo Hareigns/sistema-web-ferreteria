@@ -173,6 +173,7 @@
     return 'No definida';
   }
 
+
   // Función para cargar empleados en la tabla (actualizada)
   async function cargarEmpleadosEnTabla() {
     try {
@@ -187,6 +188,14 @@
           const row = document.createElement("tr");
           const estadoClass = empleado.Estado === 'Activo' ? 'text-success' : 'text-danger';
 
+          // Determinar la clase para la compañía (color + negrita)
+          let companiaClass = 'fw-bold'; // Siempre aplicamos negrita
+          if (empleado.Compania === 'Tigo') {
+            companiaClass += ' text-primary'; // Azul
+          } else if (empleado.Compania === 'Claro') {
+            companiaClass += ' text-danger'; // Rojo
+          }
+
           row.innerHTML = `
           <td>${empleado.Cod_Empleado}</td>
           <td>${empleado.Nombre}</td>
@@ -196,7 +205,7 @@
           <td class="${estadoClass} fw-bold">${empleado.Estado || "No definido"}</td>
           <td>${empleado.FechaIngresoFormateada || formatDate(empleado.FechaIngreso)}</td>
           <td>${empleado.Telefono || "No disponible"}</td>
-          <td>${empleado.Compania || "No disponible"}</td>
+          <td class="${companiaClass}">${empleado.Compania || "No disponible"}</td>
         `;
           tablaBody.appendChild(row);
         });
