@@ -4,24 +4,26 @@ import pool from "../database.js";
 
 // Estrategia de autenticación usando Cod_Empleado, Nombre y Apellido
 passport.use('local.login', new LocalStrategy({
-    usernameField: 'codigo_empleado', // Campo del formulario
-    passwordField: 'nombre',          // Este campo no se usa realmente, pero es necesario para la estrategia
+    usernameField: 'codigo_empleado',
+    passwordField: 'nombre',
     passReqToCallback: true
 }, async (req, codigo_empleado, nombre, done) => {
     try {
-        //console.log('Autenticando empleado:', codigo_empleado);
-
-        // Busca el empleado en la base de datos
-        const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [codigo_empleado]);
+        // Consulta solo empleados activos
+        const [rows] = await pool.query(
+            'SELECT * FROM empleado WHERE Cod_Empleado = ? AND Estado = "Activo"', 
+            [codigo_empleado]
+        );
         console.log('Resultado de la consulta:', rows);
 
         if (rows.length > 0) {
-            const empleado = rows[0]; // Accede directamente al primer registro
-            //console.log('Empleado encontrado:', empleado);
+            const empleado = rows[0];
 
-            // Verifica que el nombre y apellido coincidan sin importar mayúsculas o minúsculas
-            if (empleado.Nombre.toLowerCase() === req.body.nombre.toLowerCase() && 
-                empleado.Apellido.toLowerCase() === req.body.apellido.toLowerCase()) {
+            // Comparación de nombre y apellido sin importar mayúsculas
+            if (
+                empleado.Nombre.toLowerCase() === req.body.nombre.toLowerCase() &&
+                empleado.Apellido.toLowerCase() === req.body.apellido.toLowerCase()
+            ) {
                 console.log('Nombre y apellido válidos');
                 done(null, empleado, req.flash('success', '¡Bienvenido ' + empleado.Nombre + ' ' + empleado.Apellido + '!'));
             } else {
@@ -29,14 +31,15 @@ passport.use('local.login', new LocalStrategy({
                 done(null, false, req.flash('error', 'Nombre o apellido incorrecto'));
             }
         } else {
-            console.log('Empleado no encontrado');
-            return done(null, false, req.flash('error', 'Empleado no encontrado'));
+            console.log('Empleado no encontrado o inactivo');
+            return done(null, false, req.flash('error', 'Empleado no encontrado o inactivo'));
         }
     } catch (error) {
         console.error("Error en el inicio de sesión:", error);
         return done(error);
     }
 }));
+
 
 // Serialización de usuario (se guarda el Cod_Empleado en la sesión)
 passport.serializeUser((empleado, done) => {
