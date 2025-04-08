@@ -6,22 +6,22 @@ const router = express.Router();
 
 // Helper para validar datos del Empleado
 const validateEmpleadoData = (data) => {
-  const { nombre, apellido, direccion, telefono, compania } = data;
+  const { nombre, apellido, direccion, telefono, compania, cedula } = data;
   const errors = [];
 
-  if (!nombre) errors.push("El nombre es requerido");
-  if (!apellido) errors.push("El apellido es requerido");
-  if (!direccion) errors.push("La dirección es requerida");
+  if (!nombre || nombre.length < 2) errors.push("El nombre es requerido (mínimo 2 caracteres)");
+  if (!apellido || apellido.length < 2) errors.push("El apellido es requerido (mínimo 2 caracteres)");
+  if (!direccion || direccion.length < 5) errors.push("La dirección es requerida (mínimo 5 caracteres)");
   if (!telefono) errors.push("El teléfono es requerido");
-  if (!compania) errors.push("La compañía es requerida");
-
-  if (telefono && !/^\d{8,9}$/.test(telefono)) {
-    errors.push("El teléfono debe contener solo números (8 dígitos)");
+  
+  // Validación de cédula
+  if (!cedula || !/^[0-9]{13}[A-Z]$/i.test(cedula)) {
+    errors.push("La cédula debe tener 13 dígitos seguidos de 1 letra");
   }
 
-  // Verificar que la compañía sea válida
-  if (compania && compania !== 'Tigo' && compania !== 'Claro') {
-    errors.push("La compañía debe ser 'Tigo' o 'Claro'");
+  const companiasValidas = ['Tigo', 'Claro'];
+  if (!compania || !companiasValidas.includes(compania)) {
+    errors.push(`La compañía debe ser una de: ${companiasValidas.join(', ')}`);
   }
 
   return errors;
@@ -73,10 +73,9 @@ router.get("/list", isLoggedIn, async (req, res) => {
 
 // Ruta para agregar un empleado
 router.post("/api/empleados", async (req, res) => {
-  const { nombre, apellido, direccion, estado, telefono, compania } = req.body;
+  const { nombre, apellido, direccion, estado, telefono, compania, cedula } = req.body;
 
   try {
-    // Validación adicional
     const validationErrors = validateEmpleadoData(req.body);
     if (validationErrors.length > 0) {
       return res.status(400).json({ 
@@ -85,10 +84,13 @@ router.post("/api/empleados", async (req, res) => {
       });
     }
 
+    // Usar la fecha actual del sistema
+    const fechaIngreso = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     // Insertar en Empleado
     const [empleadoResult] = await pool.query(
-      'INSERT INTO Empleado (Nombre, Apellido, Direccion, Estado) VALUES (?, ?, ?, ?)', 
-      [nombre, apellido, direccion, estado]
+      'INSERT INTO Empleado (Nombre, Apellido, Direccion, Estado, Cedula, FechaIngreso) VALUES (?, ?, ?, ?, ?, ?)', 
+      [nombre, apellido, direccion, estado, cedula.toUpperCase(), fechaIngreso]
     );
 
     const codEmpleado = empleadoResult.insertId;
@@ -128,16 +130,36 @@ router.get('/', (req, res) => {
   });
 });
 
+function getLocalDate() {
+  const now = new Date();
+  // Ajustar para zona horaria específica (ejemplo para UTC-4)
+  const offset = -4 * 60; // 4 horas en minutos
+  now.setMinutes(now.getMinutes() + offset);
+  return now.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+// Usar al insertar/modificar
+const fechaActual = getLocalDate();
+
 // API para obtener Empleados (JSON)
 router.get('/api/empleados', isLoggedIn, async (req, res) => {
   try {
     const [empleados] = await pool.query(`
-      SELECT e.Cod_Empleado, e.Nombre, e.Apellido, e.Direccion, e.Estado,
-             t.Numero AS Telefono, t.Compania
+      SELECT 
+        e.Cod_Empleado, 
+        e.Nombre, 
+        e.Apellido, 
+        e.Direccion, 
+        e.Estado, 
+        e.Cedula,
+        e.FechaIngreso,
+        DATE_FORMAT(e.FechaIngreso, '%d/%m/%Y') AS FechaIngresoFormateada,
+        t.Numero AS Telefono, 
+        t.Compania
       FROM Empleado e
       LEFT JOIN Telefono t ON e.Cod_Empleado = t.Cod_Empleado
     `);
-
+    
     res.json({ 
       success: true, 
       data: empleados 
@@ -151,12 +173,12 @@ router.get('/api/empleados', isLoggedIn, async (req, res) => {
   }
 });
 
-router.put('/api/empleados/:id', async (req, res) => {
+router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const { nombre, apellido, direccion, estado, telefono, compania } = req.body;
+  const { nombre, apellido, direccion, estado, telefono, compania, cedula } = req.body;
 
   try {
-    // Validación de datos
+    // Validar datos
     const validationErrors = validateEmpleadoData(req.body);
     if (validationErrors.length > 0) {
       return res.status(400).json({ 
@@ -168,53 +190,32 @@ router.put('/api/empleados/:id', async (req, res) => {
     // Iniciar transacción
     await pool.query('START TRANSACTION');
 
-    try {
-      // 1. Actualizar datos del empleado
-      await pool.query(
-        `UPDATE Empleado 
-         SET Nombre = ?, Apellido = ?, Direccion = ?, Estado = ?
-         WHERE Cod_Empleado = ?`,
-        [nombre, apellido, direccion, estado, id]
-      );
+    // Actualizar datos del empleado (EXCLUYENDO FechaIngreso)
+    await pool.query(
+      `UPDATE Empleado 
+       SET Nombre = ?, Apellido = ?, Direccion = ?, Estado = ?, Cedula = ?
+       WHERE Cod_Empleado = ?`,
+      [nombre, apellido, direccion, estado, cedula.toUpperCase(), id]
+    );
 
-      // 2. Buscar teléfono actual del empleado
-      const [telefonoActual] = await pool.query(
-        `SELECT Numero FROM Telefono WHERE Cod_Empleado = ?`,
-        [id]
-      );
+    // Actualizar teléfono
+    await pool.query(
+      `UPDATE Telefono 
+       SET Numero = ?, Compania = ?
+       WHERE Cod_Empleado = ?`,
+      [telefono, compania, id]
+    );
 
-      // 3. Manejar el teléfono según exista o no
-      if (telefonoActual.length > 0) {
-        // Si el número cambió, eliminar el antiguo primero
-        if (telefonoActual[0].Numero !== telefono) {
-          await pool.query(
-            `DELETE FROM Telefono WHERE Numero = ?`,
-            [telefonoActual[0].Numero]
-          );
-        }
-        // Insertar/actualizar el nuevo número
-        await pool.query(
-          `INSERT INTO Telefono (Numero, Compania, Cod_Empleado, Cod_Proveedor)
-           VALUES (?, ?, ?, NULL)
-           ON DUPLICATE KEY UPDATE Compania = ?, Cod_Empleado = ?`,
-          [telefono, compania, id, compania, id]
-        );
-      } else {
-        // Si no tenía teléfono, insertar nuevo
-        await pool.query(
-          `INSERT INTO Telefono (Numero, Compania, Cod_Empleado, Cod_Proveedor)
-           VALUES (?, ?, ?, NULL)`,
-          [telefono, compania, id]
-        );
-      }
+    // Confirmar transacción
+    await pool.query('COMMIT');
 
-      await pool.query('COMMIT');
-      res.json({ success: true, message: 'Empleado actualizado correctamente' });
-    } catch (error) {
-      await pool.query('ROLLBACK');
-      throw error;
-    }
+    res.json({ 
+      success: true, 
+      message: 'Empleado actualizado correctamente' 
+    });
+
   } catch (error) {
+    await pool.query('ROLLBACK');
     console.error("Error al actualizar empleado:", error);
     res.status(500).json({ 
       success: false,
@@ -223,13 +224,6 @@ router.put('/api/empleados/:id', async (req, res) => {
   }
 });
 
-// Mantenemos la ruta original para compatibilidad
-router.put('/empleados/add', async (req, res) => {
-  // Redirigir a la nueva ruta API
-  const { codigoEmpleado, ...rest } = req.body;
-  req.params = { id: codigoEmpleado };
-  req.body = rest;
-  return router.handle(req, res);
-});
+
 
 export { router };
