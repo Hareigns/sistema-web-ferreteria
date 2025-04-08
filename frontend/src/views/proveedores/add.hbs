@@ -4,50 +4,57 @@
 
 <div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-      <div class="card p-4">
+    <div class="col-lg-8">
+      <div class="card shadow-lg p-4">
         <div class="card-body">
           <h3 class="text-center mb-4">Registro de Proveedores</h3>
           <form action="/proveedores/add" method="post" id="proveedorForm">
-            <div class="row">
-              <div class="col-md-6 mb-3">
+            <div class="row g-3">
+              <div class="col-md-6">
                 <label for="nombre" class="form-label">Nombre</label>
                 <input type="text" id="nombre" name="nombre" class="form-control" required>
               </div>
-              <div class="col-md-6 mb-3">
+              <div class="col-md-6">
                 <label for="apellido" class="form-label">Apellido</label>
                 <input type="text" id="apellido" name="apellido" class="form-control" required>
               </div>
-            </div>
-            <div class="mb-3">
-              <label for="telefono" class="form-label">Teléfono</label>
-              <input type="tel" id="telefono" name="telefono" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label for="compania" class="form-label">Compañía</label>
-              <select id="compania" name="compania" class="form-select" required>
-                <option value="" disabled selected>Seleccione una compañía</option>
-                <option value="Tigo">Tigo</option>
-                <option value="Claro">Claro</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label for="sector" class="form-label">Sector</label>
-              <select id="sector" name="sector" class="form-select" required>
-                <option value="" disabled selected>Seleccione un sector</option>
-                <option value="Herramientas manuales">Herramientas manuales</option>
-                <option value="Herramientas eléctricas">Herramientas eléctricas</option>
-                <option value="Materiales de construcción">Materiales de construcción</option>
-                <option value="Pinturas o accesorios">Pinturas o accesorios</option>
-                <option value="Tuberías y plomería">Tuberías y plomería</option>
-                <option value="Electricidad e iluminación">Electricidad e iluminación</option>
-                <option value="Seguridad industrial">Seguridad industrial</option>
-                <option value="Productos de ferretería general">Productos de ferretería general</option>
-              </select>
-            </div>
-            <div class="d-flex justify-content-between">
-              <button class="btn btn-primary" type="submit">Ingresar</button>
-              <button class="btn btn-secondary" type="reset">Limpiar</button>
+              <div class="col-md-6">
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input type="tel" id="telefono" name="telefono" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label for="compania" class="form-label">Compañía</label>
+                <select id="compania" name="compania" class="form-select" required>
+                  <option value="" disabled selected>Seleccione una compañía</option>
+                  <option value="Tigo">Tigo</option>
+                  <option value="Claro">Claro</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="sector" class="form-label">Sector</label>
+                <select id="sector" name="sector" class="form-select" required>
+                  <option value="" disabled selected>Seleccione un sector</option>
+                  <option value="Herramientas manuales">Herramientas manuales</option>
+                  <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+                  <option value="Materiales de construcción">Materiales de construcción</option>
+                  <option value="Pinturas o accesorios">Pinturas o accesorios</option>
+                  <option value="Tuberías y plomería">Tuberías y plomería</option>
+                  <option value="Electricidad e iluminación">Electricidad e iluminación</option>
+                  <option value="Seguridad industrial">Seguridad industrial</option>
+                  <option value="Productos de ferretería general">Productos de ferretería general</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="estado" class="form-label">Estado</label>
+                <select id="estado" name="estado" class="form-select" required>
+                  <option value="Activo" selected>Activo</option>
+                  <option value="Inactivo">Inactivo</option>
+                </select>
+              </div>
+              <div class="col-12 d-flex justify-content-between mt-3">
+                <button class="btn btn-primary" type="submit">Ingresar</button>
+                <button class="btn btn-secondary" type="reset">Limpiar</button>
+              </div>
             </div>
           </form>
         </div>
@@ -70,6 +77,7 @@
               <th>Teléfono</th>
               <th>Compañía</th>
               <th>Sector</th>
+              <th>Estado</th>
             </tr>
           </thead>
           <tbody id="proveedores-table-body"></tbody>
@@ -89,8 +97,9 @@
     const telefono = document.getElementById('telefono').value.trim();
     const compania = document.getElementById('compania').value;
     const sector = document.getElementById('sector').value;
+    const estado = document.getElementById('estado').value;
 
-    if (!nombre || !apellido || !telefono || !compania || !sector) {
+    if (!nombre || !apellido || !telefono || !compania || !sector || !estado) {
       Swal.fire({
         icon: 'warning',
         title: 'Faltan datos',
@@ -122,7 +131,8 @@
           apellido: apellido,
           telefono: telefono,
           compania: compania,
-          sector: sector
+          sector: sector,
+          estado: estado
         };
 
         const response = await fetch('/proveedores/add', {
@@ -137,7 +147,7 @@
 
         if (result.success) {
           Swal.fire('Éxito', 'Proveedor registrado correctamente', 'success')
-            .then(() => location.reload()); // Recargar la página para actualizar la lista
+            .then(() => location.reload());
         } else {
           Swal.fire('Error', result.error || 'No se pudo registrar el proveedor', 'error');
         }
@@ -153,18 +163,19 @@
       if (data.success) {
         const proveedores = data.data;
         const tableBody = document.getElementById('proveedores-table-body');
-        tableBody.innerHTML = ''; // Limpiar la tabla antes de agregar los nuevos proveedores
+        tableBody.innerHTML = '';
 
         proveedores.forEach((proveedor) => {
           const row = document.createElement('tr');
           row.innerHTML = `
-              <td>${proveedor.Cod_Proveedor}</td>
-              <td>${proveedor.Nombre}</td>
-              <td>${proveedor.Apellido}</td>
-              <td>${proveedor.Telefono}</td>
-              <td>${proveedor.Compania}</td>
-              <td>${proveedor.Sector}</td>
-            `;
+            <td>${proveedor.Cod_Proveedor}</td>
+            <td>${proveedor.Nombre}</td>
+            <td>${proveedor.Apellido}</td>
+            <td>${proveedor.Telefono}</td>
+            <td>${proveedor.Compania}</td>
+            <td>${proveedor.Sector}</td>
+            <td><span class="badge ${proveedor.Estado === 'Activo' ? 'bg-success' : 'bg-secondary'}">${proveedor.Estado}</span></td>
+          `;
           tableBody.appendChild(row);
         });
       }
