@@ -1,23 +1,23 @@
-<link rel="stylesheet" href="/styles/reportes.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link<link rel="stylesheet" href="/styles/reportes.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-lg p-4">
-                <div class="card-body">
-                    <!-- Formulario para generar reportes -->
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg p-4">
+                    <div class="card-body">
+                        <!-- Formulario para generar reportes -->
                         <div class="card-header bg-info text-white">
                             <h2 class="h5 mb-0">Generar Nuevo Reporte</h2>
                         </div>
                         <div class="card-body">
-                            <form action="/reportes/generar" method="POST">
+                            <form id="formGenerarReporte" method="POST" action="/reportes/generar">
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="tipo_reporte" class="form-label">Tipo de Reporte</label>
                                             <select class="form-select" id="tipo_reporte" name="tipo_reporte" required>
-                                                <option value=""disabled selected>Seleccionar...</option>
+                                                <option value="" disabled selected>Seleccionar...</option>
                                                 <option value="Ventas">Ventas</option>
                                                 <option value="Productos">Productos</option>
                                             </select>
@@ -115,6 +115,59 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.getElementById('formGenerarReporte').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    const tipoReporte = document.getElementById('tipo_reporte').value;
+    const periodo = document.getElementById('periodo').value;
+
+    try {
+        const response = await fetch('http://localhost:4000/reportes/generar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tipo_reporte: tipoReporte, periodo: periodo }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: `Reporte generado correctamente con ID: ${data.reportId}`,
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                // Opcional: Redirigir o hacer algo después de cerrar el alert
+                // window.location.href = '/reportes';
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Ocurrió un error al generar el reporte',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: 'No se pudo conectar con el servidor',
+            confirmButtonText: 'Entendido'
+        });
+        console.error('Error:', error);
+    }
+});
+</script>
