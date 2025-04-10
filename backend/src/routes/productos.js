@@ -160,7 +160,8 @@ router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
   }
 });
 
-// Ruta para actualizar un producto
+
+
 router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
   const { codigo } = req.params;
   const { precio_compra, cantidad } = req.body;
@@ -178,21 +179,53 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Actualizamos precio y cantidad en ProveProduct
-    await connection.query(
+    // 1. Actualizamos precio y cantidad en ProveProduct
+    const updateResult = await connection.query(
       `UPDATE ProveProduct
        SET Precio = ?, Cantidad = ?
        WHERE Cod_Producto = ?`,
       [precio_compra, cantidad, codigo]
     );
 
-    // Actualizamos la cantidad en ReporteProductos
-    await connection.query(
-      `UPDATE ReporteProductos
-       SET Cantidad_Vendida = ?
-       WHERE Cod_Producto = ?`,
-      [cantidad, codigo]
+    if (updateResult.affectedRows === 0) {
+      throw new Error(`Producto con código ${codigo} no encontrado en ProveProduct.`);
+    }
+
+    // 2. Obtenemos el último reporte
+    const [ultimoReporte] = await connection.query(
+      `SELECT Cod_Reporte FROM Reportes ORDER BY Cod_Reporte DESC LIMIT 1`
     );
+    
+    if (ultimoReporte.length === 0) {
+      throw new Error("No hay reportes existentes");
+    }
+    
+    const codReporte = ultimoReporte[0].Cod_Reporte;
+
+    // 3. Verificación más robusta de existencia
+    const [existeRegistro] = await connection.query(
+      `SELECT COUNT(*) as count FROM ReporteProductos 
+       WHERE Cod_Producto = ? AND Cod_Reporte = ?`,
+      [codigo, codReporte]
+    );
+
+    if (existeRegistro[0].count > 0) {
+      // Actualizar si existe
+      await connection.query(
+        `UPDATE ReporteProductos
+         SET Cantidad_Vendida = ?, Tipo_Analisis = 'Producto no vendido'
+         WHERE Cod_Producto = ? AND Cod_Reporte = ?`,
+        [cantidad, codigo, codReporte]
+      );
+    } else {
+      // Insertar solo si no existe
+      await connection.query(
+        `INSERT INTO ReporteProductos (Cod_Reporte, Cod_Producto, Cantidad_Vendida, Tipo_Analisis)
+         VALUES (?, ?, ?, 'Producto no vendido')
+         ON DUPLICATE KEY UPDATE Cantidad_Vendida = VALUES(Cantidad_Vendida)`,
+        [codReporte, codigo, cantidad]
+      );
+    }
 
     await connection.commit();
     res.json({ 
@@ -204,12 +237,13 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     console.error("Error al actualizar producto:", error);
     res.status(500).json({ 
       success: false, 
-      message: "Error al actualizar producto" 
+      message: error.message || "Error al actualizar producto" 
     });
   } finally {
     connection?.release();
   }
 });
+
 
 
 
