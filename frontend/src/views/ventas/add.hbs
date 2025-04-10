@@ -193,6 +193,7 @@
         });
     });
 
+
     document.getElementById("guardarVenta").addEventListener("click", async function () {
         if (productos.length === 0) {
             Swal.fire({
@@ -204,14 +205,11 @@
         }
 
         try {
+            // Obtener datos del empleado
             const empleadoResponse = await fetch('/empleados/api/empleados');
             if (!empleadoResponse.ok) throw new Error('Error al obtener datos del empleado');
 
             const empleadoData = await empleadoResponse.json();
-            if (!empleadoData.success || !empleadoData.data || empleadoData.data.length === 0) {
-                throw new Error('No se encontró información del empleado');
-            }
-
             const empleadoLogueado = empleadoData.data[0];
             const codigoEmpleado = empleadoLogueado.Cod_Empleado;
 
@@ -219,6 +217,7 @@
                 throw new Error('El código de empleado debe ser numérico');
             }
 
+            // Calcular total
             const detallesVenta = productos.map(producto => ({
                 codigo_producto: producto.codigo_producto,
                 cantidad: parseInt(producto.cantidad, 10),
@@ -231,16 +230,17 @@
                 return total + (producto.cantidad * producto.precio_unitario);
             }, 0).toFixed(2);
 
-            const ventaData = {
-                codigo_empleado: codigoEmpleado,
-                total_venta: parseFloat(totalVenta),
-                detalles_venta: detallesVenta
-            };
+            const codigoVenta = document.getElementById("codigoVenta").value;
 
+            // Enviar los datos de la venta
             const response = await fetch("http://localhost:4000/ventas/api/ventas", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(ventaData)
+                body: JSON.stringify({
+                    codigo_empleado: codigoEmpleado,
+                    detalles_venta: detallesVenta,
+                    estado_venta: 'Completada'  // Puedes definir esto según sea necesario
+                })
             });
 
             if (!response.ok) {
@@ -250,22 +250,23 @@
 
             const result = await response.json();
 
+            // Mostrar SweetAlert con el código de venta
             Swal.fire({
                 icon: 'success',
                 title: 'Venta registrada',
-                text: `✅ Venta registrada exitosamente\nCódigo: ${result.codigo || 'N/A'}`
+                text: `✅ Venta registrada exitosamente`  // Asegúrate de que el código de venta se obtenga correctamente
             });
 
+            // Resetear la venta
             productos = [];
             document.getElementById("tablaProductos").innerHTML = "";
 
-            if (result.codigo) {
-                localStorage.setItem("ultimaVenta", result.codigo);
-                cargarCodigoVenta(); // ⚡ Actualiza automáticamente el campo con el nuevo código
+            if (codigoVenta) {
+                localStorage.setItem("ultimaVenta", result.codigo_venta);  // Usa result.codigo_venta
+                cargarCodigoVenta();
                 cargarHistorialVentas();
                 actualizarTotales();
             }
-
 
         } catch (error) {
             console.error("Error en el proceso:", error);
@@ -276,6 +277,7 @@
             });
         }
     });
+
 
     fetch("http://localhost:4000/ventas/api/ventas/")
         .then(response => response.json())
@@ -460,4 +462,7 @@
         const sectorSeleccionado = this.value;
         cargarProductosPorSector(sectorSeleccionado);
     });
+
+
+
 </script>

@@ -56,77 +56,80 @@ router.get("/list", isLoggedIn, async (req, res) => {
   }
 });
 
+// Ruta para guardar la venta
 router.post("/api/ventas", isLoggedIn, async (req, res) => {
   const { 
     codigo_empleado, 
-    
-    detalles_venta, // Puede ser un array de productos con cantidades y precios
+    detalles_venta,
+    estado_venta = 'Completada' // Valor por defecto
   } = req.body;
 
-  console.log("Datos recibidos en el servidor (ventas):", req.body);
-
-  // Validaciones básicas
-  if (!codigo_empleado || !detalles_venta) {
+  if (!codigo_empleado || !detalles_venta || detalles_venta.length === 0) {
     return res.status(400).json({ 
       success: false, 
-      message: "Datos incompletos" 
+      message: "Datos incompletos: empleado y productos son requeridos" 
     });
   }
 
   let connection;
   try {
     connection = await pool.getConnection();
-    await connection.beginTransaction();
 
-    // Insertar la venta sin especificar el Cod_Venta (será auto incrementado)
-    const [resultVenta] = await connection.query(
-      `INSERT INTO Venta (Cod_Empleado)
-       VALUES (?)`,
-      [codigo_empleado]
+    // Llamada al procedimiento almacenado
+    const [result] = await connection.query(
+      `CALL RegistrarVenta(?, ?, ?)`,
+      [codigo_empleado, JSON.stringify(detalles_venta), estado_venta]
     );
 
-    const codigo_venta = resultVenta.insertId; // El ID auto incrementado se obtiene aquí
+    // El valor de `codigo_venta` se obtiene desde el resultado
+    const codigo_venta = result[0].codigo_venta;
 
-    // Insertar detalles de la venta
-    for (const detalle of detalles_venta) {
-      const { codigo_producto, cantidad, precio_unitario, metodo_pago, sector } = detalle;
-      
-      if (!codigo_producto || !cantidad || !precio_unitario || !metodo_pago || !sector) {
-        await connection.rollback();
-        return res.status(400).json({
-          success: false,
-          message: "Datos de detalles incompletos"
-        });
-      }
-
-      await connection.query(
-        `INSERT INTO ProductVenta (Cod_Venta, Cod_Producto, Precio_Venta, Cantidad_Venta, Metodo_Pago, Sector, Fecha_salida)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [codigo_venta, codigo_producto, precio_unitario, cantidad, metodo_pago, sector, new Date().toISOString().split('T')[0]]
-      );
-    }
-
-    await connection.commit();
-    
-    return res.json({ 
-      success: true, 
+    return res.json({
+      success: true,
       message: 'Venta registrada correctamente',
-      codigo: codigo_venta
+      codigo_venta: codigo_venta,  // Devuelve el código de venta
     });
 
   } catch (error) {
-    await connection?.rollback();
-    console.error("Error al registrar la venta:", error);
-    
+    console.error("Error detallado:", error);
     return res.status(500).json({ 
       success: false, 
-      message: 'Error al registrar la venta',
+      message: "Error al registrar la venta",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   } finally {
     connection?.release();
   }
 });
+
+
+
+/*router.post("/api/reporteventas", async (req, res) => {
+  const { cod_venta, monto_total } = req.body;
+
+  if (!cod_venta || !monto_total) {
+    return res.status(400).json({ message: "Datos incompletos para ReporteVentas" });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    const [reporte] = await connection.query(`
+      INSERT INTO Reportes (Tipo_Reporte, Fecha_Reporte)
+      VALUES ('Venta', NOW())
+    `);
+
+    const cod_reporte = reporte.insertId;
+
+    await connection.query(`
+      INSERT INTO ReporteVentas (Cod_Reporte, Cod_Venta, Monto_Total)
+      VALUES (?, ?, ?)`, [cod_reporte, cod_venta, monto_total]);
+
+    res.json({ success: true, message: "Reporte guardado" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error al guardar reporte", error: err.message });
+  }
+});*/
 
 
 // API para obtener ventas (JSON)
@@ -183,5 +186,7 @@ router.get("/api/productos", isLoggedIn, async (req, res) => {
     res.status(500).json({ success: false, message: "Error al obtener productos" });
   }
 });
+
+
 
 export { router };
