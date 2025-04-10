@@ -21,6 +21,7 @@ import { router as empleadosRoutes } from "./routes/empleados.js";
 import { router as productosRoutes } from "./routes/productos.js";
 import { router as proveedoresRoutes } from "./routes/proveedores.js";
 import { router as ventasRoutes } from "./routes/ventas.js";
+import { router as reportesRoutes } from "./routes/reportes.js";
 
 // Inicialización de la aplicación
 const app = express();
@@ -87,6 +88,7 @@ app.use('/empleados', empleadosRoutes);
 app.use('/productos', productosRoutes);
 app.use('/proveedores', proveedoresRoutes);
 app.use('/ventas', ventasRoutes);
+app.use('/reportes', reportesRoutes);
 app.use('/api/empleados', empleadosRoutes);
 app.use(passport.initialize());
 app.use(passport.session());
