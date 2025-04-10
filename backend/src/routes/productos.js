@@ -27,7 +27,7 @@ router.get("/add", isLoggedIn, async (req, res) => {
   }
 });
 
-// API para guardar productos
+
 router.post("/api/productos", isLoggedIn, async (req, res) => {
   const { productos } = req.body;
 
@@ -39,6 +39,18 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
+
+    const tipoReporte = 'Productos'; // Según el tipo de reporte, puede ser 'Ventas' o 'Productos'
+    const periodo = 'Diario'; // Este es solo un ejemplo, puedes ajustarlo según necesites
+
+    // Insertamos un nuevo reporte
+    const [reporteResult] = await connection.query(
+      `INSERT INTO Reportes (Tipo_Reporte, Periodo, Fecha_Generacion)
+       VALUES (?, ?, NOW())`,
+      [tipoReporte, periodo]
+    );
+
+    const codigo_reporte = reporteResult.insertId;
 
     for (const producto of productos) {
       const { 
@@ -60,24 +72,39 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
       );
 
       if (productoExistente.length > 0) {
-        throw new Error(`Producto con código ${codigo_producto} ya existe`);
+        // Producto ya existe, actualizamos la cantidad en ProveProduct
+        await connection.query(
+          `UPDATE ProveProduct
+           SET Cantidad = Cantidad + ?, Fecha_Entrada = ?
+           WHERE Cod_Proveedor = ? AND Cod_Producto = ?`,
+          [cantidad, fechaEntradaValida, codigo_proveedor, codigo_producto]
+        );
+      } else {
+        // Si el producto no existe, lo insertamos en Producto y ProveProduct
+        await connection.query(
+          `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
+           VALUES (?, ?, ?, ?, ?)`,
+          [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
+        );
+
+        await connection.query(
+          `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
+           VALUES (?, ?, ?, ?, ?)`,
+          [codigo_proveedor, codigo_producto, fechaEntradaValida, precio_compra, cantidad]
+        );
       }
 
+      // Insertamos los registros en ReporteProductos
+      const tipoAnalisis = 'Producto no vendido'; // Este puede cambiar según el tipo de análisis que quieras hacer
       await connection.query(
-        `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
-         VALUES (?, ?, ?, ?, ?)`,
-        [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
-      );
-
-      await connection.query(
-        `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
-         VALUES (?, ?, ?, ?, ?)`,
-        [codigo_proveedor, codigo_producto, fechaEntradaValida, precio_compra, cantidad]
+        `INSERT INTO ReporteProductos (Cod_Reporte, Cod_Producto, Cantidad_Vendida, Tipo_Analisis)
+         VALUES (?, ?, ?, ?)`,
+        [codigo_reporte, codigo_producto, cantidad, tipoAnalisis]
       );
     }
 
     await connection.commit();
-    res.json({ success: true, message: "Productos registrados exitosamente" });
+    res.json({ success: true, message: "Productos registrados y reportados exitosamente" });
 
   } catch (error) {
     await connection?.rollback();
@@ -87,6 +114,9 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
     connection?.release();
   }
 });
+
+
+
 
 
 // Ruta para obtener un producto específico por su código
@@ -148,12 +178,20 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // Solo actualizamos precio y cantidad
+    // Actualizamos precio y cantidad en ProveProduct
     await connection.query(
       `UPDATE ProveProduct
        SET Precio = ?, Cantidad = ?
        WHERE Cod_Producto = ?`,
       [precio_compra, cantidad, codigo]
+    );
+
+    // Actualizamos la cantidad en ReporteProductos
+    await connection.query(
+      `UPDATE ReporteProductos
+       SET Cantidad_Vendida = ?
+       WHERE Cod_Producto = ?`,
+      [cantidad, codigo]
     );
 
     await connection.commit();
@@ -172,6 +210,7 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     connection?.release();
   }
 });
+
 
 
 // Ruta para obtener todos los productos
