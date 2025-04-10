@@ -1,0 +1,120 @@
+<link rel="stylesheet" href="/styles/reportes.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg p-4">
+                <div class="card-body">
+                    <!-- Formulario para generar reportes -->
+                        <div class="card-header bg-info text-white">
+                            <h2 class="h5 mb-0">Generar Nuevo Reporte</h2>
+                        </div>
+                        <div class="card-body">
+                            <form action="/reportes/generar" method="POST">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="tipo_reporte" class="form-label">Tipo de Reporte</label>
+                                            <select class="form-select" id="tipo_reporte" name="tipo_reporte" required>
+                                                <option value=""disabled selected>Seleccionar...</option>
+                                                <option value="Ventas">Ventas</option>
+                                                <option value="Productos">Productos</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="periodo" class="form-label">Período</label>
+                                            <select class="form-select" id="periodo" name="periodo" required>
+                                                <option value="" disabled selected>Seleccionar...</option>
+                                                <option value="Diario">Diario</option>
+                                                <option value="Semanal">Semanal</option>
+                                                <option value="Mensual">Mensual</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-file-alt me-2"></i>Generar Reporte
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Sección de Reportes -->
+                        <div class="row">
+                            <!-- Reporte de Ventas -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-primary text-white">
+                                        <h2 class="h5 mb-0">Reporte de Ventas</h2>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="list-group list-group-flush">
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <div class="form-check me-3">
+                                                    <input class="form-check-input" type="checkbox" id="diario">
+                                                    <label class="form-check-label" for="diario">Diario</label>
+                                                </div>
+                                                <span class="badge bg-secondary ms-auto">Últimos 7 días</span>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <div class="form-check me-3">
+                                                    <input class="form-check-input" type="checkbox" id="semanal">
+                                                    <label class="form-check-label" for="semanal">Semanal</label>
+                                                </div>
+                                                <span class="badge bg-secondary ms-auto">Últimas 4 semanas</span>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <div class="form-check me-3">
+                                                    <input class="form-check-input" type="checkbox" id="mensual">
+                                                    <label class="form-check-label" for="mensual">Mensual</label>
+                                                </div>
+                                                <span class="badge bg-secondary ms-auto">Últimos 12 meses</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download me-1"></i>Exportar selección
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reporte de Productos -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h2 class="h5 mb-0">Reporte de Productos</h2>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="list-group list-group-flush">
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge bg-success me-3">+</span>
+                                                <span>Producto + vendido</span>
+                                                <span class="badge bg-primary ms-auto">Top 5</span>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge bg-danger me-3">-</span>
+                                                <span>Producto - vendido</span>
+                                                <span class="badge bg-primary ms-auto">Peores 5</span>
+                                            </div>
+                                            <div class="list-group-item d-flex align-items-center">
+                                                <span class="badge bg-warning me-3">○</span>
+                                                <span>Producto no vendido</span>
+                                                <span class="badge bg-primary ms-auto">Sin ventas</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <button class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-download me-1"></i>Exportar reporte
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
