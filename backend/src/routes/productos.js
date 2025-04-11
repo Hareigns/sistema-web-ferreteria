@@ -88,6 +88,36 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
   }
 });
 
+// Ruta para obtener proveedores activos (MODIFICADA)
+router.get("/api/proveedores", isLoggedIn, async (req, res) => {
+  try {
+    const { sector } = req.query;
+    let query = 'SELECT Cod_Proveedor, Nombre, Apellido, Sector FROM Proveedor WHERE Estado = "Activo"';
+    const params = [];
+    
+    if (sector) {
+      query += ' AND Sector = ?';
+      params.push(sector);
+    }
+    
+    const [proveedores] = await pool.query(query, params);
+    res.json({
+      success: true,
+      data: proveedores.map(p => ({
+        codigo_proveedor: p.Cod_Proveedor,
+        nombre: `${p.Nombre} ${p.Apellido}`,
+        sector: p.Sector
+      }))
+    });
+  } catch (error) {
+    console.error("Error al obtener proveedores:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener proveedores"
+    });
+  }
+});
+
 
 // Ruta para obtener un producto específico por su código
 router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {

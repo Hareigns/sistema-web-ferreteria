@@ -33,7 +33,7 @@
               <div class="col-md-6">
                 <label for="codigo_proveedor" class="form-label">Proveedor</label>
                 <select id="codigo_proveedor" name="codigo_proveedor" class="form-select" required disabled>
-                  <option value="" disabled selected>Seleccione un proveedor</option>
+                  <option value="" disabled selected>Cargando proveedores...</option>
                 </select>
               </div>
             </div>
@@ -163,18 +163,47 @@
   let productosTemp = [];
   const fechaActual = new Date().toISOString().split('T')[0];
 
+  // Función para cargar proveedores activos por sector
+  async function cargarProveedores() {
+    const sector = this.value;
+    const selectProveedor = document.getElementById('codigo_proveedor');
+
+    try {
+      selectProveedor.innerHTML = '<option value="" disabled selected>Cargando proveedores...</option>';
+
+      const response = await fetch(`/productos/api/proveedores?sector=${encodeURIComponent(sector)}`);
+      const data = await response.json();
+
+      if (data.success) {
+        selectProveedor.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
+
+        data.data.forEach(proveedor => {
+          const option = document.createElement('option');
+          option.value = proveedor.codigo_proveedor;
+          option.textContent = `${proveedor.codigo_proveedor} - ${proveedor.nombre}`;
+          selectProveedor.appendChild(option);
+        });
+
+        selectProveedor.disabled = false;
+      } else {
+        throw new Error(data.message || 'Error al cargar proveedores');
+      }
+    } catch (error) {
+      console.error('Error al cargar proveedores:', error);
+      selectProveedor.innerHTML = '<option value="" disabled selected>Error al cargar proveedores</option>';
+      Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
+    }
+  }
+
   // Inicialización al cargar la página
   document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('fecha_entrada').value = fechaActual;
-    document.getElementById('sector').addEventListener('change', async function () {
-      // Primero cargar proveedores y luego bloquear el sector
-      await cargarProveedores.call(this); // Usamos call para mantener el contexto
-      this.disabled = true;
-    });
+    document.getElementById('sector').addEventListener('change', cargarProveedores);
     document.getElementById('check_vencimiento').addEventListener('change', toggleFechaVencimiento);
     document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
     document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
     cargarProductos();
+    cargarSelectProductos();
   });
 
   // Función para alternar el campo de fecha de vencimiento
@@ -184,41 +213,28 @@
     if (!this.checked) fechaVencimientoInput.value = "";
   }
 
-  // Función para cargar proveedores según el sector seleccionado
-  async function cargarProveedores() {
-    const sector = this.value; // Ahora usamos 'this' en lugar de obtener el elemento nuevamente
-    const selectProveedor = document.getElementById('codigo_proveedor');
-
-    if (!sector) {
-      selectProveedor.disabled = true;
-      selectProveedor.innerHTML = '<option value="" disabled selected>Seleccione un sector primero</option>';
-      return;
-    }
-
+  // Función para cargar proveedores activos
+  async function cargarProveedoresActivos() {
     try {
-      selectProveedor.disabled = true;
-      selectProveedor.innerHTML = '<option value="" disabled selected>Cargando proveedores...</option>';
-
-      const response = await fetch(`http://localhost:4000/productos/api/proveedores?sector=${encodeURIComponent(sector)}`);
+      const response = await fetch('/proveedores/api/proveedores-activos');
       const data = await response.json();
 
-      if (data.success && data.data.length > 0) {
+      if (data.success) {
+        const selectProveedor = document.getElementById('codigo_proveedor');
         selectProveedor.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
+
         data.data.forEach(proveedor => {
           const option = document.createElement('option');
-          option.value = proveedor.Cod_Proveedor;
-          option.textContent = `${proveedor.Nombre} ${proveedor.Apellido || ''}`;
+          option.value = proveedor.codigo_proveedor;
+          option.textContent = `${proveedor.codigo_proveedor} - ${proveedor.nombre}`;
           selectProveedor.appendChild(option);
         });
+
+        // Habilitar el select después de cargar los datos
         selectProveedor.disabled = false;
-      } else {
-        selectProveedor.innerHTML = '<option value="" disabled>No hay proveedores para este sector</option>';
       }
     } catch (error) {
-      console.error('Error al cargar proveedores:', error);
-      selectProveedor.innerHTML = '<option value="" disabled>Error al cargar proveedores</option>';
-      // Si hay error, no bloqueamos el sector para permitir reintento
-      this.disabled = false;
+      console.error('Error al cargar proveedores activos:', error);
     }
   }
 
@@ -360,70 +376,70 @@
 
   // Función para modificar el producto
   async function modificarProducto() {
-  const codigoProducto = document.getElementById('select_producto_modificar').value;
-  
-  if (!codigoProducto) {
-    Swal.fire('Error', 'Debe seleccionar un producto', 'error');
-    return;
-  }
+    const codigoProducto = document.getElementById('select_producto_modificar').value;
 
-  // Obtener solo los campos editables (precio y cantidad)
-  const precio_compra = parseFloat(document.getElementById('precio_compra').value);
-  const cantidad = parseInt(document.getElementById('cantidad').value);
-
-  // Validaciones básicas
-  if (isNaN(precio_compra)) {
-    Swal.fire('Error', 'El precio debe ser un número válido', 'error');
-    return;
-  }
-
-  if (isNaN(cantidad)) {
-    Swal.fire('Error', 'La cantidad debe ser un número válido', 'error');
-    return;
-  }
-
-  Swal.fire({
-    title: '¿Confirmar modificación?',
-    text: `¿Desea actualizar el precio a ${precio_compra.toFixed(2)} y la cantidad a ${cantidad}?`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Sí, modificar',
-    cancelButtonText: 'Cancelar'
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        const response = await fetch(`/productos/api/productos/${codigoProducto}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            precio_compra: precio_compra,
-            cantidad: cantidad
-          })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          Swal.fire('Éxito', 'Producto modificado correctamente', 'success')
-            .then(() => {
-              cargarSelectProductos();
-              cargarProductos();
-              limpiarFormularioProducto();
-            });
-        } else {
-          Swal.fire('Error', result.message || 'No se pudo modificar el producto', 'error');
-        }
-      } catch (error) {
-        console.error('Error al modificar producto:', error);
-        Swal.fire('Error', 'Error al conectar con el servidor', 'error');
-      }
+    if (!codigoProducto) {
+      Swal.fire('Error', 'Debe seleccionar un producto', 'error');
+      return;
     }
-  });
-}
+
+    // Obtener solo los campos editables (precio y cantidad)
+    const precio_compra = parseFloat(document.getElementById('precio_compra').value);
+    const cantidad = parseInt(document.getElementById('cantidad').value);
+
+    // Validaciones básicas
+    if (isNaN(precio_compra)) {
+      Swal.fire('Error', 'El precio debe ser un número válido', 'error');
+      return;
+    }
+
+    if (isNaN(cantidad)) {
+      Swal.fire('Error', 'La cantidad debe ser un número válido', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: '¿Confirmar modificación?',
+      text: `¿Desea actualizar el precio a ${precio_compra.toFixed(2)} y la cantidad a ${cantidad}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, modificar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/productos/api/productos/${codigoProducto}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              precio_compra: precio_compra,
+              cantidad: cantidad
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            Swal.fire('Éxito', 'Producto modificado correctamente', 'success')
+              .then(() => {
+                cargarSelectProductos();
+                cargarProductos();
+                limpiarFormularioProducto();
+              });
+          } else {
+            Swal.fire('Error', result.message || 'No se pudo modificar el producto', 'error');
+          }
+        } catch (error) {
+          console.error('Error al modificar producto:', error);
+          Swal.fire('Error', 'Error al conectar con el servidor', 'error');
+        }
+      }
+    });
+  }
 
   // Función para limpiar el formulario de producto
   function limpiarFormularioProducto() {
