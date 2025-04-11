@@ -81,8 +81,8 @@
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent">
-                                <button class="btn btn-sm btn-outline-success">
-                                    <i class="fas fa-download me-1"></i>Exportar reporte
+                                <button id="exportarProductos" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-file-earmark-excel"></i> Exportar reporte
                                 </button>
                             </div>
                         </div>
@@ -258,48 +258,97 @@
         }
     });
 
+    //Reporte Productos
+    document.getElementById('exportarProductos').addEventListener('click', async () => {
+        try {
+            const res = await fetch('/reportes/productos');
+            const data = await res.json();
+
+            if (data.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin datos',
+                    text: 'No hay productos en el reporte.',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            await exportarExcelProductos(data, 'reporte_productos');
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Reporte exportado!',
+                text: 'El archivo Excel ha sido descargado exitosamente.',
+                confirmButtonText: 'Aceptar',
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+        } catch (err) {
+            console.error('Error al exportar productos:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al generar el reporte.',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
 
 
+    async function exportarExcelProductos(data, nombreArchivo) {
+        const ExcelJS = window.ExcelJS;
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Productos');
 
+        worksheet.columns = [
+            { header: 'Código', key: 'Cod_Producto', width: 15 },
+            { header: 'Nombre', key: 'Nombre', width: 30 },
+            { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
+            { header: 'Tipo', key: 'Tipo', width: 20 }
+        ];
 
+        // Encabezado con estilo
+        worksheet.getRow(1).eachCell((cell) => {
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4F81BD' }
+            };
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
 
+        data.forEach(producto => {
+            const row = worksheet.addRow(producto);
+            row.eachCell(cell => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
 
-    function exportarCSV(data, nombreArchivo) {
-        if (!data || !data.length) return;
-
-        const encabezados = Object.keys(data[0]);
-        const filas = data.map(obj =>
-            encabezados.map(col => (obj[col] ?? '').toString().replace(/\s+/g, ' ')).join('\t')
-        );
-
-        const contenido = [encabezados.join('\t'), ...filas].join('\n');
-        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8;' });
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
 
         const url = URL.createObjectURL(blob);
-        const enlace = document.createElement('a');
-        enlace.setAttribute('href', url);
-        enlace.setAttribute('download', nombreArchivo + '.xls'); // <- .xls para abrir bonito en Excel
-        enlace.style.visibility = 'hidden';
-        document.body.appendChild(enlace);
-        enlace.click();
-        document.body.removeChild(enlace);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo + '.xlsx';
+        a.click();
+        URL.revokeObjectURL(url);
     }
-
-    function exportarExcel(data, nombreArchivo) {
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-
-        XLSX.utils.book_append_sheet(wb, ws, 'Reporte de Ventas');
-
-        // Aplica estilos básicos
-        const wscols = Object.keys(data[0]).map(() => ({ wch: 20 }));
-        ws['!cols'] = wscols;
-
-        XLSX.writeFile(wb, nombreArchivo + '.xlsx');
-    }
-
-
-
-
 
 </script>

@@ -1,5 +1,7 @@
 import express from 'express';
 import pool from '../database.js';
+import ExcelJS from 'exceljs';
+import { database } from '../keys.js';
 
 
 const router = express.Router();
@@ -23,6 +25,18 @@ router.post('/ventas', async (req, res) => {
       res.status(500).json({ error: 'Error al generar el reporte' });
   }
 });
+
+
+router.get('/productos', async (req, res) => {
+    try {
+        const [rows] = await pool.query('CALL ReporteProductosVendidos()');
+        res.json(rows[0]); // Enviar solo los datos al frontend
+    } catch (error) {
+        console.error('Error al obtener datos de productos:', error);
+        res.status(500).json({ error: 'Error al generar el reporte de productos' });
+    }
+});
+
 
 
 export { router };
