@@ -1,5 +1,6 @@
+<link rel="stylesheet" href="/styles/reportes.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/styles/Reportes.css">
+
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -8,110 +9,81 @@
                 <div class="card-body">
                     <!-- Formulario para generar reportes -->
                     <div class="card-header bg-info text-white">
-                        <h2 class="h5 mb-0">Generar Nuevo Reporte</h2>
+                        <h2 class="h5 mb-0">Generar Reportes</h2>
                     </div>
-                    <div class="card-body">
-                        <form id="formGenerarReporte" method="POST" action="/reportes/generar">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="tipo_reporte" class="form-label">Tipo de Reporte</label>
-                                        <select class="form-select" id="tipo_reporte" name="tipo_reporte" required>
-                                            <option value="" disabled selected>Seleccionar...</option>
-                                            <option value="Ventas">Ventas</option>
-                                            <option value="Productos">Productos</option>
-                                        </select>
+
+                </div>
+
+                <!-- Sección de Reportes -->
+                <div class="row">
+                    <!-- Reporte de Ventas -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h2 class="h5 mb-0">Reporte de Ventas</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <div class="form-check me-3">
+                                            <input class="form-check-input" type="checkbox" id="diario">
+                                            <label class="form-check-label" for="diario">Diario</label>
+                                        </div>
+                                        <span class="badge bg-secondary ms-auto">Últimos 7 días</span>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="periodo" class="form-label">Período</label>
-                                        <select class="form-select" id="periodo" name="periodo" required>
-                                            <option value="" disabled selected>Seleccionar...</option>
-                                            <option value="Diario">Diario</option>
-                                            <option value="Semanal">Semanal</option>
-                                            <option value="Mensual">Mensual</option>
-                                        </select>
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <div class="form-check me-3">
+                                            <input class="form-check-input" type="checkbox" id="semanal">
+                                            <label class="form-check-label" for="semanal">Semanal</label>
+                                        </div>
+                                        <span class="badge bg-secondary ms-auto">Últimas 4 semanas</span>
+                                    </div>
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <div class="form-check me-3">
+                                            <input class="form-check-input" type="checkbox" id="mensual">
+                                            <label class="form-check-label" for="mensual">Mensual</label>
+                                        </div>
+                                        <span class="badge bg-secondary ms-auto">Últimos 12 meses</span>
                                     </div>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-file-alt me-2"></i>Generar Reporte
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Sección de Reportes -->
-                    <div class="row">
-                        <!-- Reporte de Ventas -->
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header bg-primary text-white">
-                                    <h2 class="h5 mb-0">Reporte de Ventas</h2>
-                                </div>
-                                <div class="card-body">
-                                    <div class="list-group list-group-flush">
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <div class="form-check me-3">
-                                                <input class="form-check-input" type="checkbox" id="diario">
-                                                <label class="form-check-label" for="diario">Diario</label>
-                                            </div>
-                                            <span class="badge bg-secondary ms-auto">Últimos 7 días</span>
-                                        </div>
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <div class="form-check me-3">
-                                                <input class="form-check-input" type="checkbox" id="semanal">
-                                                <label class="form-check-label" for="semanal">Semanal</label>
-                                            </div>
-                                            <span class="badge bg-secondary ms-auto">Últimas 4 semanas</span>
-                                        </div>
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <div class="form-check me-3">
-                                                <input class="form-check-input" type="checkbox" id="mensual">
-                                                <label class="form-check-label" for="mensual">Mensual</label>
-                                            </div>
-                                            <span class="badge bg-secondary ms-auto">Últimos 12 meses</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="card-footer bg-transparent">
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-download me-1"></i>Exportar selección
-                                    </button>
-                                </div>
+                            <div class="card-footer bg-transparent">
+                                <button class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download me-1"></i>Exportar selección
+                                </button>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Reporte de Productos -->
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header bg-success text-white">
-                                    <h2 class="h5 mb-0">Reporte de Productos</h2>
-                                </div>
-                                <div class="card-body">
-                                    <div class="list-group list-group-flush">
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <span class="badge bg-success me-3">+</span>
-                                            <span>Producto + vendido</span>
-                                            <span class="badge bg-primary ms-auto">Top 5</span>
-                                        </div>
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <span class="badge bg-danger me-3">-</span>
-                                            <span>Producto - vendido</span>
-                                            <span class="badge bg-primary ms-auto">Peores 5</span>
-                                        </div>
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <span class="badge bg-warning me-3">○</span>
-                                            <span>Producto no vendido</span>
-                                            <span class="badge bg-primary ms-auto">Sin ventas</span>
-                                        </div>
+                    <!-- Reporte de Productos -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <h2 class="h5 mb-0">Reporte de Productos</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-success me-3">+</span>
+                                        <span>Producto + vendido</span>
+                                        <span class="badge bg-primary ms-auto">Top 5</span>
+                                    </div>
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-danger me-3">-</span>
+                                        <span>Producto - vendido</span>
+                                        <span class="badge bg-primary ms-auto">Peores 5</span>
+                                    </div>
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-warning me-3">○</span>
+                                        <span>Producto no vendido</span>
+                                        <span class="badge bg-primary ms-auto">Sin ventas</span>
                                     </div>
                                 </div>
-                                <div class="card-footer bg-transparent">
-                                    <button class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-download me-1"></i>Exportar reporte
-                                    </button>
-                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <button class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-download me-1"></i>Exportar reporte
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -122,52 +94,212 @@
 </div>
 
 
+
+<script src="reportes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+
 
 <script>
-    document.getElementById('formGenerarReporte').addEventListener('submit', async (event) => {
-        event.preventDefault();
 
-        const tipoReporte = document.getElementById('tipo_reporte').value;
-        const periodo = document.getElementById('periodo').value;
+    document.querySelector('.btn-outline-primary').addEventListener('click', async () => {
+        let filtro = null;
+
+        if (document.getElementById('diario').checked) {
+            filtro = 'diario';
+        } else if (document.getElementById('semanal').checked) {
+            filtro = 'semanal';
+        } else if (document.getElementById('mensual').checked) {
+            filtro = 'mensual';
+        }
+
+        if (!filtro) {
+            alert('Selecciona un filtro primero');
+            return;
+        }
 
         try {
-            const response = await fetch('http://localhost:4000/reportes/generar', {
+            const res = await fetch('/reportes/ventas', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ tipo_reporte: tipoReporte, periodo: periodo }),
+                body: JSON.stringify({ filtro })
             });
 
-            const data = await response.json();
+            const data = await res.json();
 
-            if (data.success) {
+            if (data.length === 0) {
                 Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: `Reporte generado correctamente con ID: ${data.reportId}`,
-                    confirmButtonText: 'Aceptar'
-                }).then(() => {
-                    // Opcional: Redirigir o hacer algo después de cerrar el alert
-                    // window.location.href = '/reportes';
+                    icon: 'info',
+                    title: 'Sin datos',
+                    text: 'No hay datos para este filtro.',
+                    confirmButtonText: 'OK'
                 });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Ocurrió un error al generar el reporte',
-                    confirmButtonText: 'Entendido'
-                });
+                return;
             }
-        } catch (error) {
+
+            await exportarExcelBonito(data, `reporte_ventas_${filtro}`);
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Reporte exportado!',
+                text: 'El archivo Excel ha sido descargado exitosamente.',
+                confirmButtonText: 'Aceptar',
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+        } catch (err) {
+            console.error('Error al generar reporte:', err);
             Swal.fire({
                 icon: 'error',
-                title: 'Error de conexión',
-                text: 'No se pudo conectar con el servidor',
-                confirmButtonText: 'Entendido'
+                title: 'Error',
+                text: 'Ocurrió un error al generar el reporte.',
+                confirmButtonText: 'Cerrar'
             });
-            console.error('Error:', error);
         }
     });
+
+
+    // Función para exportar los datos a Excel
+    async function exportarExcelBonito(data, nombreArchivo) {
+        // Limpiar y formatear las fechas
+        const dataLimpia = data.map(item => ({
+            Cod_Venta: item.Cod_Venta,
+            Cod_Producto: item.Cod_Producto,
+            Nombre_Producto: item.Nombre_Producto,
+            Monto_Total: item.Monto_Total,
+            Fecha_Venta: new Date(item.Fecha_Venta).toLocaleDateString('es-ES') // "10/04/2025"
+        }));
+
+        // Crear el archivo Excel usando ExcelJS
+        const ExcelJS = window.ExcelJS;
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Reporte');
+
+        // Añadir encabezados con estilo
+        const headers = Object.keys(dataLimpia[0]);
+        worksheet.addRow(headers);
+
+        // Estilo para el encabezado
+        const headerRow = worksheet.getRow(1);
+        headerRow.eachCell((cell) => {
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4F81BD' } // Azul oscuro
+            };
+            cell.font = {
+                bold: true,
+                color: { argb: 'FFFFFFFF' } // Blanco
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+
+        // Añadir los datos de las ventas
+        dataLimpia.forEach(item => {
+            const row = worksheet.addRow(Object.values(item));
+
+            // Aplicar bordes a las celdas de datos
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
+
+        // Ajustar el ancho de las columnas automáticamente
+        worksheet.columns.forEach(column => {
+            column.width = 20;
+        });
+
+        // Generar el archivo Excel y descargarlo
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo + '.xlsx';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Aseguramos que solo se pueda seleccionar un checkbox
+    document.getElementById('diario').addEventListener('change', () => {
+        if (document.getElementById('diario').checked) {
+            document.getElementById('semanal').checked = false;
+            document.getElementById('mensual').checked = false;
+        }
+    });
+
+    document.getElementById('semanal').addEventListener('change', () => {
+        if (document.getElementById('semanal').checked) {
+            document.getElementById('diario').checked = false;
+            document.getElementById('mensual').checked = false;
+        }
+    });
+
+    document.getElementById('mensual').addEventListener('change', () => {
+        if (document.getElementById('mensual').checked) {
+            document.getElementById('diario').checked = false;
+            document.getElementById('semanal').checked = false;
+        }
+    });
+
+
+
+
+
+
+
+    function exportarCSV(data, nombreArchivo) {
+        if (!data || !data.length) return;
+
+        const encabezados = Object.keys(data[0]);
+        const filas = data.map(obj =>
+            encabezados.map(col => (obj[col] ?? '').toString().replace(/\s+/g, ' ')).join('\t')
+        );
+
+        const contenido = [encabezados.join('\t'), ...filas].join('\n');
+        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8;' });
+
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.setAttribute('href', url);
+        enlace.setAttribute('download', nombreArchivo + '.xls'); // <- .xls para abrir bonito en Excel
+        enlace.style.visibility = 'hidden';
+        document.body.appendChild(enlace);
+        enlace.click();
+        document.body.removeChild(enlace);
+    }
+
+    function exportarExcel(data, nombreArchivo) {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Reporte de Ventas');
+
+        // Aplica estilos básicos
+        const wscols = Object.keys(data[0]).map(() => ({ wch: 20 }));
+        ws['!cols'] = wscols;
+
+        XLSX.writeFile(wb, nombreArchivo + '.xlsx');
+    }
+
+
+
+
+
 </script>

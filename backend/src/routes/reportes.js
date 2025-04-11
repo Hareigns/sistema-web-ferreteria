@@ -1,46 +1,28 @@
 import express from 'express';
 import pool from '../database.js';
-import { isLoggedIn } from "../lib/auth.js";
 
 
 const router = express.Router();
 
-// Ruta para mostrar el formulario de agregar reporte
+// Ruta para mostrar la vista
 router.get('/add', (req, res) => {
-    res.render('reportes/add'); // Renderiza la vista 'add.hbs'
-  });
-  
+    res.render('reportes/add');
+});
 
 
-  router.post('/generar', async (req, res) => {
-    const { tipo_reporte, periodo } = req.body;
-  
-    if (!tipo_reporte || !periodo) {
-      return res.status(400).json({
-        success: false,
-        message: 'Faltan parámetros requeridos',
-      });
-    }
-  
-    try {
-      const [result] = await pool.query(
-        'INSERT INTO Reportes (Tipo_Reporte, Periodo, Fecha_Generacion) VALUES (?, ?, ?)',
-        [tipo_reporte, periodo, new Date()]
-      );
-  
-      res.status(200).json({
-        success: true,
-        message: 'Reporte generado y guardado en la base de datos',
-        reportId: result.insertId, // ID del reporte generado
-      });
-    } catch (error) {
-      console.error('Error al generar reporte:', error);
-      res.status(500).json({
-        success: false,
-        message: `Error al generar reporte: ${error.message}`,
-      });
-    }
-  });
+router.post('/ventas', async (req, res) => {
+  const { filtro } = req.body;
+  console.log("Filtro recibido:", filtro);
+
+  try {
+      const [rows] = await pool.query('CALL sp_reporte_ventas(?)', [filtro]);
+      console.log("Resultado:", rows);
+      res.json(rows[0]);
+  } catch (err) {
+      console.error("Error en el procedimiento:", err);
+      res.status(500).json({ error: 'Error al generar el reporte' });
+  }
+});
 
 
 export { router };

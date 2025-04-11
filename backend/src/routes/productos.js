@@ -27,7 +27,7 @@ router.get("/add", isLoggedIn, async (req, res) => {
   }
 });
 
-
+// API para guardar productos
 router.post("/api/productos", isLoggedIn, async (req, res) => {
   const { productos } = req.body;
 
@@ -39,18 +39,6 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
-
-    const tipoReporte = 'Productos'; // Según el tipo de reporte, puede ser 'Ventas' o 'Productos'
-    const periodo = 'Diario'; // Este es solo un ejemplo, puedes ajustarlo según necesites
-
-    // Insertamos un nuevo reporte
-    const [reporteResult] = await connection.query(
-      `INSERT INTO Reportes (Tipo_Reporte, Periodo, Fecha_Generacion)
-       VALUES (?, ?, NOW())`,
-      [tipoReporte, periodo]
-    );
-
-    const codigo_reporte = reporteResult.insertId;
 
     for (const producto of productos) {
       const { 
@@ -72,39 +60,24 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
       );
 
       if (productoExistente.length > 0) {
-        // Producto ya existe, actualizamos la cantidad en ProveProduct
-        await connection.query(
-          `UPDATE ProveProduct
-           SET Cantidad = Cantidad + ?, Fecha_Entrada = ?
-           WHERE Cod_Proveedor = ? AND Cod_Producto = ?`,
-          [cantidad, fechaEntradaValida, codigo_proveedor, codigo_producto]
-        );
-      } else {
-        // Si el producto no existe, lo insertamos en Producto y ProveProduct
-        await connection.query(
-          `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
-           VALUES (?, ?, ?, ?, ?)`,
-          [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
-        );
-
-        await connection.query(
-          `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
-           VALUES (?, ?, ?, ?, ?)`,
-          [codigo_proveedor, codigo_producto, fechaEntradaValida, precio_compra, cantidad]
-        );
+        throw new Error(`Producto con código ${codigo_producto} ya existe`);
       }
 
-      // Insertamos los registros en ReporteProductos
-      const tipoAnalisis = 'Producto no vendido'; // Este puede cambiar según el tipo de análisis que quieras hacer
       await connection.query(
-        `INSERT INTO ReporteProductos (Cod_Reporte, Cod_Producto, Cantidad_Vendida, Tipo_Analisis)
-         VALUES (?, ?, ?, ?)`,
-        [codigo_reporte, codigo_producto, cantidad, tipoAnalisis]
+        `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
+         VALUES (?, ?, ?, ?, ?)`,
+        [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
+      );
+
+      await connection.query(
+        `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
+         VALUES (?, ?, ?, ?, ?)`,
+        [codigo_proveedor, codigo_producto, fechaEntradaValida, precio_compra, cantidad]
       );
     }
 
     await connection.commit();
-    res.json({ success: true, message: "Productos registrados y reportados exitosamente" });
+    res.json({ success: true, message: "Productos registrados exitosamente" });
 
   } catch (error) {
     await connection?.rollback();
@@ -114,9 +87,6 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
     connection?.release();
   }
 });
-
-
-
 
 
 // Ruta para obtener un producto específico por su código
@@ -160,8 +130,7 @@ router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
+// Ruta para actualizar un producto
 router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
   const { codigo } = req.params;
   const { precio_compra, cantidad } = req.body;
@@ -179,53 +148,13 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 1. Actualizamos precio y cantidad en ProveProduct
-    const updateResult = await connection.query(
+    // Solo actualizamos precio y cantidad
+    await connection.query(
       `UPDATE ProveProduct
        SET Precio = ?, Cantidad = ?
        WHERE Cod_Producto = ?`,
       [precio_compra, cantidad, codigo]
     );
-
-    if (updateResult.affectedRows === 0) {
-      throw new Error(`Producto con código ${codigo} no encontrado en ProveProduct.`);
-    }
-
-    // 2. Obtenemos el último reporte
-    const [ultimoReporte] = await connection.query(
-      `SELECT Cod_Reporte FROM Reportes ORDER BY Cod_Reporte DESC LIMIT 1`
-    );
-    
-    if (ultimoReporte.length === 0) {
-      throw new Error("No hay reportes existentes");
-    }
-    
-    const codReporte = ultimoReporte[0].Cod_Reporte;
-
-    // 3. Verificación más robusta de existencia
-    const [existeRegistro] = await connection.query(
-      `SELECT COUNT(*) as count FROM ReporteProductos 
-       WHERE Cod_Producto = ? AND Cod_Reporte = ?`,
-      [codigo, codReporte]
-    );
-
-    if (existeRegistro[0].count > 0) {
-      // Actualizar si existe
-      await connection.query(
-        `UPDATE ReporteProductos
-         SET Cantidad_Vendida = ?, Tipo_Analisis = 'Producto no vendido'
-         WHERE Cod_Producto = ? AND Cod_Reporte = ?`,
-        [cantidad, codigo, codReporte]
-      );
-    } else {
-      // Insertar solo si no existe
-      await connection.query(
-        `INSERT INTO ReporteProductos (Cod_Reporte, Cod_Producto, Cantidad_Vendida, Tipo_Analisis)
-         VALUES (?, ?, ?, 'Producto no vendido')
-         ON DUPLICATE KEY UPDATE Cantidad_Vendida = VALUES(Cantidad_Vendida)`,
-        [codReporte, codigo, cantidad]
-      );
-    }
 
     await connection.commit();
     res.json({ 
@@ -237,14 +166,12 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     console.error("Error al actualizar producto:", error);
     res.status(500).json({ 
       success: false, 
-      message: error.message || "Error al actualizar producto" 
+      message: "Error al actualizar producto" 
     });
   } finally {
     connection?.release();
   }
 });
-
-
 
 
 // Ruta para obtener todos los productos
