@@ -31,6 +31,10 @@
         text-transform: uppercase;
     }
 
+    .titulo-bienvenida {
+        margin-bottom: 80px;
+    }
+
     .spinner {
         width: 60px;
         height: 60px;
