@@ -116,7 +116,12 @@
         }
 
         if (!filtro) {
-            alert('Selecciona un filtro primero');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Filtro requerido',
+                text: 'Por favor selecciona un filtro primero',
+                confirmButtonText: 'Entendido'
+            });
             return;
         }
 
