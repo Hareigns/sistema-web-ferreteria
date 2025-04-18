@@ -9,7 +9,7 @@ router.get('/login', isNotLoggedIn, (req, res) => {
   res.render('auth/login', { cssFile: 'login.css' });
 });
 
-// Procesar el formulario de login con los nuevos campos
+// Procesar el formulario de login
 router.post('/login', isNotLoggedIn, (req, res, next) => {
   passport.authenticate('local.login', {
     successRedirect: '/dashboard',
@@ -24,15 +24,23 @@ router.get('/dashboard', isLoggedIn, (req, res) => {
   res.render('dashboard');
 });
 
-
 // Ruta para cerrar sesión
 router.get('/logout', (req, res, next) => {
-  req.logout((err) => {
+  req.logout(err => {
     if (err) {
       console.error('Error al cerrar sesión:', err);
       return next(err);
     }
-    res.redirect('/login');
+
+    // Destruir sesión y limpiar cookies
+    req.session.destroy(err => {
+      if (err) {
+        console.error('Error al destruir la sesión:', err);
+        return next(err);
+      }
+      res.clearCookie('connect.sid'); // Limpia la cookie de sesión
+      res.redirect('/login');
+    });
   });
 });
 
@@ -43,4 +51,4 @@ router.use((err, req, res, next) => {
   return res.redirect('/login');
 });
 
-export default router;
+export default router; 

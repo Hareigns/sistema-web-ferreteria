@@ -1,8 +1,61 @@
-  <title>{{title}}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  {{#if cssFile}}
-    <link rel="stylesheet" href="/assets/styles/{{cssFile}}">
-  {{/if}}
-  {{> navigation}}
-  {{{body}}}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<title>{{title}}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{{#if cssFile}}
+<link rel="stylesheet" href="/assets/styles/{{cssFile}}">
+{{/if}}
+{{> navigation}}
+{{#if user}}
+<link rel="stylesheet" href="/styles/main.css">
+
+  <div id="inactivity-warning">Se cerrará la sesión por inactividad en <span id="countdown">10</span> segundos...</div>
+
+  <script>
+    const TIEMPO_INACTIVIDAD = 1 * 60 * 1000; // 1 minuto
+    const TIEMPO_AVISO = 10; // segundos antes de cerrar sesión
+
+    let temporizadorInactividad;
+    let temporizadorLogout;
+    let tiempoRestante = TIEMPO_AVISO;
+
+    const warningBox = document.getElementById('inactivity-warning');
+    const countdown = document.getElementById('countdown');
+
+    const mostrarCuentaRegresiva = () => {
+      tiempoRestante = TIEMPO_AVISO;
+      warningBox.style.display = 'block';
+      countdown.textContent = tiempoRestante;
+
+      temporizadorLogout = setInterval(() => {
+        tiempoRestante--;
+        countdown.textContent = tiempoRestante;
+
+        if (tiempoRestante <= 0) {
+          clearInterval(temporizadorLogout);
+          window.location.href = '/logout';
+        }
+      }, 1000);
+    };
+
+    const ocultarCuentaRegresiva = () => {
+      clearInterval(temporizadorLogout);
+      warningBox.style.display = 'none';
+    };
+
+    const resetInactividad = () => {
+      clearTimeout(temporizadorInactividad);
+      ocultarCuentaRegresiva();
+
+      temporizadorInactividad = setTimeout(() => {
+        mostrarCuentaRegresiva();
+      }, TIEMPO_INACTIVIDAD);
+    };
+
+    ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evento => {
+      window.addEventListener(evento, resetInactividad);
+    });
+
+    resetInactividad();
+  </script>
+{{/if}}
+{{{body}}}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

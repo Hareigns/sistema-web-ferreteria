@@ -71,6 +71,13 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
 // Variables globales
 app.use((req, res, next) => {
     res.locals.success = req.flash('success');
@@ -128,3 +135,5 @@ app.use((err, req, res, next) => {
 app.listen(app.get('port'), () => {
     console.log(`Servidor corriendo en http://localhost:${app.get('port')}`);
 });
+
+

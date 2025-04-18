@@ -1,0 +1,13 @@
+#inactivity-warning {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #ffc107;
+    color: black;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
+    font-weight: bold;
+    z-index: 9999;
+    display: none;
+  }

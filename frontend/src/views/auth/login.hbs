@@ -25,5 +25,15 @@
 
     <button id="boton" class="btn btn-success">Iniciar Sesión</button>
 
+    <script>
+      // Evita que el usuario vuelva con el botón "Atrás"
+      if (window.history && window.history.pushState) {
+        window.history.pushState(null, null, window.location.href);
+        window.onpopstate = function () {
+          window.history.go(1);
+        };
+      }
+    </script>
+
   </form>
-</div>  
+</div>
