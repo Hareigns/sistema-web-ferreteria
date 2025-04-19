@@ -1,7 +1,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles/navigation.css">
-
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 {{#if user}}
 <nav class="navbar navbar-expand-lg">
   <div class="container-fluid">
@@ -13,19 +14,19 @@
       aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    
+
     <div class="collapse navbar-collapse" id="navbarNav">
       <div class="navbar-nav ms-auto">
         <a class="nav-link" href="/proveedores/add">
           <img src="/images/iconperson.webp" alt="Proveedores">
           Proveedores
         </a>
-        
+
         <a class="nav-link" href="/productos/add">
           <img src="/images/iconproduct.webp" alt="Productos">
           Productos
         </a>
-        
+
         <a class="nav-link" href="/ventas/add">
           <img src="/images/iconshop.webp" alt="Ventas">
           Ventas
@@ -46,10 +47,16 @@
           Reportes
         </a>
 
-        <a class="nav-link text-danger" href="/logout">
-          <img src="/images/iconlogout.webp" alt="Logout">
-          Cerrar sesión
-        </a>
+        <!-- Dropdown del usuario -->
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle fs-5 me-1"></i>
+            {{user.Apellido}} {{user.Nombre}}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item text-danger" href="/logout">Cerrar sesión</a></li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
