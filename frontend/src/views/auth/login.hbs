@@ -14,26 +14,25 @@
     </div>
 
     <div class="input-group">
-      <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
-      <input type="text" name="nombre" placeholder="Nombre" class="form-control">
-    </div>
-
-    <div class="input-group">
-      <span class="input-group-text"><i class="fa-solid fa-user-tag"></i></span>
-      <input type="text" name="apellido" placeholder="Apellido" class="form-control">
+      <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+      <input type="password" name="password" placeholder="Contraseña Temporal" class="form-control">
     </div>
 
     <button id="boton" class="btn btn-success">Iniciar Sesión</button>
-
-    <script>
-      // Evita que el usuario vuelva con el botón "Atrás"
-      if (window.history && window.history.pushState) {
-        window.history.pushState(null, null, window.location.href);
-        window.onpopstate = function () {
-          window.history.go(1);
-        };
-      }
-    </script>
-
   </form>
+</div>
+
+
+
+<script>
+  // Evita que el usuario vuelva con el botón "Atrás"
+  if (window.history && window.history.pushState) {
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      window.history.go(1);
+    };
+  }
+</script>
+
+</form>
 </div>

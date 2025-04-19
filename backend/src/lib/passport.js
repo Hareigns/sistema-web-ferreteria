@@ -2,12 +2,12 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import pool from "../database.js";
 
-// Estrategia de autenticación usando Cod_Empleado, Nombre y Apellido
+// Estrategia de autenticación usando Cod_Empleado y Contraseña
 passport.use('local.login', new LocalStrategy({
     usernameField: 'codigo_empleado',
-    passwordField: 'nombre',
-    passReqToCallback: true
-}, async (req, codigo_empleado, nombre, done) => {
+    passwordField: 'password',
+    passReqToCallback: false // Ya no necesitamos la request completa
+}, async (codigo_empleado, password, done) => {
     try {
         // Consulta solo empleados activos
         const [rows] = await pool.query(
@@ -18,21 +18,18 @@ passport.use('local.login', new LocalStrategy({
 
         if (rows.length > 0) {
             const empleado = rows[0];
-
-            // Comparación de nombre y apellido sin importar mayúsculas
-            if (
-                empleado.Nombre.toLowerCase() === req.body.nombre.toLowerCase() &&
-                empleado.Apellido.toLowerCase() === req.body.apellido.toLowerCase()
-            ) {
-                console.log('Nombre y apellido válidos');
-                done(null, empleado, req.flash('success', '¡Bienvenido ' + empleado.Nombre + ' ' + empleado.Apellido + '!'));
+            
+            // Comparación de la contraseña (sin hash por ahora, ya que es temporal)
+            if (empleado.Contraseña === password) {
+                console.log('Contraseña válida');
+                done(null, empleado, { message: `¡Bienvenido ${empleado.Nombre} ${empleado.Apellido}!` });
             } else {
-                console.log('Nombre o apellido incorrecto');
-                done(null, false, req.flash('error', 'Nombre o apellido incorrecto'));
+                console.log('Contraseña incorrecta');
+                done(null, false, { message: 'Código de empleado o contraseña incorrectos' });
             }
         } else {
             console.log('Empleado no encontrado o inactivo');
-            return done(null, false, req.flash('error', 'Empleado no encontrado o inactivo'));
+            return done(null, false, { message: 'Empleado no encontrado o inactivo' });
         }
     } catch (error) {
         console.error("Error en el inicio de sesión:", error);
@@ -40,20 +37,17 @@ passport.use('local.login', new LocalStrategy({
     }
 }));
 
-
 // Serialización de usuario (se guarda el Cod_Empleado en la sesión)
 passport.serializeUser((empleado, done) => {
     done(null, empleado.Cod_Empleado);
 });
 
-// Deserialización del usuario (se busca el empleado por Cod_Empleado para restaurar los datos en la sesión)
+// Deserialización del usuario
 passport.deserializeUser(async (Cod_Empleado, done) => {
     try {
-        //console.log("Deserializando empleado con Cod_Empleado:", Cod_Empleado);  // Verifica el Cod_Empleado
         const [rows] = await pool.query('SELECT * FROM empleado WHERE Cod_Empleado = ?', [Cod_Empleado]);
         if (rows.length > 0) {
             const empleado = rows[0];
-            //console.log("Empleado encontrado:", empleado);  // Verifica si los datos del empleado están correctos
             done(null, empleado);
         } else {
             done(new Error('Empleado no encontrado'));

@@ -47,22 +47,29 @@
                   <option value="Claro">Claro</option>
                 </select>
               </div>
-            </div>
-            <div class="d-flex justify-content-between">
-              <button class="btn btn-primary" type="button" id="ingresarButton"
-                onclick="ingresarEmpleado()">Ingresar</button>
-              <button class="btn btn-danger" type="button" onclick="limpiarCampos()">Limpiar</button>
-            </div>
+              <div class="col-md-6 mb-3 d-flex align-items-center">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="contrasena_temporal">
+                  <label class="form-check-label" for="contrasena_temporal">
+                    Contraseña temporal
+                  </label>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between">
+                <button class="btn btn-primary" type="button" id="ingresarButton"
+                  onclick="ingresarEmpleado()">Ingresar</button>
+                <button class="btn btn-danger" type="button" onclick="limpiarCampos()">Limpiar</button>
+              </div>
 
-            <div class="mt-4">
-              <h5 class="text-center mb-3">Modificar Empleados</h5>
-              <select name="codigo_empleado" class="form-select" id="codigo_empleado" required
-                onchange="habilitarDeshabilitarBotones()">
-                <option value="" disabled selected>Seleccione un empleado</option>
-              </select>
-              <button class="btn btn-success mt-2 w-100" type="button" id="modificarButton"
-                onclick="modificarEmpleado()" disabled>Modificar</button>
-            </div>
+              <div class="mt-4">
+                <h5 class="text-center mb-3">Modificar Empleados</h5>
+                <select name="codigo_empleado" class="form-select" id="codigo_empleado" required
+                  onchange="habilitarDeshabilitarBotones()">
+                  <option value="" disabled selected>Seleccione un empleado</option>
+                </select>
+                <button class="btn btn-success mt-2 w-100" type="button" id="modificarButton"
+                  onclick="modificarEmpleado()" disabled>Modificar</button>
+              </div>
           </form>
         </div>
       </div>
@@ -435,10 +442,10 @@
 
     // Limpiar todos los campos del formulario
     document.getElementById('empleadoForm').reset();
-    
+
     // Deseleccionar cualquier empleado seleccionado
     document.getElementById('codigo_empleado').value = "";
-    
+
     // Habilitar el botón de ingresar y deshabilitar el de modificar
     document.getElementById('ingresarButton').disabled = false;
     document.getElementById('modificarButton').disabled = true;

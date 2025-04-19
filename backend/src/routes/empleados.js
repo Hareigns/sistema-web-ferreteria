@@ -93,6 +93,7 @@ router.post("/api/empleados", async (req, res) => {
       'INSERT INTO Empleado (Nombre, Apellido, Direccion, Estado, Cedula, FechaIngreso) VALUES (?, ?, ?, ?, ?, ?)', 
       [nombre, apellido, direccion, estado, cedula.toUpperCase(), fechaIngreso]
     );
+    
 
     const codEmpleado = empleadoResult.insertId;
 
