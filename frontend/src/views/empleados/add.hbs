@@ -131,81 +131,107 @@
     habilitarDeshabilitarBotones();
   };
 
-
-
-  // Cargar empleados en el select
   async function cargarEmpleadosEnSelect() {
+    const select = document.getElementById("codigo_empleado");
+
     try {
-      const response = await fetch("/empleados/api/empleados");
-      const data = await response.json();
+      // Mostrar estado de carga
+      select.disabled = true;
+      select.innerHTML = '<option value="">Cargando empleados...</option>';
 
-      if (data.success) {
-        const selectEmpleado = document.getElementById("codigo_empleado");
-        selectEmpleado.innerHTML = `<option value="" disabled selected>Seleccione un empleado</option>`;
+      const response = await fetch('/empleados/api/empleados');
 
-        data.data.forEach(empleado => {
-          const option = document.createElement("option");
-          option.value = empleado.Cod_Empleado;
-          option.textContent = `${empleado.Nombre} ${empleado.Apellido}`;
-          selectEmpleado.appendChild(option);
-        });
-      } else {
-        Swal.fire("Error", "No se pudieron cargar los empleados.", "error");
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
+
+      const result = await response.json();
+
+      // Verificar estructura de respuesta
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error('Formato de respuesta inválido');
+      }
+
+      const empleados = result.data;
+
+      // Limpiar y preparar el select
+      select.innerHTML = '<option value="" disabled selected>Seleccione un empleado</option>';
+
+      if (empleados.length === 0) {
+        select.innerHTML = '<option value="" disabled>No hay empleados activos</option>';
+        return;
+      }
+
+      // Ordenar empleados por nombre
+      empleados.sort((a, b) => {
+        const nombreA = a.Nombre?.toUpperCase() || '';
+        const nombreB = b.Nombre?.toUpperCase() || '';
+        return nombreA.localeCompare(nombreB);
+      });
+
+      // Llenar el select
+      empleados.forEach(empleado => {
+        const option = document.createElement("option");
+        option.value = empleado.Cod_Empleado;
+        option.textContent = `${empleado.Cod_Empleado} - ${empleado.Nombre} ${empleado.Apellido || ''}`;
+
+        // Mapear campos según la estructura de tu API
+        option.dataset.nombre = empleado.Nombre || '';
+        option.dataset.apellido = empleado.Apellido || '';
+        option.dataset.direccion = empleado.Direccion || '';
+        option.dataset.estado = empleado.Estado || 'Activo';
+        option.dataset.cedula = empleado.Cedula || '';
+        option.dataset.telefono = empleado.Telefono || '';
+        option.dataset.compania = empleado.Compania || 'Tigo';
+        option.dataset.fechaIngreso = empleado.FechaIngresoFormateada || formatDate(empleado.FechaIngreso) || 'No definida';
+
+        select.appendChild(option);
+      });
+
+      select.disabled = false;
+      habilitarDeshabilitarBotones();
+
     } catch (error) {
-      console.error("Error al obtener empleados:", error);
-      Swal.fire("Error", "Hubo un problema al obtener la lista de empleados.", "error");
+      console.error('Error al cargar empleados:', error);
+      select.innerHTML = '<option value="" disabled>Error al cargar empleados</option>';
+
+      Swal.fire({
+        title: 'Error',
+        html: `<p>No se pudieron cargar los empleados.</p>
+            <small>${error.message || 'Error desconocido'}</small>`,
+        icon: 'error',
+        confirmButtonText: 'Reintentar',
+        showDenyButton: true,
+        denyButtonText: 'Cerrar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          cargarEmpleadosEnSelect();
+        }
+      });
     }
   }
 
-  // Llenar los campos con los datos del empleado seleccionado
-  document.getElementById("codigo_empleado").addEventListener("change", async function () {
-    const codigoEmpleado = this.value;
-    if (!codigoEmpleado) return;
+  // Función auxiliar para formatear fechas
+  function formatDate(dateString) {
+    if (!dateString) return '';
 
     try {
-      const response = await fetch(`/empleados/api/empleados`);
-      const data = await response.json();
-
-      if (data.success) {
-        const empleado = data.data.find(emp => emp.Cod_Empleado == codigoEmpleado);
-
-        if (empleado) {
-          document.getElementById("nombre").value = empleado.Nombre;
-          document.getElementById("apellido").value = empleado.Apellido;
-          document.getElementById("direccion").value = empleado.Direccion;
-          document.getElementById("estado").value = empleado.Estado || "Activo";
-          document.getElementById("telefono").value = empleado.Telefono || "";
-          document.getElementById("compania_telefonica").value = empleado.Compania || "";
-          document.getElementById("cedula").value = empleado.Cedula || "";
-        } else {
-          Swal.fire("Error", "Empleado no encontrado.", "error");
-        }
-      } else {
-        Swal.fire("Error", "No se pudieron cargar los datos.", "error");
+      // Si es un string ISO (YYYY-MM-DD)
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
       }
-    } catch (error) {
-      console.error("Error al obtener datos del empleado:", error);
-      Swal.fire("Error", "Hubo un problema al obtener los datos.", "error");
+
+      // Si ya está formateada (dd/mm/yyyy)
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateString;
+      }
+
+      return '';
+    } catch (e) {
+      console.error('Error formateando fecha:', e);
+      return '';
     }
-  });
-
-  // Función para formatear fechas (consistente con el backend)
-  function formatDate(dateString) {
-    if (!dateString) return 'No definida';
-
-    // Si ya viene formateada del backend (dd/mm/yyyy)
-    if (typeof dateString === 'string' && dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-      return dateString;
-    }
-
-    // Si es un string ISO (YYYY-MM-DD)
-    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const [year, month, day] = dateString.split('-');
-      return `${day}/${month}/${year}`;
-    }
-
-    return 'No definida';
   }
 
 
@@ -262,6 +288,9 @@
   // Función para modificar empleado (mejorada)
   async function modificarEmpleado() {
     const codigoEmpleado = document.getElementById("codigo_empleado").value;
+    const resetPassword = document.getElementById("contrasena_temporal").checked;
+
+    // Obtener valores de los campos
     const nombre = document.getElementById("nombre").value.trim();
     const apellido = document.getElementById("apellido").value.trim();
     const direccion = document.getElementById("direccion").value.trim();
@@ -270,22 +299,11 @@
     const compania = document.getElementById("compania_telefonica").value;
     const cedula = document.getElementById("cedula").value.trim();
 
-    // Validación de campos
-    if (!codigoEmpleado || !nombre || !apellido || !direccion || !estado || !telefono || !compania || !cedula) {
+    // Validación mínima
+    if (!codigoEmpleado) {
       await Swal.fire({
-        title: "Campos incompletos",
-        text: "Todos los campos son obligatorios para modificar un empleado",
-        icon: "warning",
-        confirmButtonColor: "#3085d6"
-      });
-      return;
-    }
-
-    // Validación específica de cédula
-    if (!/^[0-9]{13}[A-Z]$/i.test(cedula)) {
-      await Swal.fire({
-        title: "Cédula inválida",
-        text: "La cédula debe tener 13 dígitos seguidos de 1 letra",
+        title: "Error",
+        text: "Debe seleccionar un empleado",
         icon: "error"
       });
       return;
@@ -294,7 +312,9 @@
     try {
       const confirmacion = await Swal.fire({
         title: `¿Actualizar empleado ${codigoEmpleado}?`,
-        html: `<b>${nombre} ${apellido}</b><br>¿Confirmas la modificación?`,
+        html: `<b>${nombre} ${apellido}</b><br>
+          ${resetPassword ? '<b>Se reseteará la contraseña a "1234"</b><br>' : ''}
+          ¿Confirmas la modificación?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#28a745",
@@ -317,7 +337,8 @@
           estado,
           telefono,
           compania,
-          cedula: cedula.toUpperCase()
+          cedula: cedula.toUpperCase(),
+          resetPassword // Enviamos el estado del checkbox
         })
       });
 
@@ -328,26 +349,30 @@
       }
 
       if (data.success) {
+        let message = `Empleado ${nombre} ${apellido} modificado correctamente`;
+        if (data.passwordReset) {
+          message += '<br><b>Contraseña reseteada a "1234"</b>';
+        }
+
         await Swal.fire({
           title: "¡Actualizado!",
-          text: `Empleado ${nombre} ${apellido} modificado correctamente`,
+          html: message,
           icon: "success",
           timer: 2000,
           timerProgressBar: true,
           showConfirmButton: false
         });
 
-        // Actualizar la UI - forzar recarga del select
+        // Actualizar la UI
         await cargarEmpleadosEnSelect();
         cargarEmpleadosEnTabla();
+        document.getElementById("contrasena_temporal").checked = false;
 
         // Si el estado cambió a Inactivo, limpiar el formulario
         if (estado === 'Inactivo') {
           limpiarCampos();
           document.getElementById("codigo_empleado").selectedIndex = 0;
         }
-      } else {
-        throw new Error(data.message || "La modificación no tuvo éxito");
       }
     } catch (error) {
       console.error("Error en modificarEmpleado:", error);
@@ -431,23 +456,95 @@
     }
   }
 
-  // Función para limpiar campos
   function limpiarCampos() {
+    // Limpiar campos de texto
     const campos = ["nombre", "apellido", "direccion", "telefono", "cedula"];
-    campos.forEach(id => document.getElementById(id).value = "");
+    campos.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.value = "";
+        element.defaultValue = ""; // Asegurar reset de valores por defecto
+      }
+    });
 
+    // Resetear selects
     document.getElementById("estado").value = "Activo";
     document.getElementById("compania_telefonica").value = "Tigo";
-    document.getElementById("codigo_empleado").value = "";
 
-    // Limpiar todos los campos del formulario
-    document.getElementById('empleadoForm').reset();
+    // Resetear select de empleados y checkbox
+    const selectEmpleado = document.getElementById("codigo_empleado");
+    selectEmpleado.value = "";
+    selectEmpleado.selectedIndex = 0;
 
-    // Deseleccionar cualquier empleado seleccionado
-    document.getElementById('codigo_empleado').value = "";
+    document.getElementById("contrasena_temporal").checked = false;
 
-    // Habilitar el botón de ingresar y deshabilitar el de modificar
-    document.getElementById('ingresarButton').disabled = false;
-    document.getElementById('modificarButton').disabled = true;
+    // Manejar estados de botones
+    document.getElementById("ingresarButton").disabled = false;
+    document.getElementById("modificarButton").disabled = true;
+
+    // Resetear formulario completamente
+    document.getElementById("empleadoForm").reset();
   }
+
+
+  // Evento change mejorado con manejo de errores
+  document.getElementById("codigo_empleado").addEventListener("change", async function () {
+    try {
+      const selectedOption = this.options[this.selectedIndex];
+
+      if (!selectedOption?.value) {
+        limpiarCampos();
+        document.getElementById("modificarButton").disabled = true;
+        return;
+      }
+
+      // Verificar datos del empleado seleccionado
+      if (!selectedOption.dataset.nombre) {
+        throw new Error('Datos del empleado no cargados correctamente');
+      }
+
+      // Llenar campos del formulario
+      const fieldsToUpdate = [
+        { id: 'nombre', dataset: 'nombre', required: true },
+        { id: 'apellido', dataset: 'apellido' },
+        { id: 'direccion', dataset: 'direccion' },
+        { id: 'cedula', dataset: 'cedula' },
+        { id: 'telefono', dataset: 'telefono' },
+        { id: 'estado', dataset: 'estado', type: 'select' },
+        { id: 'compania_telefonica', dataset: 'compania', type: 'select' }
+      ];
+
+      fieldsToUpdate.forEach(field => {
+        const element = document.getElementById(field.id);
+        if (!element) {
+          console.error(`Elemento no encontrado: ${field.id}`);
+          return;
+        }
+
+        const value = selectedOption.dataset[field.dataset] || '';
+
+        if (field.type === 'select') {
+          // Para select, verificar que el valor existe en las opciones
+          const optionExists = [...element.options].some(opt => opt.value === value);
+          element.value = optionExists ? value : element.options[0]?.value || '';
+        } else {
+          element.value = value;
+        }
+
+        // Guardar valor original para detectar cambios
+        element.defaultValue = element.value;
+      });
+
+      document.getElementById("modificarButton").disabled = false;
+      document.getElementById("contrasena_temporal").checked = false;
+
+    } catch (error) {
+      console.error('Error al cargar datos del empleado:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudieron cargar los datos del empleado seleccionado',
+        icon: 'error'
+      });
+    }
+  });
 </script>

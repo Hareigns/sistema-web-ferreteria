@@ -177,9 +177,10 @@ router.get('/api/empleados', isLoggedIn, async (req, res) => {
   }
 });
 
+
 router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const { nombre, apellido, direccion, estado, telefono, compania, cedula } = req.body;
+  const { nombre, apellido, direccion, estado, telefono, compania, cedula, resetPassword } = req.body;
 
   try {
     // Validar datos
@@ -194,28 +195,56 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
     // Iniciar transacción
     await pool.query('START TRANSACTION');
 
-    // Actualizar datos del empleado (EXCLUYENDO FechaIngreso)
-    await pool.query(
-      `UPDATE Empleado 
-       SET Nombre = ?, Apellido = ?, Direccion = ?, Estado = ?, Cedula = ?
-       WHERE Cod_Empleado = ?`,
-      [nombre, apellido, direccion, estado, cedula.toUpperCase(), id]
-    );
+    // Construir consulta SQL dinámica para Empleado
+    const empleadoFields = [];
+    const empleadoValues = [];
 
-    // Actualizar teléfono
-    await pool.query(
-      `UPDATE Telefono 
-       SET Numero = ?, Compania = ?
-       WHERE Cod_Empleado = ?`,
-      [telefono, compania, id]
-    );
+    if (nombre !== undefined) {
+      empleadoFields.push('Nombre = ?');
+      empleadoValues.push(nombre);
+    }
+    if (apellido !== undefined) {
+      empleadoFields.push('Apellido = ?');
+      empleadoValues.push(apellido);
+    }
+    if (direccion !== undefined) {
+      empleadoFields.push('Direccion = ?');
+      empleadoValues.push(direccion);
+    }
+    if (estado !== undefined) {
+      empleadoFields.push('Estado = ?');
+      empleadoValues.push(estado);
+    }
+    if (cedula !== undefined) {
+      empleadoFields.push('Cedula = ?');
+      empleadoValues.push(cedula.toUpperCase());
+    }
+    if (resetPassword) {
+      empleadoFields.push('Contraseña = ?');
+      empleadoValues.push('1234'); // Establecer contraseña temporal
+    }
+
+    // Actualizar empleado si hay campos para modificar
+    if (empleadoFields.length > 0) {
+      const query = `UPDATE Empleado SET ${empleadoFields.join(', ')} WHERE Cod_Empleado = ?`;
+      await pool.query(query, [...empleadoValues, id]);
+    }
+
+    // Actualizar teléfono si se proporcionó
+    if (telefono !== undefined && compania !== undefined) {
+      await pool.query(
+        `UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Empleado = ?`,
+        [telefono, compania, id]
+      );
+    }
 
     // Confirmar transacción
     await pool.query('COMMIT');
 
     res.json({ 
       success: true, 
-      message: 'Empleado actualizado correctamente' 
+      message: 'Empleado actualizado correctamente',
+      passwordReset: resetPassword || false
     });
 
   } catch (error) {
@@ -227,7 +256,5 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
     });
   }
 });
-
-
 
 export { router };
