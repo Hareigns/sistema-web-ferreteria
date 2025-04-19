@@ -1,6 +1,5 @@
 import express from 'express';
 import pool from '../database.js';
-import ExcelJS from 'exceljs';
 import { database } from '../keys.js';
 
 

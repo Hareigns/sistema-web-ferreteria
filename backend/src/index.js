@@ -3,7 +3,7 @@ import morgan from "morgan";
 import { engine } from "express-handlebars";
 import { join, dirname } from "path";
 import session from "express-session";
-import flash from "connect-flash";
+//import flash from "connect-flash";
 import MySQLStoreFactory from "express-mysql-session";
 import passport from "passport";
 import { fileURLToPath } from "url";
@@ -13,6 +13,7 @@ import cors from 'cors'; // Importación añadida
 import { Handlebars } from "./lib/handlebars.js";
 import './lib/passport.js';
 import bodyParser from 'body-parser';
+import flash from 'express-flash';
 
 // Importación de rutas
 import indexRoutes from "./routes/index.js";

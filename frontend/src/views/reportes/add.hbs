@@ -98,7 +98,6 @@
 <script src="reportes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
 
 
@@ -303,36 +302,36 @@
 
 
     async function exportarExcelProductos(data, nombreArchivo) {
-        const ExcelJS = window.ExcelJS;
+    try {
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Productos');
+        workbook.creator = 'Tu Aplicación';
+        workbook.lastModifiedBy = 'Tu Aplicación';
+        workbook.created = new Date();
+        
+        const worksheet = workbook.addWorksheet('Productos', {
+            properties: { tabColor: { argb: 'FF4F81BD' } }
+        });
 
+        // Configuración de columnas (mejorado)
         worksheet.columns = [
             { header: 'Código', key: 'Cod_Producto', width: 15 },
             { header: 'Nombre', key: 'Nombre', width: 30 },
-            { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
+            { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20, style: { numFmt: '#,##0' } },
             { header: 'Tipo', key: 'Tipo', width: 20 }
         ];
 
-        // Encabezado con estilo
-        worksheet.getRow(1).eachCell((cell) => {
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FF4F81BD' }
-            };
-            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' }
-            };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        });
-
-        data.forEach(producto => {
-            const row = worksheet.addRow(producto);
+        // Estilo de encabezado (optimizado)
+        const headerRow = worksheet.getRow(1);
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4F81BD' }
+        };
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+        
+        // Aplicar bordes a todas las celdas de una vez
+        worksheet.eachRow({ includeEmpty: false }, row => {
             row.eachCell(cell => {
                 cell.border = {
                     top: { style: 'thin' },
@@ -343,17 +342,29 @@
             });
         });
 
+        // Agregar datos
+        worksheet.addRows(data);
+
+        // Generar archivo
         const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        const blob = new Blob([buffer], { 
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
         });
 
+        // Descargar
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = nombreArchivo + '.xlsx';
+        a.download = `${nombreArchivo}_${new Date().toISOString().slice(0,10)}.xlsx`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('Error al exportar Excel:', error);
+        throw error;
     }
+}
 
 </script>

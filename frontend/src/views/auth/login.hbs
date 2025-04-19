@@ -6,19 +6,45 @@
 <div class="login-container">
   <img src="/images/logo1.webp" alt="Logo de la Ferretería">
   <h3>Iniciar Sesión</h3>
-  <form action="/login" method="post">
+  
+  {{#if error}}
+    <div class="alert alert-danger">{{error}}</div>
+  {{/if}}
+  
+  {{#if success}}
+    <div class="alert alert-success">{{success}}</div>
+  {{/if}}
 
+  <form action="/login" method="post" id="loginForm">
     <div class="input-group">
       <span class="input-group-text"><i class="fa-solid fa-id-badge"></i></span>
-      <input type="text" name="codigo_empleado" placeholder="Código de Empleado" class="form-control">
+      <input type="text" name="codigo_empleado" placeholder="Código de Empleado" class="form-control" required>
     </div>
 
-    <div class="input-group">
+    <div class="input-group mt-3">
       <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
-      <input type="password" name="password" placeholder="Contraseña Temporal" class="form-control">
+      <input type="password" name="password" id="tempPassword" placeholder="Contraseña" class="form-control" required>
     </div>
 
-    <button id="boton" class="btn btn-success">Iniciar Sesión</button>
+    <div id="newPasswordFields" style="display: none;">
+      <div class="alert alert-warning mt-3">
+        <i class="fas fa-exclamation-triangle"></i> Debe cambiar su contraseña temporal
+      </div>
+      
+      <div class="input-group mt-2">
+        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+        <input type="password" name="new_password" id="newPassword" placeholder="Nueva Contraseña" class="form-control">
+      </div>
+
+      <div class="input-group mt-2">
+        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+        <input type="password" name="confirm_password" id="confirmPassword" placeholder="Confirmar Nueva Contraseña" class="form-control">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3 w-100">
+      <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+    </button>
   </form>
 </div>
 
@@ -32,6 +58,23 @@
       window.history.go(1);
     };
   }
+
+document.addEventListener('DOMContentLoaded', function() {
+  const tempPassword = document.getElementById('tempPassword');
+  const newPasswordFields = document.getElementById('newPasswordFields');
+  
+  tempPassword.addEventListener('input', function() {
+    if (this.value === '1234') {
+      newPasswordFields.style.display = 'block';
+      document.getElementById('newPassword').required = true;
+      document.getElementById('confirmPassword').required = true;
+    } else {
+      newPasswordFields.style.display = 'none';
+      document.getElementById('newPassword').required = false;
+      document.getElementById('confirmPassword').required = false;
+    }
+  });
+});
 </script>
 
 </form>

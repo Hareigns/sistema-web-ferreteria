@@ -11,3 +11,4 @@ export function isNotLoggedIn(req, res, next) {
     }
     return res.redirect('/dashboard');
 }
+
