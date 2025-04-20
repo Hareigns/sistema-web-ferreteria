@@ -51,7 +51,7 @@
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="contrasena_temporal">
                   <label class="form-check-label" for="contrasena_temporal">
-                    Contraseña temporal
+                    Resetear a contraseña temporal
                   </label>
                 </div>
               </div>
@@ -162,11 +162,11 @@
         return;
       }
 
-      // Ordenar empleados por nombre
+      // Ordenar empleados por código numérico (ascendente)
       empleados.sort((a, b) => {
-        const nombreA = a.Nombre?.toUpperCase() || '';
-        const nombreB = b.Nombre?.toUpperCase() || '';
-        return nombreA.localeCompare(nombreB);
+        const codigoA = parseInt(a.Cod_Empleado) || 0;
+        const codigoB = parseInt(b.Cod_Empleado) || 0;
+        return codigoA - codigoB;
       });
 
       // Llenar el select
@@ -476,7 +476,9 @@
     selectEmpleado.value = "";
     selectEmpleado.selectedIndex = 0;
 
-    document.getElementById("contrasena_temporal").checked = false;
+    // Ocultar el checkbox y su label
+    document.querySelector(".form-check").classList.remove("visible");
+
 
     // Manejar estados de botones
     document.getElementById("ingresarButton").disabled = false;
@@ -494,7 +496,6 @@
 
       if (!selectedOption?.value) {
         limpiarCampos();
-        document.getElementById("modificarButton").disabled = true;
         return;
       }
 
@@ -536,7 +537,8 @@
       });
 
       document.getElementById("modificarButton").disabled = false;
-      document.getElementById("contrasena_temporal").checked = false;
+      // Mostrar el checkbox y su label
+      document.querySelector(".form-check").classList.add("visible");
 
     } catch (error) {
       console.error('Error al cargar datos del empleado:', error);

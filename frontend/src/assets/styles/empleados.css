@@ -42,3 +42,13 @@ body {
   .fw-bold {
     font-weight: bold !important;
   }
+
+/* Ocultar inicialmente el contenedor del checkbox */
+.form-check {
+  display: none;
+}
+
+/* Mostrar cuando tenga la clase 'visible' */
+.form-check.visible {
+  display: block;
+}
