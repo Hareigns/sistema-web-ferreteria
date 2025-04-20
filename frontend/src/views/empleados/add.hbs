@@ -464,6 +464,7 @@
       if (element) {
         element.value = "";
         element.defaultValue = ""; // Asegurar reset de valores por defecto
+        element.disabled = false; // Habilitar campo al limpiar
       }
     });
 
@@ -479,7 +480,6 @@
     // Ocultar el checkbox y su label
     document.querySelector(".form-check").classList.remove("visible");
 
-
     // Manejar estados de botones
     document.getElementById("ingresarButton").disabled = false;
     document.getElementById("modificarButton").disabled = true;
@@ -488,14 +488,18 @@
     document.getElementById("empleadoForm").reset();
   }
 
-
-  // Evento change mejorado con manejo de errores
+  // Evento change mejorado con manejo de errores y bloqueo de campos
   document.getElementById("codigo_empleado").addEventListener("change", async function () {
     try {
       const selectedOption = this.options[this.selectedIndex];
 
       if (!selectedOption?.value) {
         limpiarCampos();
+        // Habilitar campos al limpiar
+        ['nombre', 'apellido', 'cedula'].forEach(id => {
+          const field = document.getElementById(id);
+          if (field) field.disabled = false;
+        });
         return;
       }
 
@@ -534,6 +538,12 @@
 
         // Guardar valor original para detectar cambios
         element.defaultValue = element.value;
+      });
+
+      // Bloquear campos que no deben editarse
+      ['nombre', 'apellido', 'cedula'].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.disabled = true;
       });
 
       document.getElementById("modificarButton").disabled = false;

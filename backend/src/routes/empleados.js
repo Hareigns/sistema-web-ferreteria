@@ -5,18 +5,29 @@ import { isLoggedIn } from "../lib/auth.js";
 const router = express.Router();
 
 // Helper para validar datos del Empleado
-const validateEmpleadoData = (data) => {
+const validateEmpleadoData = (data, isUpdate = false) => {
   const { nombre, apellido, direccion, telefono, compania, cedula } = data;
   const errors = [];
 
-  if (!nombre || nombre.length < 2) errors.push("El nombre es requerido (mínimo 2 caracteres)");
-  if (!apellido || apellido.length < 2) errors.push("El apellido es requerido (mínimo 2 caracteres)");
-  if (!direccion || direccion.length < 5) errors.push("La dirección es requerida (mínimo 5 caracteres)");
-  if (!telefono) errors.push("El teléfono es requerido");
-  
-  // Validación de cédula
-  if (!cedula || !/^[0-9]{13}[A-Z]$/i.test(cedula)) {
-    errors.push("La cédula debe tener 13 dígitos seguidos de 1 letra");
+  // Solo validamos estos campos si no es una actualización
+  if (!isUpdate) {
+    if (!nombre || nombre.length < 2) {
+      errors.push("El nombre es requerido (mínimo 2 caracteres)");
+    }
+    if (!apellido || apellido.length < 2) {
+      errors.push("El apellido es requerido (mínimo 2 caracteres)");
+    }
+    if (!cedula || !/^[0-9]{13}[A-Z]$/i.test(cedula)) {
+      errors.push("La cédula debe tener 13 dígitos seguidos de 1 letra");
+    }
+  }
+
+  // Estos campos siempre se validan (tanto en creación como actualización)
+  if (!direccion || direccion.length < 5) {
+    errors.push("La dirección es requerida (mínimo 5 caracteres)");
+  }
+  if (!telefono) {
+    errors.push("El teléfono es requerido");
   }
 
   const companiasValidas = ['Tigo', 'Claro'];
@@ -180,11 +191,11 @@ router.get('/api/empleados', isLoggedIn, async (req, res) => {
 
 router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const { nombre, apellido, direccion, estado, telefono, compania, cedula, resetPassword } = req.body;
+  const { direccion, estado, telefono, compania, resetPassword } = req.body;
 
   try {
-    // Validar datos
-    const validationErrors = validateEmpleadoData(req.body);
+    // Validar datos (sin incluir nombre, apellido ni cédula)
+    const validationErrors = validateEmpleadoData(req.body, true); // Pasamos false para indicar que no validemos esos campos
     if (validationErrors.length > 0) {
       return res.status(400).json({ 
         success: false, 
@@ -195,18 +206,10 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
     // Iniciar transacción
     await pool.query('START TRANSACTION');
 
-    // Construir consulta SQL dinámica para Empleado
+    // Construir consulta SQL dinámica para Empleado (sin incluir nombre, apellido ni cédula)
     const empleadoFields = [];
     const empleadoValues = [];
 
-    if (nombre !== undefined) {
-      empleadoFields.push('Nombre = ?');
-      empleadoValues.push(nombre);
-    }
-    if (apellido !== undefined) {
-      empleadoFields.push('Apellido = ?');
-      empleadoValues.push(apellido);
-    }
     if (direccion !== undefined) {
       empleadoFields.push('Direccion = ?');
       empleadoValues.push(direccion);
@@ -214,10 +217,6 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
     if (estado !== undefined) {
       empleadoFields.push('Estado = ?');
       empleadoValues.push(estado);
-    }
-    if (cedula !== undefined) {
-      empleadoFields.push('Cedula = ?');
-      empleadoValues.push(cedula.toUpperCase());
     }
     if (resetPassword) {
       empleadoFields.push('Contraseña = ?');
@@ -256,5 +255,4 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
     });
   }
 });
-
 export { router };
