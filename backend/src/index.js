@@ -91,6 +91,12 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use((req, res, next) => {
+    res.locals.user = req.user || null;
+    res.locals.esAdmin = req.user ? [1, 2].includes(req.user.Cod_Empleado) : false;
+    next();
+  });
+
 // Configuración de rutas
 app.use(indexRoutes);
 app.use(autentificacionRoutes);

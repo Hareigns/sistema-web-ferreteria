@@ -32,11 +32,13 @@
           Ventas
         </a>
 
+        {{#if esAdmin}}
         <a class="nav-link" href="/empleados/add">
           <img src="/images/iconemployee.webp" alt="Empleados">
           Empleados
         </a>
-
+        {{/if}}
+        
         <a class="nav-link" href="/bodega/list">
           <img src="/images/iconstock.webp" alt="Bodega">
           Bodega
@@ -47,9 +49,9 @@
           Reportes
         </a>
 
-        <!-- Dropdown del usuario -->
         <div class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
             <i class="bi bi-person-circle fs-5 me-1"></i>
             {{user.Apellido}} {{user.Nombre}}
           </a>
@@ -61,4 +63,6 @@
     </div>
   </div>
 </nav>
+{{else}}
+<p>No estás logueado</p>
 {{/if}}

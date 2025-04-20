@@ -2,6 +2,7 @@ import express from "express";
 import passport from "passport";
 import { isLoggedIn, isNotLoggedIn } from "../lib/auth.js";
 import pool from "../database.js"; // <-- Agrega esta línea
+import { marcarRol } from "../lib/roles.js";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.post('/login', isNotLoggedIn, async (req, res, next) => {
   try {
     const { password, new_password, confirm_password, codigo_empleado } = req.body;
 
+    // Verificación de contraseña temporal
     if (password === '1234') {
       if (!new_password) {
         req.flash('error', 'Debe establecer una nueva contraseña');
@@ -42,17 +44,28 @@ router.post('/login', isNotLoggedIn, async (req, res, next) => {
         return res.redirect('/login');
       }
 
-      // ✅ Importante: Cambiar req.body.password para que passport use la nueva contraseña
       req.body.password = new_password;
     }
 
-    // Ahora autenticar normalmente con la nueva contraseña
-    passport.authenticate('local.login', {
-      successRedirect: '/dashboard',
-      failureRedirect: '/login',
-      failureFlash: true
+    // Autenticación con Passport
+    passport.authenticate('local.login', (err, user, info) => {
+      if (err) {
+        console.error('Error en autenticación:', err);
+        return next(err);
+      }
+      if (!user) {
+        req.flash('error', info.message || 'Error de autenticación');
+        return res.redirect('/login');
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Error en login:', err);
+          return next(err);
+        }
+        return res.redirect('/dashboard');
+      });
     })(req, res, next);
-    
+
   } catch (error) {
     console.error('Error en el proceso de login:', error);
     req.flash('error', 'Error al procesar la solicitud');
@@ -61,11 +74,13 @@ router.post('/login', isNotLoggedIn, async (req, res, next) => {
 });
 
 
-// Ruta del dashboard (requiere autenticación)
 router.get('/dashboard', isLoggedIn, (req, res) => {
-  console.log(req.user); // Verifica si contiene los datos del usuario
-  res.render('dashboard');
+  console.log('Usuario en sesión:', req.user); // Debería mostrar los datos del usuario
+  res.render('dashboard', {
+    user: req.user // Usa req.user en lugar de req.session.user
+  });
 });
+
 
 // Ruta para cerrar sesión
 router.get('/logout', (req, res, next) => {
