@@ -170,35 +170,32 @@
 
     // Función para exportar los datos a Excel
     async function exportarExcelBonito(data, nombreArchivo) {
-        // Limpiar y formatear las fechas
         const dataLimpia = data.map(item => ({
             Cod_Venta: item.Cod_Venta,
             Cod_Producto: item.Cod_Producto,
             Nombre_Producto: item.Nombre_Producto,
             Monto_Total: item.Monto_Total,
-            Fecha_Venta: new Date(item.Fecha_Venta).toLocaleDateString('es-ES') // "10/04/2025"
+            Fecha_Venta: new Date(item.Fecha_Venta).toLocaleDateString('es-ES')
         }));
 
-        // Crear el archivo Excel usando ExcelJS
         const ExcelJS = window.ExcelJS;
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Reporte');
 
-        // Añadir encabezados con estilo
+        // Añadir encabezados
         const headers = Object.keys(dataLimpia[0]);
         worksheet.addRow(headers);
 
-        // Estilo para el encabezado
         const headerRow = worksheet.getRow(1);
-        headerRow.eachCell((cell) => {
+        headerRow.eachCell(cell => {
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'FF4F81BD' } // Azul oscuro
+                fgColor: { argb: 'FF4F81BD' }
             };
             cell.font = {
                 bold: true,
-                color: { argb: 'FFFFFFFF' } // Blanco
+                color: { argb: 'FFFFFFFF' }
             };
             cell.border = {
                 top: { style: 'thin' },
@@ -209,12 +206,10 @@
             cell.alignment = { vertical: 'middle', horizontal: 'center' };
         });
 
-        // Añadir los datos de las ventas
+        // Agregar los datos
         dataLimpia.forEach(item => {
             const row = worksheet.addRow(Object.values(item));
-
-            // Aplicar bordes a las celdas de datos
-            row.eachCell((cell) => {
+            row.eachCell(cell => {
                 cell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },
@@ -224,12 +219,39 @@
             });
         });
 
-        // Ajustar el ancho de las columnas automáticamente
+        // Calcular el subtotal
+        const total = dataLimpia.reduce((sum, item) => sum + parseFloat(item.Monto_Total), 0);
+
+        // Agregar fila de total de ventas
+        const totalRow = worksheet.addRow([
+            '', '', 'Total de Ventas', total, ''
+        ]);
+
+        totalRow.eachCell((cell, colNumber) => {
+            cell.font = { bold: true };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4F81BD' }
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+            if (colNumber === 4) {
+                cell.numFmt = '#,##0.00'; // Formato numérico
+            }
+        });
+
+
+        // Ajustar anchos
         worksheet.columns.forEach(column => {
             column.width = 20;
         });
 
-        // Generar el archivo Excel y descargarlo
+        // Descargar el archivo
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = URL.createObjectURL(blob);
@@ -239,6 +261,7 @@
         a.click();
         URL.revokeObjectURL(url);
     }
+
 
     // Aseguramos que solo se pueda seleccionar un checkbox
     document.getElementById('diario').addEventListener('change', () => {
@@ -302,69 +325,69 @@
 
 
     async function exportarExcelProductos(data, nombreArchivo) {
-    try {
-        const workbook = new ExcelJS.Workbook();
-        workbook.creator = 'Tu Aplicación';
-        workbook.lastModifiedBy = 'Tu Aplicación';
-        workbook.created = new Date();
-        
-        const worksheet = workbook.addWorksheet('Productos', {
-            properties: { tabColor: { argb: 'FF4F81BD' } }
-        });
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Tu Aplicación';
+            workbook.lastModifiedBy = 'Tu Aplicación';
+            workbook.created = new Date();
 
-        // Configuración de columnas (mejorado)
-        worksheet.columns = [
-            { header: 'Código', key: 'Cod_Producto', width: 15 },
-            { header: 'Nombre', key: 'Nombre', width: 30 },
-            { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20, style: { numFmt: '#,##0' } },
-            { header: 'Tipo', key: 'Tipo', width: 20 }
-        ];
-
-        // Estilo de encabezado (optimizado)
-        const headerRow = worksheet.getRow(1);
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF4F81BD' }
-        };
-        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-        
-        // Aplicar bordes a todas las celdas de una vez
-        worksheet.eachRow({ includeEmpty: false }, row => {
-            row.eachCell(cell => {
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' }
-                };
+            const worksheet = workbook.addWorksheet('Productos', {
+                properties: { tabColor: { argb: 'FF4F81BD' } }
             });
-        });
 
-        // Agregar datos
-        worksheet.addRows(data);
+            // Configuración de columnas (mejorado)
+            worksheet.columns = [
+                { header: 'Código', key: 'Cod_Producto', width: 15 },
+                { header: 'Nombre', key: 'Nombre', width: 30 },
+                { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20, style: { numFmt: '#,##0' } },
+                { header: 'Tipo', key: 'Tipo', width: 20 }
+            ];
 
-        // Generar archivo
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { 
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-        });
+            // Estilo de encabezado (optimizado)
+            const headerRow = worksheet.getRow(1);
+            headerRow.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4F81BD' }
+            };
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-        // Descargar
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${nombreArchivo}_${new Date().toISOString().slice(0,10)}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-    } catch (error) {
-        console.error('Error al exportar Excel:', error);
-        throw error;
+            // Aplicar bordes a todas las celdas de una vez
+            worksheet.eachRow({ includeEmpty: false }, row => {
+                row.eachCell(cell => {
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                });
+            });
+
+            // Agregar datos
+            worksheet.addRows(data);
+
+            // Generar archivo
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+
+            // Descargar
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${nombreArchivo}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error('Error al exportar Excel:', error);
+            throw error;
+        }
     }
-}
 
 </script>

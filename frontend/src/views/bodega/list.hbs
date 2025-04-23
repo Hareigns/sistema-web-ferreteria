@@ -5,6 +5,9 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -125,8 +128,15 @@
         const searchError = $('#search-error');
         
         if (!sector) {
-            searchError.text('Por favor seleccione un sector').show();
-            $('#sector').focus();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campo requerido',
+                text: 'Por favor seleccione un sector',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            }).then(() => {
+                $('#sector').focus();
+            });
             return;
         }
         
@@ -255,6 +265,16 @@
         const searchTerm = $('#search-input').val().trim();
 
         try {
+            // Mostrar loading mientras se busca
+            Swal.fire({
+                title: 'Buscando datos',
+                html: 'Por favor espere...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             // Construir la URL de búsqueda
             let url = `/bodega/api/reporte?sector=${encodeURIComponent(sector)}`;
             
@@ -295,9 +315,29 @@
 
             dataTable.draw();
 
+            // Cerrar el loading
+            Swal.close();
+
+            // Mostrar mensaje si no hay resultados
+            if (data.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin resultados',
+                    text: 'No se encontraron productos con los criterios de búsqueda',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Entendido'
+                });
+            }
+
         } catch (error) {
             console.error('Error al buscar datos:', error);
-            $('#search-error').text('Error al buscar datos: ' + error.message).show();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al buscar',
+                text: 'Error al buscar datos: ' + error.message,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
         }
     }
 
