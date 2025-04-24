@@ -22,21 +22,24 @@ const validateEmpleadoData = (data, isUpdate = false) => {
     }
   }
 
-  // Estos campos siempre se validan (tanto en creación como actualización)
-  if (!direccion || direccion.length < 5) {
+  // Validación condicional para updates
+  if (data.direccion !== undefined && (!direccion || direccion.length < 5)) {
     errors.push("La dirección es requerida (mínimo 5 caracteres)");
   }
-  if (!telefono) {
+
+  if (data.telefono !== undefined && !telefono) {
     errors.push("El teléfono es requerido");
   }
 
   const companiasValidas = ['Tigo', 'Claro'];
-  if (!compania || !companiasValidas.includes(compania)) {
-    errors.push(`La compañía debe ser una de: ${companiasValidas.join(', ')}`);
+  if (data.compania !== undefined && (!compania || !companiasValidas.includes(compania))) {
+    errors.push(`La compañía debe ser: ${companiasValidas.join(', ')}`);
   }
 
   return errors;
 };
+
+
 
 // Mostrar formulario de añadir Empleado
 router.get("/add", isLoggedIn, async (req, res) => {
@@ -96,6 +99,14 @@ router.post("/api/empleados", async (req, res) => {
       });
     }
 
+    // Verificar si el teléfono ya existe
+    if (await telefonoExiste(telefono)) {
+      return res.status(400).json({
+        success: false,
+        errors: ['El número de teléfono ya está registrado para otro empleado o proveedor']
+      });
+    }    
+
     // Usar la fecha actual del sistema
     const fechaIngreso = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
@@ -105,7 +116,6 @@ router.post("/api/empleados", async (req, res) => {
       [nombre, apellido, direccion, estado, cedula.toUpperCase(), fechaIngreso]
     );
     
-
     const codEmpleado = empleadoResult.insertId;
 
     // Insertar en Telefono
@@ -128,6 +138,7 @@ router.post("/api/empleados", async (req, res) => {
     });
   }
 });
+
 
 // Ruta para obtener los datos del empleado logueado
 router.get('/', (req, res) => {
@@ -189,70 +200,118 @@ router.get('/api/empleados', isLoggedIn, async (req, res) => {
 });
 
 
+// Función helper para verificar teléfono
+async function telefonoExiste(numero, excluirEmpleadoId = null) {
+  try {
+    let query = `
+      SELECT COUNT(*) as count 
+      FROM Telefono 
+      WHERE Numero = ? 
+      AND (Cod_Empleado != ? OR ? IS NULL)
+    `;
+    const params = [numero, excluirEmpleadoId, excluirEmpleadoId];
+    
+    const [result] = await pool.query(query, params);
+    return result[0].count > 0;
+  } catch (error) {
+    console.error('Error al verificar teléfono:', error);
+    throw error;
+  }
+}
+
+// Ruta PUT actualizada
 router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const { direccion, estado, telefono, compania, resetPassword } = req.body;
+  const { telefono, compania } = req.body;
 
   try {
-    // Validar datos (sin incluir nombre, apellido ni cédula)
-    const validationErrors = validateEmpleadoData(req.body, true); // Pasamos false para indicar que no validemos esos campos
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        errors: validationErrors 
-      });
-    }
-
-    // Iniciar transacción
+    // 1. Iniciar transacción para evitar condiciones de carrera
     await pool.query('START TRANSACTION');
 
-    // Construir consulta SQL dinámica para Empleado (sin incluir nombre, apellido ni cédula)
-    const empleadoFields = [];
-    const empleadoValues = [];
-
-    if (direccion !== undefined) {
-      empleadoFields.push('Direccion = ?');
-      empleadoValues.push(direccion);
-    }
-    if (estado !== undefined) {
-      empleadoFields.push('Estado = ?');
-      empleadoValues.push(estado);
-    }
-    if (resetPassword) {
-      empleadoFields.push('Contraseña = ?');
-      empleadoValues.push('1234'); // Establecer contraseña temporal
-    }
-
-    // Actualizar empleado si hay campos para modificar
-    if (empleadoFields.length > 0) {
-      const query = `UPDATE Empleado SET ${empleadoFields.join(', ')} WHERE Cod_Empleado = ?`;
-      await pool.query(query, [...empleadoValues, id]);
-    }
-
-    // Actualizar teléfono si se proporcionó
-    if (telefono !== undefined && compania !== undefined) {
-      await pool.query(
-        `UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Empleado = ?`,
-        [telefono, compania, id]
+    // 2. Verificar teléfono DENTRO de la transacción
+    if (telefono) {
+      const [current] = await pool.query(
+        'SELECT Numero FROM Telefono WHERE Cod_Empleado = ?', 
+        [id]
       );
+      
+      const telefonoActual = current[0]?.Numero;
+      
+      // Solo verificar si el teléfono cambió
+      if (telefono !== telefonoActual) {
+        const [existente] = await pool.query(
+          'SELECT 1 FROM Telefono WHERE Numero = ? AND Cod_Empleado != ? LIMIT 1',
+          [telefono, id]
+        );
+        
+        if (existente.length > 0) {
+          await pool.query('ROLLBACK');
+          return res.status(400).json({
+            success: false,
+            errors: ['El teléfono ya está registrado para otro empleado']
+          });
+        }
+      }
     }
 
-    // Confirmar transacción
-    await pool.query('COMMIT');
+    // 3. Actualización segura
+    await pool.query(
+      'UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Empleado = ?',
+      [telefono, compania, id]
+    );
 
-    res.json({ 
-      success: true, 
-      message: 'Empleado actualizado correctamente',
-      passwordReset: resetPassword || false
-    });
+    await pool.query('COMMIT');
+    
+    res.json({ success: true, message: 'Actualización exitosa' });
 
   } catch (error) {
     await pool.query('ROLLBACK');
-    console.error("Error al actualizar empleado:", error);
+    
+    // Manejo específico de errores
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({
+        success: false,
+        errors: ['Error: El número de teléfono ya existe']
+      });
+    }
+
+    console.error('Error en PUT:', error);
     res.status(500).json({ 
       success: false,
-      error: error.message || "Error al actualizar empleado"
+      errors: ['Error interno del servidor']
     });
   }
 });
+
+
+router.get('/api/telefono/existe/:numero', isLoggedIn, async (req, res) => {
+  try {
+    const { numero } = req.params;
+    const { excluirEmpleado } = req.query;
+    
+    if (!numero) {
+      return res.status(400).json({
+        success: false,
+        error: 'Número de teléfono requerido'
+      });
+    }
+    
+    const existe = await telefonoExiste(numero, excluirEmpleado);
+    
+    res.json({
+      success: true,
+      existe,
+      message: existe 
+        ? 'El número de teléfono ya está registrado' 
+        : 'El número de teléfono está disponible'
+    });
+  } catch (error) {
+    console.error('Error al verificar teléfono:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al verificar teléfono'
+    });
+  }
+});
+
 export { router };

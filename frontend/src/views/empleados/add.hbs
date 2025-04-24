@@ -284,13 +284,48 @@
     cargarEmpleadosEnTabla();
   });
 
+  // Función para verificar si un teléfono ya existe (Frontend)
+  async function verificarTelefonoExistente(telefono, codEmpleado = null) {
+    try {
+      let url = `/empleados/api/telefono/existe/${telefono}`;
+      if (codEmpleado) {
+        url += `?excluirEmpleado=${codEmpleado}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al verificar teléfono');
+      }
+
+      if (data.existe) {
+        await Swal.fire({
+          title: 'Teléfono existente',
+          text: 'Este número de teléfono ya está registrado para otro empleado o proveedor',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error al verificar teléfono:', error);
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo verificar el número de teléfono',
+        icon: 'error'
+      });
+      return true; // Asumir que existe para prevenir problemas
+    }
+  }
 
   // Función para modificar empleado (mejorada)
   async function modificarEmpleado() {
     const codigoEmpleado = document.getElementById("codigo_empleado").value;
     const resetPassword = document.getElementById("contrasena_temporal").checked;
 
-    // Obtener valores de los campos
+    // Obtener valores
     const nombre = document.getElementById("nombre").value.trim();
     const apellido = document.getElementById("apellido").value.trim();
     const direccion = document.getElementById("direccion").value.trim();
@@ -299,37 +334,28 @@
     const compania = document.getElementById("compania_telefonica").value;
     const cedula = document.getElementById("cedula").value.trim();
 
-    // Validación mínima
     if (!codigoEmpleado) {
-      await Swal.fire({
-        title: "Error",
-        text: "Debe seleccionar un empleado",
-        icon: "error"
-      });
+      await Swal.fire("Error", "Debe seleccionar un empleado", "error");
       return;
     }
 
     try {
+      // Confirmación
       const confirmacion = await Swal.fire({
-        title: `¿Actualizar empleado ${codigoEmpleado}?`,
-        html: `<b>${nombre} ${apellido}</b><br>
-          ${resetPassword ? '<b>Se reseteará la contraseña a "1234"</b><br>' : ''}
-          ¿Confirmas la modificación?`,
+        title: `¿Actualizar empleado?`,
+        html: `¿Confirmas la modificación de ${nombre} ${apellido}?`,
         icon: "question",
         showCancelButton: true,
-        confirmButtonColor: "#28a745",
-        cancelButtonColor: "#dc3545",
         confirmButtonText: 'Confirmar',
         cancelButtonText: 'Cancelar'
       });
 
       if (!confirmacion.isConfirmed) return;
 
+      // Enviar datos
       const response = await fetch(`/empleados/api/empleados/${codigoEmpleado}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre,
           apellido,
@@ -338,44 +364,32 @@
           telefono,
           compania,
           cedula: cedula.toUpperCase(),
-          resetPassword // Enviamos el estado del checkbox
+          resetPassword
         })
       });
 
       const data = await response.json();
 
+      // Manejar respuesta
       if (!response.ok) {
-        throw new Error(data.error || "Error en la respuesta del servidor");
+        // Mostrar errores específicos del backend
+        const errorMsg = data.errors ? data.errors.join('<br>') : data.message;
+        throw new Error(errorMsg || "Error al actualizar");
       }
 
-      if (data.success) {
-        let message = `Empleado ${nombre} ${apellido} modificado correctamente`;
-        if (data.passwordReset) {
-          message += '<br><b>Contraseña reseteada a "1234"</b>';
-        }
+      // Éxito
+      await Swal.fire({
+        title: "¡Actualizado!",
+        text: `Empleado ${nombre} ${apellido} modificado correctamente`,
+        icon: "success"
+      });
 
-        await Swal.fire({
-          title: "¡Actualizado!",
-          html: message,
-          icon: "success",
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false
-        });
+      // Actualizar UI
+      cargarEmpleadosEnTabla();
+      if (estado === 'Inactivo') limpiarCampos();
 
-        // Actualizar la UI
-        await cargarEmpleadosEnSelect();
-        cargarEmpleadosEnTabla();
-        document.getElementById("contrasena_temporal").checked = false;
-
-        // Si el estado cambió a Inactivo, limpiar el formulario
-        if (estado === 'Inactivo') {
-          limpiarCampos();
-          document.getElementById("codigo_empleado").selectedIndex = 0;
-        }
-      }
     } catch (error) {
-      console.error("Error en modificarEmpleado:", error);
+      console.error("Error:", error);
       await Swal.fire({
         title: "Error",
         html: `<b>No se pudo modificar el empleado</b><br><small>${error.message}</small>`,
@@ -398,6 +412,10 @@
     if (!nombre || !apellido || !direccion || !telefono || !compania || !cedula) {
       Swal.fire("Advertencia", "Todos los campos son obligatorios.", "warning");
       return;
+    }
+
+    if (await verificarTelefonoExistente(telefono)) {
+      return; // Detener el proceso si el teléfono existe
     }
 
     if (!/^[0-9]{13}[A-Za-z]{1}$/.test(cedula)) {
