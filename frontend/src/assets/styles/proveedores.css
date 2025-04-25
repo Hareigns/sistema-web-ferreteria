@@ -120,6 +120,12 @@ input[readonly], select:disabled {
   transition: all 0.3s ease;
 }
 
+input:disabled, select:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
 
 
 

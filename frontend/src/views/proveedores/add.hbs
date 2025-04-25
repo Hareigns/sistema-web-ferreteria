@@ -1,6 +1,7 @@
 <title>Registro</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/styles/Proveedores.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="container py-5">
   <div class="row justify-content-center">
@@ -25,7 +26,7 @@
               <div class="col-md-6">
                 <label for="compania" class="form-label">Compañía</label>
                 <select id="compania" name="compania" class="form-select" required>
-                  <option value="" disabled selected>Seleccione una compañía</option>
+                  <option value="" selected disabled>Seleccione una compañía</option>
                   <option value="Tigo">Tigo</option>
                   <option value="Claro">Claro</option>
                 </select>
@@ -52,7 +53,7 @@
                 </select>
               </div>
               <div class="col-12 d-flex justify-content-between mt-3">
-                <button class="btn btn-primary" type="submit" id="registrarButton">Ingresar</button>
+                <button class="btn btn-primary" type="submit" id="ingresarButton">Ingresar</button>
                 <button class="btn btn-secondary" type="button" onclick="limpiarFormulario()">Limpiar</button>
               </div>
               <div class="card-body">
@@ -97,244 +98,236 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
-  document.getElementById('proveedorForm').addEventListener('submit', async function (event) {
-    event.preventDefault();
-
-    const nombre = document.getElementById('nombre').value.trim();
-    const apellido = document.getElementById('apellido').value.trim();
-    const telefono = document.getElementById('telefono').value.trim();
-    const compania = document.getElementById('compania').value;
-    const sector = document.getElementById('sector').value;
-    const estado = document.getElementById('estado').value;
-
-    if (!nombre || !apellido || !telefono || !compania || !sector || !estado) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Faltan datos',
-        text: 'El Proveedor no fue registrado exitosamente!',
-        timer: 3000,
-        showConfirmButton: false
-      });
-      return;
-    }
-
-    if (!/^\d{8,9}$/.test(telefono)) {
-      Swal.fire('Error', 'El teléfono debe contener solo números (8-9 dígitos)', 'error');
-      return;
-    }
-
-    Swal.fire({
-      title: '¿Confirmar registro?',
-      text: '¿Está seguro que desea registrar este proveedor?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, registrar',
-      cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const formData = {
-          nombre: nombre,
-          apellido: apellido,
-          telefono: telefono,
-          compania: compania,
-          sector: sector,
-          estado: estado
-        };
-
-        const response = await fetch('/proveedores/add', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          Swal.fire('Éxito', 'Proveedor registrado correctamente', 'success')
-            .then(() => location.reload());
-        } else {
-          Swal.fire('Error', result.error || 'No se pudo registrar el proveedor', 'error');
-        }
-      }
-    });
-  });
-
-  // Función para cargar la tabla de proveedores
+  // Función para cargar proveedores en el select y la tabla
   async function cargarProveedores() {
     try {
       const response = await fetch('/proveedores/api/proveedores');
       const data = await response.json();
 
       if (data.success) {
-        const proveedores = data.data;
-        const tableBody = document.getElementById('proveedores-table-body');
-        tableBody.innerHTML = '';
+        const select = document.getElementById('codigo_proveedor');
+        select.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
 
-        proveedores.forEach((proveedor) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-          <td>${proveedor.Cod_Proveedor}</td>
-          <td>${proveedor.Nombre}</td>
-          <td>${proveedor.Apellido}</td>
-          <td>${proveedor.Telefono}</td>
-          <td>${proveedor.Compania}</td>
-          <td>${proveedor.Sector}</td>
-          <td><span class="badge ${proveedor.Estado === 'Activo' ? 'bg-success' : 'bg-secondary'}">${proveedor.Estado}</span></td>
-        `;
-          tableBody.appendChild(row);
-        });
-      }
-    } catch (error) {
-      console.error('Error al cargar los proveedores:', error);
-    }
-  }
-
-  // Función para cargar datos del proveedor seleccionado
-  async function cargarDatosProveedor(codigoProveedor) {
-    // Elementos del formulario
-    const elements = {
-      nombre: document.getElementById('nombre'),
-      apellido: document.getElementById('apellido'),
-      telefono: document.getElementById('telefono'),
-      compania: document.getElementById('compania'),
-      sector: document.getElementById('sector'), // Este es el select
-      estado: document.getElementById('estado'),
-      modificarButton: document.getElementById('modificarButton'),
-      registrarButton: document.getElementById('registrarButton')
-    };
-
-    // Validar que todos los elementos existan
-    for (const [key, element] of Object.entries(elements)) {
-      if (!element) {
-        console.error(`Elemento no encontrado: ${key}`);
-        return;
-      }
-    }
-
-    if (!codigoProveedor) {
-      elements.modificarButton.disabled = true;
-      return;
-    }
-
-    try {
-      const response = await fetch(`/proveedores/api/proveedor/${codigoProveedor}`);
-      const data = await response.json();
-
-      if (data.success && data.data) {
-        const proveedor = data.data;
-
-        // Llenar los campos del formulario
-        elements.nombre.value = proveedor.Nombre || '';
-        elements.apellido.value = proveedor.Apellido || '';
-        elements.telefono.value = proveedor.Telefono || '';
-        elements.compania.value = proveedor.Compania || '';
-        elements.sector.value = proveedor.Sector || ''; // Establecer valor del select
-        elements.estado.value = proveedor.Estado || 'Activo';
-
-        // Deshabilitar campos que no se pueden modificar
-        elements.nombre.readOnly = true;
-        elements.apellido.readOnly = true;
-        elements.sector.disabled = true; // Deshabilitar el select (no readOnly)
-
-        // Cambiar visibilidad de botones
-        elements.registrarButton.style.display = 'none';
-        elements.modificarButton.disabled = false;
-        elements.modificarButton.style.display = 'block';
-      }
-    } catch (error) {
-      console.error('Error al cargar datos del proveedor:', error);
-      Swal.fire('Error', 'No se pudieron cargar los datos del proveedor', 'error');
-    }
-  }
-
-  // Función para limpiar el formulario
-  function limpiarFormulario() {
-    const elements = {
-      nombre: document.getElementById('nombre'),
-      apellido: document.getElementById('apellido'),
-      sector: document.getElementById('sector'), // Select de sector
-      modificarButton: document.getElementById('modificarButton'),
-      registrarButton: document.getElementById('registrarButton'),
-      form: document.getElementById('proveedorForm')
-    };
-
-    // Resetear formulario
-    if (elements.form) elements.form.reset();
-
-    // Habilitar campos deshabilitados
-    if (elements.nombre) elements.nombre.readOnly = false;
-    if (elements.apellido) elements.apellido.readOnly = false;
-    if (elements.sector) elements.sector.disabled = false; // Habilitar el select
-
-    // Restablecer botones
-    if (elements.modificarButton) {
-      elements.modificarButton.disabled = true;
-      elements.modificarButton.style.display = 'none';
-    }
-    if (elements.registrarButton) {
-      elements.registrarButton.style.display = 'block';
-    }
-  }
-
-  // Al cargar la página
-  window.onload = function () {
-    // Configuración inicial
-    document.getElementById('modificarButton').style.display = 'none';
-
-    // Cargar datos
-    cargarSelectProveedores();
-    cargarProveedores();
-  };
-
-
-  async function cargarSelectProveedores() {
-    try {
-      const response = await fetch('/proveedores/api/proveedores');
-      const data = await response.json();
-      const select = document.getElementById('codigo_proveedor');
-
-      if (!select) {
-        console.error('Elemento select no encontrado');
-        return;
-      }
-
-      if (data.success) {
-        // Limpiar opciones excepto la primera
-        while (select.options.length > 1) {
-          select.remove(1);
-        }
-
-        // Agregar opciones
+        // Formato: "ID - Nombre Apellido" (ej: "1 - Juan Pérez López")
         data.data.forEach(proveedor => {
           const option = document.createElement('option');
           option.value = proveedor.Cod_Proveedor;
           option.textContent = `${proveedor.Cod_Proveedor} - ${proveedor.Nombre} ${proveedor.Apellido}`;
           select.appendChild(option);
         });
+
+        // Llenar tabla
+        const tbody = document.getElementById('proveedores-table-body');
+        tbody.innerHTML = '';
+        data.data.forEach(proveedor => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+          <td>${proveedor.Cod_Proveedor}</td>
+          <td>${proveedor.Nombre}</td>
+          <td>${proveedor.Apellido}</td>
+          <td>${proveedor.Telefono}</td>
+          <td>${proveedor.Compania}</td>
+          <td>${proveedor.Sector}</td>
+          <td>
+            <span class="badge ${proveedor.Estado === 'Activo' ? 'bg-success' : 'bg-danger'}">
+              ${proveedor.Estado}
+            </span>
+          </td>
+        `;
+          tbody.appendChild(tr);
+        });
       }
     } catch (error) {
       console.error('Error al cargar proveedores:', error);
+      Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
     }
   }
 
-  // Función para modificar el proveedor
-  async function modificarProveedor() {
-    const codigoProveedor = document.getElementById('codigo_proveedor').value;
+  // Esta función se mantiene EXACTAMENTE como la tenías originalmente
+  async function cargarDatosProveedor(codProveedor) {
+    try {
+      const response = await fetch(`/proveedores/api/proveedores/${codProveedor}`);
+      const data = await response.json();
 
-    if (!codigoProveedor) {
+      if (data.success) {
+        // Cargar datos en el formulario
+        document.getElementById('nombre').value = data.data.Nombre;
+        document.getElementById('apellido').value = data.data.Apellido;
+        document.getElementById('telefono').value = data.data.Telefono;
+        document.getElementById('compania').value = data.data.Compania;
+        document.getElementById('sector').value = data.data.Sector;
+        document.getElementById('estado').value = data.data.Estado;
+
+        // ✅ Habilitar solo Teléfono, Compañía y Estado
+        document.getElementById('nombre').disabled = true;
+        document.getElementById('apellido').disabled = true;
+        document.getElementById('sector').disabled = true;
+
+        document.getElementById('telefono').disabled = false;
+        document.getElementById('compania').disabled = false;
+        document.getElementById('estado').disabled = false;
+
+        // Activar botón de modificar
+        document.getElementById('modificarButton').disabled = false;
+        document.getElementById('ingresarButton').disabled = true;
+      }
+    } catch (error) {
+      console.error('Error al cargar proveedor:', error);
+      Swal.fire('Error', 'No se pudieron cargar los datos del proveedor', 'error');
+    }
+  }
+
+  // Función para limpiar el formulario
+  function limpiarFormulario() {
+    document.getElementById('proveedorForm').reset();
+    document.getElementById('codigo_proveedor').value = '';
+
+    // ✅ Reactivar todos los campos
+    document.getElementById('nombre').disabled = false;
+    document.getElementById('apellido').disabled = false;
+    document.getElementById('sector').disabled = false;
+    document.getElementById('telefono').disabled = false;
+    document.getElementById('compania').disabled = false;
+    document.getElementById('estado').disabled = false;
+
+    // Desactivar botón de modificar
+    document.getElementById('modificarButton').disabled = true;
+    document.getElementById('ingresarButton').disabled = false;
+  }
+
+  // Función para verificar teléfono existente
+  async function verificarTelefonoExistente(telefono, codProveedor = null) {
+    try {
+      // Validación básica del teléfono primero
+      if (!telefono || !/^\d{8,9}$/.test(telefono)) {
+        await Swal.fire({
+          title: 'Teléfono inválido',
+          text: 'El teléfono debe tener 8 o 9 dígitos',
+          icon: 'error'
+        });
+        return true; // Consideramos que existe para bloquear el envío
+      }
+
+      let url = `/proveedores/api/telefono/existe/${telefono}`;
+      if (codProveedor) {
+        url += `?excluirProveedor=${codProveedor}`;
+      }
+
+      // Agregar timeout para evitar que se quede pegado
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos timeout
+
+      const response = await fetch(url, {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Error en la verificación');
+      }
+
+      if (data.existe) {
+        await Swal.fire({
+          title: 'Teléfono registrado',
+          text: 'Este número ya está en uso por otro proveedor/empleado',
+          icon: 'warning',
+          confirmButtonText: 'Entendido'
+        });
+        return true;
+      }
+      return false;
+
+    } catch (error) {
+      console.error('Error verificando teléfono:', error);
+
+      // Mostrar error diferente si fue por timeout
+      if (error.name === 'AbortError') {
+        await Swal.fire({
+          title: 'Tiempo de espera agotado',
+          text: 'La verificación de teléfono tardó demasiado',
+          icon: 'error'
+        });
+      } else {
+        await Swal.fire({
+          title: 'Error de verificación',
+          text: error.message || 'No se pudo verificar el teléfono',
+          icon: 'error'
+        });
+      }
+      return true; // Bloquear en caso de error
+    }
+  }
+
+  // Función para manejar el envío del formulario (POST)
+  document.getElementById('proveedorForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('ingresarButton');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
+    try {
+      const formData = {
+        nombre: document.getElementById('nombre').value.trim(),
+        apellido: document.getElementById('apellido').value.trim(),
+        telefono: document.getElementById('telefono').value.trim(),
+        compania: document.getElementById('compania').value,
+        sector: document.getElementById('sector').value,
+        estado: document.getElementById('estado').value
+      };
+
+      // Validaciones básicas
+      if (!formData.nombre || !formData.apellido || !formData.telefono ||
+        !formData.compania || !formData.sector || !formData.estado) {
+        await Swal.fire('Error', 'Todos los campos son requeridos', 'error');
+        return;
+      }
+
+      // Verificar teléfono
+      const telefonoExiste = await verificarTelefonoExistente(formData.telefono);
+      if (telefonoExiste) return;
+
+      // Enviar datos al servidor
+      const response = await fetch('/proveedores/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await Swal.fire('Éxito', 'Proveedor registrado correctamente', 'success');
+        cargarProveedores(); // Actualizar la lista
+        limpiarFormulario(); // Limpiar el formulario
+      } else {
+        await Swal.fire('Error', result.errors?.join(', ') || 'Error al registrar', 'error');
+      }
+    } catch (error) {
+      console.error('Error en submit:', error);
+      await Swal.fire('Error', 'Ocurrió un error inesperado', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Ingresar';
+    }
+  });
+
+  // Función para modificar proveedor (PUT)
+  async function modificarProveedor() {
+    const codProveedor = document.getElementById('codigo_proveedor').value;
+    if (!codProveedor) {
       Swal.fire('Error', 'Debe seleccionar un proveedor', 'error');
       return;
     }
 
-    // Recopilar datos del formulario
-    const datosProveedor = {
+    const formData = {
       nombre: document.getElementById('nombre').value.trim(),
       apellido: document.getElementById('apellido').value.trim(),
       telefono: document.getElementById('telefono').value.trim(),
@@ -343,108 +336,55 @@
       estado: document.getElementById('estado').value
     };
 
-    // Validaciones (puedes reutilizar las que ya tienes)
-    if (!datosProveedor.nombre || !datosProveedor.apellido || !datosProveedor.telefono ||
-      !datosProveedor.compania || !datosProveedor.sector || !datosProveedor.estado) {
-      Swal.fire('Error', 'Todos los campos son requeridos', 'error');
+    // Validaciones
+    if (!formData.nombre || !formData.apellido || !formData.telefono ||
+      !formData.compania || !formData.sector || !formData.estado) {
+      Swal.fire('Advertencia', 'Todos los campos son obligatorios', 'warning');
       return;
     }
 
-    Swal.fire({
-      title: '¿Confirmar modificación?',
-      text: '¿Está seguro que desea modificar este proveedor?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, modificar',
-      cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await fetch(`api/proveedores/${codigoProveedor}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(datosProveedor)
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            Swal.fire('Éxito', 'Proveedor modificado correctamente', 'success')
-              .then(() => {
-                // Recargar los datos
-                cargarSelectProveedores();
-                cargarProveedores();
-                // Limpiar formulario
-                document.getElementById('proveedorForm').reset();
-                document.getElementById('modificarButton').disabled = true;
-              });
-          } else {
-            Swal.fire('Error', result.error || 'No se pudo modificar el proveedor', 'error');
-          }
-        } catch (error) {
-          console.error('Error al modificar proveedor:', error);
-          Swal.fire('Error', 'Error al modificar el proveedor', 'error');
-        }
-      }
-    });
-  }
-
-  // Llamar a esta función cuando la página cargue
-  window.onload = function () {
-    // Verificar elementos esenciales
-    const essentialElements = [
-      'codigo_proveedor',
-      'modificarButton',
-      'registrarButton',
-      'proveedorForm'
-    ];
-    for (const id of essentialElements) {
-      if (!document.getElementById(id)) {
-        console.error(`Elemento esencial no encontrado: ${id}`);
-        return;
-      }
+    if (await verificarTelefonoExistente(formData.telefono, codProveedor)) {
+      return;
     }
 
-    // Configuración inicial de botones
-    document.getElementById('modificarButton').style.display = 'none';
-    document.getElementById('registrarButton').style.display = 'block';
+    const confirmacion = await Swal.fire({
+      title: '¿Actualizar proveedor?',
+      text: `¿Desea actualizar a ${formData.nombre} ${formData.apellido}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, actualizar',
+      cancelButtonText: 'Cancelar'
+    });
 
-    // Cargar datos de proveedores en select y tabla
-    cargarSelectProveedores();
-    cargarProveedores();
-  };
+    if (!confirmacion.isConfirmed) return;
 
+    try {
+      const response = await fetch(`/proveedores/api/proveedores/${codProveedor}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
 
+      const result = await response.json();
 
-  function limpiarFormulario() {
-  const elements = {
-    form: document.getElementById('proveedorForm'),
-    nombre: document.getElementById('nombre'),
-    apellido: document.getElementById('apellido'),
-    sector: document.getElementById('sector'),
-    modificarButton: document.getElementById('modificarButton'),
-    registrarButton: document.getElementById('registrarButton')
-  };
-
-  if (!elements.form || !elements.modificarButton || !elements.registrarButton) {
-    console.error('Elementos críticos no encontrados al limpiar formulario');
-    return;
+      if (result.success) {
+        await Swal.fire('Éxito', 'Proveedor actualizado correctamente', 'success');
+        cargarProveedores();
+        limpiarFormulario();
+      } else {
+        Swal.fire('Error', result.errors?.join(', ') || 'Error al actualizar', 'error');
+      }
+    } catch (error) {
+      console.error('Error al actualizar:', error);
+      Swal.fire('Error', 'Error al comunicarse con el servidor', 'error');
+    }
   }
 
-  elements.form.reset();
-
-  // Asegurarse de que se puedan editar
-  if (elements.nombre) elements.nombre.readOnly = false;
-  if (elements.apellido) elements.apellido.readOnly = false;
-  if (elements.sector) elements.sector.disabled = false; // Habilita el select
-
-  elements.modificarButton.disabled = true;
-  elements.modificarButton.style.display = 'none';
-  elements.registrarButton.style.display = 'block';
-}
+  // Cargar proveedores al iniciar la página
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarProveedores();
+  });
 
 </script>
