@@ -408,18 +408,25 @@
     const compania = document.getElementById("compania_telefonica").value;
     const cedula = document.getElementById("cedula").value.trim();
 
-    // Validación (igual que en el backend)
+    // Validación básica
     if (!nombre || !apellido || !direccion || !telefono || !compania || !cedula) {
       Swal.fire("Advertencia", "Todos los campos son obligatorios.", "warning");
       return;
     }
 
-    if (await verificarTelefonoExistente(telefono)) {
-      return; // Detener el proceso si el teléfono existe
-    }
-
+    // Validar formato de cédula
     if (!/^[0-9]{13}[A-Za-z]{1}$/.test(cedula)) {
       Swal.fire("Error", "La cédula debe tener 13 dígitos seguidos de 1 letra", "error");
+      return;
+    }
+
+    // Verificar si la cédula ya existe
+    if (await verificarCedulaExistente(cedula)) {
+      return;
+    }
+
+    // Verificar si el teléfono ya existe
+    if (await verificarTelefonoExistente(telefono)) {
       return;
     }
 
@@ -577,4 +584,41 @@
       });
     }
   });
+
+  // Función para verificar si una cédula ya existe (Frontend)
+  async function verificarCedulaExistente(cedula, codEmpleado = null) {
+    try {
+      let url = `/empleados/api/cedula/existe/${cedula}`;
+      if (codEmpleado) {
+        url += `?excluirEmpleado=${codEmpleado}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al verificar cédula');
+      }
+
+      if (data.existe) {
+        await Swal.fire({
+          title: 'Cédula existente',
+          text: 'Esta cédula ya está registrada para otro empleado',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error al verificar cédula:', error);
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo verificar la cédula',
+        icon: 'error'
+      });
+      return true; // Asumir que existe para prevenir problemas
+    }
+  }
+
 </script>

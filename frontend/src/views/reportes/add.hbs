@@ -174,9 +174,10 @@
             Cod_Venta: item.Cod_Venta,
             Cod_Producto: item.Cod_Producto,
             Nombre_Producto: item.Nombre_Producto,
-            Monto_Total: item.Monto_Total,
+            Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
             Fecha_Venta: new Date(item.Fecha_Venta).toLocaleDateString('es-ES')
         }));
+
 
         const ExcelJS = window.ExcelJS;
         const workbook = new ExcelJS.Workbook();
@@ -219,13 +220,10 @@
             });
         });
 
-        // Calcular el subtotal
         const total = dataLimpia.reduce((sum, item) => sum + parseFloat(item.Monto_Total), 0);
 
         // Agregar fila de total de ventas
-        const totalRow = worksheet.addRow([
-            '', '', 'Total de Ventas', total, ''
-        ]);
+        const totalRow = worksheet.addRow(['', '', 'Total de Ventas', total, '']);
 
         totalRow.eachCell((cell, colNumber) => {
             cell.font = { bold: true };
@@ -241,10 +239,9 @@
                 right: { style: 'thin' }
             };
             if (colNumber === 4) {
-                cell.numFmt = '#,##0.00'; // Formato numérico
+                cell.numFmt = '#,##0.00'; // ✅ Formato US: 1,283.89
             }
         });
-
 
         // Ajustar anchos
         worksheet.columns.forEach(column => {

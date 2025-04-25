@@ -99,6 +99,14 @@ router.post("/api/empleados", async (req, res) => {
       });
     }
 
+    // Verificar si la cédula ya existe
+    if (await cedulaExiste(cedula.toUpperCase())) {
+      return res.status(400).json({
+        success: false,
+        errors: ['La cédula ya está registrada para otro empleado']
+      });
+    }
+
     // Verificar si el teléfono ya existe
     if (await telefonoExiste(telefono)) {
       return res.status(400).json({
@@ -310,6 +318,56 @@ router.get('/api/telefono/existe/:numero', isLoggedIn, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al verificar teléfono'
+    });
+  }
+});
+
+// Helper para verificar si una cédula ya existe
+async function cedulaExiste(cedula, excluirEmpleadoId = null) {
+  try {
+    let query = `
+      SELECT COUNT(*) as count 
+      FROM Empleado 
+      WHERE Cedula = ? 
+      ${excluirEmpleadoId ? 'AND Cod_Empleado != ?' : ''}
+    `;
+    
+    const params = excluirEmpleadoId ? [cedula, excluirEmpleadoId] : [cedula];
+    
+    const [result] = await pool.query(query, params);
+    return result[0].count > 0;
+  } catch (error) {
+    console.error('Error al verificar cédula:', error);
+    throw error;
+  }
+}
+
+router.get('/api/cedula/existe/:cedula', isLoggedIn, async (req, res) => {
+  try {
+    const { cedula } = req.params;
+    const { excluirEmpleado } = req.query;
+    
+    if (!cedula) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cédula requerida'
+      });
+    }
+    
+    const existe = await cedulaExiste(cedula, excluirEmpleado);
+    
+    res.json({
+      success: true,
+      existe,
+      message: existe 
+        ? 'La cédula ya está registrada' 
+        : 'La cédula está disponible'
+    });
+  } catch (error) {
+    console.error('Error al verificar cédula:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al verificar cédula'
     });
   }
 });
