@@ -127,14 +127,19 @@
 <script>
     let productos = [];
 
+    // Modificar el evento agregarProducto para usar el nombre:
     document.getElementById("agregarProducto").addEventListener("click", function () {
-        let nombre = document.getElementById("nombreProducto").value;
+        let selectProducto = document.getElementById("nombreProducto");
+        let selectedOption = selectProducto.options[selectProducto.selectedIndex];
+
+        let codigo = selectProducto.value;
+        let nombre = selectedOption.dataset.nombre; // Obtenemos el nombre del dataset
         let cantidad = document.getElementById("cantidad").value;
         let precio = document.getElementById("precio").value;
         let metodoPago = document.getElementById("metodoPago").value;
         let sector = document.getElementById("sector").value;
 
-        if (nombre === "" || cantidad === "" || precio === "" || metodoPago === "" || sector === "") {
+        if (codigo === "" || cantidad === "" || precio === "" || metodoPago === "" || sector === "") {
             Swal.fire({
                 icon: 'warning',
                 title: 'Campos incompletos',
@@ -144,7 +149,8 @@
         }
 
         productos.push({
-            codigo_producto: nombre,
+            codigo_producto: codigo,
+            nombre_producto: nombre, // Guardamos el nombre también
             cantidad: cantidad,
             precio_venta: precio,
             metodo_pago: metodoPago,
@@ -153,21 +159,30 @@
 
         let tabla = document.getElementById("tablaProductos");
         let fila = document.createElement("tr");
+        fila.dataset.codigo = codigo; // Guardamos el código como atributo de la fila
 
         fila.innerHTML = `
-            <td>${nombre}</td>
-            <td>${cantidad}</td>
-            <td>${precio}</td>
-            <td>${metodoPago}</td>
-            <td><button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button></td>
-        `;
+    <td>${nombre}</td>
+    <td class="cantidad-cell">${cantidad}</td>
+    <td class="precio-cell">${precio}</td>
+    <td class="metodo-pago-cell">${metodoPago}</td>
+    <td>
+        <button class="btn btn-warning btn-sm me-1 editar">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm eliminar">❌ Eliminar</button>
+    </td>
+`;
 
         tabla.appendChild(fila);
 
+        // Limpiar campos
         document.getElementById("nombreProducto").value = "";
         document.getElementById("cantidad").value = "";
         document.getElementById("precio").value = "";
         document.getElementById("metodoPago").value = "";
+
+        fila.querySelector(".editar").addEventListener("click", function () {
+            editarProducto(fila, codigo);
+        });
 
         actualizarTotales();
 
@@ -182,7 +197,7 @@
                 confirmButtonText: 'Sí, eliminar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    productos = productos.filter(p => p.codigo_producto !== nombre);
+                    productos = productos.filter(p => p.codigo_producto !== codigo);
                     fila.remove();
                     Swal.fire({
                         icon: 'success',
@@ -192,7 +207,119 @@
                 }
             });
         });
+
+
+        // Función para editar producto
+        function editarProducto(fila, codigo) {
+            // Obtener los valores actuales
+            const cantidadCell = fila.querySelector(".cantidad-cell");
+            const precioCell = fila.querySelector(".precio-cell");
+            const cantidadActual = cantidadCell.textContent;
+            const precioActual = precioCell.textContent;
+
+            // Convertir celdas en campos editables
+            cantidadCell.innerHTML = `<input type="number" class="form-control form-control-sm edit-cantidad" value="${cantidadActual}" min="1">`;
+            precioCell.innerHTML = `<input type="number" class="form-control form-control-sm edit-precio" value="${precioActual}" min="0.01" step="0.01">`;
+
+            // Cambiar botón de editar a guardar
+            const btnEditar = fila.querySelector(".editar");
+            btnEditar.innerHTML = "💾 Guardar";
+            btnEditar.classList.remove("btn-warning");
+            btnEditar.classList.add("btn-success");
+
+            // Remover el evento anterior y agregar el de guardar
+            btnEditar.replaceWith(btnEditar.cloneNode(true));
+            fila.querySelector(".editar").addEventListener("click", function () {
+                guardarEdicion(fila, codigo);
+            });
+        }
+
+
+        // Función para editar producto
+        function editarProducto(fila, codigo) {
+            // Obtener los valores actuales
+            const cantidadCell = fila.querySelector(".cantidad-cell");
+            const precioCell = fila.querySelector(".precio-cell");
+            const metodoPagoCell = fila.querySelector(".metodo-pago-cell");
+            const cantidadActual = cantidadCell.textContent;
+            const precioActual = precioCell.textContent;
+            const metodoPagoActual = metodoPagoCell.textContent.trim();
+
+            // Convertir celdas en campos editables
+            cantidadCell.innerHTML = `<input type="number" class="form-control form-control-sm edit-cantidad" value="${cantidadActual}" min="1">`;
+            precioCell.innerHTML = `<input type="number" class="form-control form-control-sm edit-precio" value="${precioActual}" min="0.01" step="0.01">`;
+
+            // Crear select para método de pago
+            const metodosPago = ['Efectivo', 'Tarjeta', 'Transferencia'];
+            let options = metodosPago.map(mp =>
+                `<option value="${mp}" ${mp === metodoPagoActual ? 'selected' : ''}>${mp}</option>`
+            ).join('');
+
+            metodoPagoCell.innerHTML = `
+        <select class="form-select form-select-sm edit-metodo-pago">
+            ${options}
+        </select>
+    `;
+
+            // Cambiar botón de editar a guardar
+            const btnEditar = fila.querySelector(".editar");
+            btnEditar.innerHTML = "💾 Guardar";
+            btnEditar.classList.remove("btn-warning");
+            btnEditar.classList.add("btn-success");
+
+            // Remover el evento anterior y agregar el de guardar
+            btnEditar.replaceWith(btnEditar.cloneNode(true));
+            fila.querySelector(".editar").addEventListener("click", function () {
+                guardarEdicion(fila, codigo);
+            });
+        }
+
+        // Función para guardar los cambios
+        function guardarEdicion(fila, codigo) {
+            const nuevaCantidad = fila.querySelector(".edit-cantidad").value;
+            const nuevoPrecio = fila.querySelector(".edit-precio").value;
+            const nuevoMetodoPago = fila.querySelector(".edit-metodo-pago").value;
+
+            // Validar los valores
+            if (!nuevaCantidad || nuevaCantidad < 1 || !nuevoPrecio || nuevoPrecio <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Valores inválidos',
+                    text: 'La cantidad debe ser al menos 1 y el precio debe ser mayor a 0'
+                });
+                return;
+            }
+
+            // Actualizar la fila
+            fila.querySelector(".cantidad-cell").textContent = nuevaCantidad;
+            fila.querySelector(".precio-cell").textContent = nuevoPrecio;
+            fila.querySelector(".metodo-pago-cell").textContent = nuevoMetodoPago;
+
+            // Actualizar el array de productos
+            const productoIndex = productos.findIndex(p => p.codigo_producto === codigo);
+            if (productoIndex !== -1) {
+                productos[productoIndex].cantidad = nuevaCantidad;
+                productos[productoIndex].precio_venta = nuevoPrecio;
+                productos[productoIndex].metodo_pago = nuevoMetodoPago;
+            }
+
+            // Restaurar botón de editar
+            const btnGuardar = fila.querySelector(".editar");
+            btnGuardar.innerHTML = "✏️ Editar";
+            btnGuardar.classList.remove("btn-success");
+            btnGuardar.classList.add("btn-warning");
+
+            // Volver a asignar el evento de editar
+            btnGuardar.replaceWith(btnGuardar.cloneNode(true));
+            fila.querySelector(".editar").addEventListener("click", function () {
+                editarProducto(fila, codigo);
+            });
+
+            // Actualizar totales
+            actualizarTotales();
+        }
     });
+
 
 
     document.getElementById("guardarVenta").addEventListener("click", async function () {
@@ -428,6 +555,7 @@
         actualizarTotales();
     });
 
+    // En la función cargarProductosPorSector, modificar la creación de options para guardar también el nombre:
     async function cargarProductosPorSector(sectorSeleccionado) {
         try {
             const response = await fetch("http://localhost:4000/productos/api/productos");
@@ -444,6 +572,7 @@
                     option.value = producto.Cod_Producto;
                     option.textContent = producto.Nombre;
                     option.dataset.precio = producto.Precio_Compra;
+                    option.dataset.nombre = producto.Nombre; // Guardamos el nombre aquí
                     selectProducto.appendChild(option);
                 });
             }

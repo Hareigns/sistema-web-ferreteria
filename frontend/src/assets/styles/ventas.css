@@ -71,3 +71,26 @@ main {
     text-align: right;
     background-color: #6c6c6d;
 }
+
+/* Estilos para los inputs de edición */
+.edit-cantidad, .edit-precio {
+    width: 80px;
+    display: inline-block;
+}
+
+/* Ajustes para los botones */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.edit-metodo-pago {
+    width: 120px;
+    display: inline-block;
+}
+
+.form-select-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    height: calc(1.5em + 0.5rem + 2px);
+}
