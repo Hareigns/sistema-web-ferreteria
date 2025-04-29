@@ -58,73 +58,115 @@ router.get("/list", isLoggedIn, async (req, res) => {
 
 router.post("/api/ventas", isLoggedIn, async (req, res) => {
   const { 
-    codigo_empleado, 
-    
-    detalles_venta, // Puede ser un array de productos con cantidades y precios
+      codigo_empleado, 
+      detalles_venta,
+      estado_venta = 'Completada'
   } = req.body;
 
-  console.log("Datos recibidos en el servidor (ventas):", req.body);
-
-  // Validaciones básicas
   if (!codigo_empleado || !detalles_venta) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Datos incompletos" 
-    });
+      return res.status(400).json({ 
+          success: false, 
+          message: "Datos incompletos" 
+      });
   }
 
   let connection;
   try {
-    connection = await pool.getConnection();
-    await connection.beginTransaction();
+      connection = await pool.getConnection();
+      await connection.beginTransaction();
 
-    // Insertar la venta sin especificar el Cod_Venta (será auto incrementado)
-    const [resultVenta] = await connection.query(
-      `INSERT INTO Venta (Cod_Empleado)
-       VALUES (?)`,
-      [codigo_empleado]
-    );
+      // 1. Insertar la venta principal
+      const [resultVenta] = await connection.query(
+          `INSERT INTO Venta (Cod_Empleado, Estado_Venta) VALUES (?, ?)`,
+          [codigo_empleado, estado_venta]
+      );
+      const codigo_venta = resultVenta.insertId;
 
-    const codigo_venta = resultVenta.insertId; // El ID auto incrementado se obtiene aquí
+      // 2. Procesar cada producto en la venta
+      for (const detalle of detalles_venta) {
+          const { codigo_producto, cantidad, precio_unitario, metodo_pago, sector } = detalle;
+          
+          // Validaciones básicas
+          if (!codigo_producto || !cantidad || !precio_unitario || !metodo_pago || !sector) {
+              await connection.rollback();
+              return res.status(400).json({
+                  success: false,
+                  message: "Datos de detalles incompletos"
+              });
+          }
 
-    // Insertar detalles de la venta
-    for (const detalle of detalles_venta) {
-      const { codigo_producto, cantidad, precio_unitario, metodo_pago, sector } = detalle;
-      
-      if (!codigo_producto || !cantidad || !precio_unitario || !metodo_pago || !sector) {
-        await connection.rollback();
-        return res.status(400).json({
-          success: false,
-          message: "Datos de detalles incompletos"
-        });
+          // Verificar si el producto está vencido
+          const [productoInfo] = await connection.query(
+              `SELECT FechaVencimiento, Nombre FROM Producto WHERE Cod_Producto = ?`,
+              [codigo_producto]
+          );
+
+          if (productoInfo.length > 0 && productoInfo[0].FechaVencimiento) {
+              const fechaVencimiento = new Date(productoInfo[0].FechaVencimiento);
+              const hoy = new Date();
+              const nombre = productoInfo[0].Nombre_Producto || 'el producto';
+              
+              if (fechaVencimiento < hoy) {
+                  await connection.rollback();
+                  return res.status(400).json({
+                      success: false,
+                      message: `ADVERTENCIA: El producto "${nombre}" está vencido (Fecha de vencimiento: ${fechaVencimiento.toLocaleDateString()})`,
+                      isWarning: true
+                  });
+              }
+          }
+
+          // Insertar detalle de venta
+          await connection.query(
+              `INSERT INTO ProductVenta (Cod_Venta, Cod_Producto, Precio_Venta, Cantidad_Venta, Metodo_Pago, Sector, Fecha_salida)
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [codigo_venta, codigo_producto, precio_unitario, cantidad, metodo_pago, sector, new Date().toISOString().split('T')[0]]
+          );
+
+          // Descontar del inventario (método FIFO)
+          let cantidadRestante = cantidad;
+          const [lotes] = await connection.query(
+              `SELECT Cod_Proveedor, Cantidad 
+              FROM ProveProduct 
+              WHERE Cod_Producto = ? AND Cantidad > 0
+              ORDER BY Fecha_Entrada ASC
+              FOR UPDATE`,
+              [codigo_producto]
+          );
+
+          for (const lote of lotes) {
+              if (cantidadRestante <= 0) break;
+
+              const cantidadADescontar = Math.min(lote.Cantidad, cantidadRestante);
+              
+              await connection.query(
+                  `UPDATE ProveProduct 
+                  SET Cantidad = Cantidad - ? 
+                  WHERE Cod_Proveedor = ? AND Cod_Producto = ?`,
+                  [cantidadADescontar, lote.Cod_Proveedor, codigo_producto]
+              );
+
+              cantidadRestante -= cantidadADescontar;
+          }
       }
 
-      await connection.query(
-        `INSERT INTO ProductVenta (Cod_Venta, Cod_Producto, Precio_Venta, Cantidad_Venta, Metodo_Pago, Sector, Fecha_salida)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [codigo_venta, codigo_producto, precio_unitario, cantidad, metodo_pago, sector, new Date().toISOString().split('T')[0]]
-      );
-    }
-
-    await connection.commit();
-    
-    return res.json({ 
-      success: true, 
-      message: 'Venta registrada correctamente',
-      codigo: codigo_venta
-    });
+      await connection.commit();
+      return res.json({ 
+          success: true, 
+          message: 'Venta registrada correctamente',
+          codigo_venta: codigo_venta
+      });
 
   } catch (error) {
-    await connection?.rollback();
-    console.error("Error al registrar la venta:", error);
-    
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Error al registrar la venta',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+      await connection?.rollback();
+      console.error("Error al registrar la venta:", error);
+      return res.status(500).json({ 
+          success: false, 
+          message: 'Error al registrar la venta',
+          error: error.message
+      });
   } finally {
-    connection?.release();
+      connection?.release();
   }
 });
 
@@ -167,15 +209,13 @@ router.get("/api/productos", isLoggedIn, async (req, res) => {
         p.Cod_Producto, 
         p.Nombre, 
         p.Marca, 
-        p.Fecha_Vencimiento, 
-        pv.Sector, 
+        p.FechaVencimiento, 
         p.Precio_Compra, 
-        p.Cantidad
+        p.Cantidad,
+        p.Sector
       FROM Producto p
-      JOIN ProductVenta pv ON p.Cod_Producto = pv.Cod_Producto
+      WHERE p.FechaVencimiento IS NULL OR p.FechaVencimiento >= CURDATE()
     `);
-
-    console.log("Datos enviados desde la API:", productos);
 
     res.json({ success: true, data: productos });
   } catch (error) {

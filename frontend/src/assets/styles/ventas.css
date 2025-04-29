@@ -94,3 +94,27 @@ main {
     font-size: 0.875rem;
     height: calc(1.5em + 0.5rem + 2px);
 }
+
+/* Estilos para la advertencia de producto vencido */
+.vencido-alert-container {
+    text-align: left;
+}
+
+.vencido-alert-message {
+    color: #856404;
+    background-color: #fff3cd;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 4px solid #ffeeba;
+    margin-bottom: 15px;
+}
+
+.vencido-alert-icon {
+    margin-right: 8px;
+    color: #ffc107;
+}
+
+.vencido-alert-question {
+    font-weight: bold;
+    margin-top: 15px;
+}
