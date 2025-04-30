@@ -45,10 +45,10 @@
                   <option value="Productos de ferretería general">Productos de ferretería general</option>
                 </select>
               </div>
-              <div class="col-md-6">
+              <div id="estado-container" class="col-md-6">
                 <label for="estado" class="form-label">Estado</label>
                 <select id="estado" name="estado" class="form-select" required>
-                  <option value="Activo" selected>Activo</option>
+                  <option value="Activo">Activo</option>
                   <option value="Inactivo">Inactivo</option>
                 </select>
               </div>
@@ -110,18 +110,21 @@
         const select = document.getElementById('codigo_proveedor');
         select.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
 
-        // Formato: "ID - Nombre Apellido" (ej: "1 - Juan Pérez López")
-        data.data.forEach(proveedor => {
+        // Ordenar los proveedores por Cod_Proveedor (ascendente)
+        const proveedoresOrdenados = [...data.data].sort((a, b) => a.Cod_Proveedor - b.Cod_Proveedor);
+
+        // Llenar el select con proveedores ordenados
+        proveedoresOrdenados.forEach(proveedor => {
           const option = document.createElement('option');
           option.value = proveedor.Cod_Proveedor;
           option.textContent = `${proveedor.Cod_Proveedor} - ${proveedor.Nombre} ${proveedor.Apellido}`;
           select.appendChild(option);
         });
 
-        // Llenar tabla
+        // Llenar tabla con proveedores ordenados
         const tbody = document.getElementById('proveedores-table-body');
         tbody.innerHTML = '';
-        data.data.forEach(proveedor => {
+        proveedoresOrdenados.forEach(proveedor => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
           <td>${proveedor.Cod_Proveedor}</td>
@@ -152,6 +155,9 @@
       const data = await response.json();
 
       if (data.success) {
+        // Mostrar campo de estado
+        document.getElementById('estado-container').classList.add('visible');
+
         // Cargar datos en el formulario
         document.getElementById('nombre').value = data.data.Nombre;
         document.getElementById('apellido').value = data.data.Apellido;
@@ -160,7 +166,7 @@
         document.getElementById('sector').value = data.data.Sector;
         document.getElementById('estado').value = data.data.Estado;
 
-        // ✅ Habilitar solo Teléfono, Compañía y Estado
+        // Habilitar solo Teléfono, Compañía y Estado
         document.getElementById('nombre').disabled = true;
         document.getElementById('apellido').disabled = true;
         document.getElementById('sector').disabled = true;
@@ -184,7 +190,10 @@
     document.getElementById('proveedorForm').reset();
     document.getElementById('codigo_proveedor').value = '';
 
-    // ✅ Reactivar todos los campos
+    // Ocultar campo de estado
+    document.getElementById('estado-container').classList.remove('visible');
+
+    // Reactivar todos los campos
     document.getElementById('nombre').disabled = false;
     document.getElementById('apellido').disabled = false;
     document.getElementById('sector').disabled = false;

@@ -52,3 +52,13 @@ body {
 .form-check.visible {
   display: block;
 }
+
+/* Ocultar inicialmente el campo de estado */
+#estado-container {
+  display: none;
+}
+
+/* Mostrar cuando tenga la clase 'visible' */
+#estado-container.visible {
+  display: block;
+}

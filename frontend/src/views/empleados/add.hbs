@@ -29,7 +29,7 @@
                 <input type="text" id="cedula" class="form-control" pattern="[0-9]{13}[A-Za-z]{1}"
                   title="13 dígitos seguidos de 1 letra" required>
               </div>
-              <div class="col-md-6 mb-3">
+              <div id="estado-container" class="col-md-6 mb-3">
                 <label for="estado" class="form-label">Estado</label>
                 <select id="estado" class="form-select" required>
                   <option value="Activo">Activo</option>
@@ -502,7 +502,8 @@
     selectEmpleado.value = "";
     selectEmpleado.selectedIndex = 0;
 
-    // Ocultar el checkbox y su label
+    // Ocultar ambos campos
+    document.getElementById("estado-container").classList.remove("visible");
     document.querySelector(".form-check").classList.remove("visible");
 
     // Manejar estados de botones
@@ -527,6 +528,10 @@
         });
         return;
       }
+
+      // Mostrar ambos campos (estado y reset password)
+      document.getElementById("estado-container").classList.add("visible");
+      document.querySelector(".form-check").classList.add("visible");
 
       // Verificar datos del empleado seleccionado
       if (!selectedOption.dataset.nombre) {

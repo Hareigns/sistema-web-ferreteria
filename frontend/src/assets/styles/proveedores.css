@@ -126,9 +126,12 @@ input:disabled, select:disabled {
   cursor: not-allowed;
 }
 
+/* Ocultar campo de estado inicialmente */
+#estado-container {
+  display: none !important;
+}
 
-
-
-
-
-
+/* Mostrar cuando sea necesario */
+#estado-container.visible {
+  display: block !important;
+}
