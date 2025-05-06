@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import pool from "../database.js";
+import bcrypt from "bcryptjs";
 
 passport.use('local.login', new LocalStrategy(
     { usernameField: 'codigo_empleado', passwordField: 'password' },
@@ -19,8 +20,9 @@ passport.use('local.login', new LocalStrategy(
           return done(null, false, { message: 'Cuenta inactiva' });
         }
         
-        // Compara la contraseña (asegúrate que el campo coincida con tu DB)
-        if (empleado.Contraseña !== password) {
+        // Compara la contraseña usando bcrypt
+        const isMatch = await bcrypt.compare(password, empleado.Contraseña);
+        if (!isMatch) {
           return done(null, false, { message: 'Contraseña incorrecta' });
         }
   

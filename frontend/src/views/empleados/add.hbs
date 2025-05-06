@@ -343,7 +343,7 @@
       // Confirmación
       const confirmacion = await Swal.fire({
         title: `¿Actualizar empleado?`,
-        html: `¿Confirmas la modificación de ${nombre} ${apellido}?`,
+        html: `¿Confirmas la modificación de ${nombre} ${apellido}?<br>${resetPassword ? '<b>Se restablecerá la contraseña a temporal</b>' : ''}`,
         icon: "question",
         showCancelButton: true,
         confirmButtonText: 'Confirmar',
@@ -352,27 +352,34 @@
 
       if (!confirmacion.isConfirmed) return;
 
+      // Preparar datos para enviar
+      const payload = {
+        nombre,
+        apellido,
+        direccion,
+        estado,
+        telefono,
+        compania,
+        cedula: cedula.toUpperCase(),
+        resetPassword
+      };
+
+      // Si se solicita resetear la contraseña, enviar flag
+      if (resetPassword) {
+        payload.resetPassword = true;
+      }
+
       // Enviar datos
       const response = await fetch(`/empleados/api/empleados/${codigoEmpleado}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre,
-          apellido,
-          direccion,
-          estado,
-          telefono,
-          compania,
-          cedula: cedula.toUpperCase(),
-          resetPassword
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
 
       // Manejar respuesta
       if (!response.ok) {
-        // Mostrar errores específicos del backend
         const errorMsg = data.errors ? data.errors.join('<br>') : data.message;
         throw new Error(errorMsg || "Error al actualizar");
       }
@@ -380,7 +387,7 @@
       // Éxito
       await Swal.fire({
         title: "¡Actualizado!",
-        text: `Empleado ${nombre} ${apellido} modificado correctamente`,
+        text: `Empleado ${nombre} ${apellido} modificado correctamente${resetPassword ? ' (Contraseña restablecida)' : ''}`,
         icon: "success"
       });
 

@@ -1,6 +1,7 @@
 import express from "express";
 import pool from "../database.js";
 import { isLoggedIn } from "../lib/auth.js";
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
@@ -117,11 +118,15 @@ router.post("/api/empleados", async (req, res) => {
 
     // Usar la fecha actual del sistema
     const fechaIngreso = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    
+    // Hashear la contraseña por defecto
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('1234', salt);
 
-    // Insertar en Empleado
+    // Insertar en Empleado con la contraseña hasheada
     const [empleadoResult] = await pool.query(
-      'INSERT INTO Empleado (Nombre, Apellido, Direccion, Estado, Cedula, FechaIngreso) VALUES (?, ?, ?, ?, ?, ?)', 
-      [nombre, apellido, direccion, estado, cedula.toUpperCase(), fechaIngreso]
+      'INSERT INTO Empleado (Nombre, Apellido, Direccion, Estado, Cedula, FechaIngreso, Contraseña) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+      [nombre, apellido, direccion, estado, cedula.toUpperCase(), fechaIngreso, hashedPassword]
     );
     
     const codEmpleado = empleadoResult.insertId;
@@ -230,7 +235,7 @@ async function telefonoExiste(numero, excluirEmpleadoId = null) {
 // Ruta PUT actualizada
 router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const { telefono, compania } = req.body;
+  const { telefono, compania, resetPassword } = req.body;
 
   try {
     // 1. Iniciar transacción para evitar condiciones de carrera
@@ -262,15 +267,31 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
       }
     }
 
-    // 3. Actualización segura
+    // 3. Actualización segura del teléfono
     await pool.query(
       'UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Empleado = ?',
       [telefono, compania, id]
     );
 
+    // 4. Si se solicitó resetear la contraseña
+    if (resetPassword) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash('1234', salt); // Contraseña temporal
+      
+      await pool.query(
+        'UPDATE Empleado SET Contraseña = ? WHERE Cod_Empleado = ?',
+        [hashedPassword, id]
+      );
+    }
+
     await pool.query('COMMIT');
     
-    res.json({ success: true, message: 'Actualización exitosa' });
+    res.json({ 
+      success: true, 
+      message: resetPassword 
+        ? 'Datos actualizados y contraseña restablecida' 
+        : 'Actualización exitosa' 
+    });
 
   } catch (error) {
     await pool.query('ROLLBACK');

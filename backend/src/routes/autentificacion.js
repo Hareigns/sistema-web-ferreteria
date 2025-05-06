@@ -2,7 +2,7 @@ import express from "express";
 import passport from "passport";
 import { isLoggedIn, isNotLoggedIn } from "../lib/auth.js";
 import pool from "../database.js"; // <-- Agrega esta línea
-import { marcarRol } from "../lib/roles.js";
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
@@ -34,10 +34,13 @@ router.post('/login', isNotLoggedIn, async (req, res, next) => {
       }
 
       // Actualizar la contraseña en la base de datos
-      const [result] = await pool.query(
-        'UPDATE Empleado SET Contraseña = ? WHERE Cod_Empleado = ?',
-        [new_password, codigo_empleado]
-      );
+const salt = await bcrypt.genSalt(10);
+const hashedPassword = await bcrypt.hash(new_password, salt);
+
+const [result] = await pool.query(
+    'UPDATE Empleado SET Contraseña = ? WHERE Cod_Empleado = ?',
+    [hashedPassword, codigo_empleado]
+);
 
       if (result.affectedRows === 0) {
         req.flash('error', 'Empleado no encontrado');
