@@ -1,34 +1,205 @@
 <link rel="stylesheet" href="/styles/dashboard.css">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Ferretería</title>
+<title>Estadísticas - Ferretería</title>
 
-<div class="dashboard-container">
-    <div class="card">
-        <div class="icon">🚀</div>
-        <h3>Misión</h3>
-        <p>Proveer materiales ferreteros de calidad, ofreciendo una amplia gama de productos que faciliten la
-            construcción, reparación y mantenimiento.</p>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- Gráficos: Ventas Mensuales y por Empleado -->
+      <div class="row">
+        <!-- Gráfico de Ventas Mensuales -->
+        <div class="col-md-6 mb-4">
+          <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+              <h3 class="mb-0">Ventas Mensuales</h3>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="height: 350px;">
+              <canvas id="ventasChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <!-- Gráfico de Ventas por Empleado -->
+        <div class="col-md-6 mb-4">
+          <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+              <h3 class="mb-0">Ventas por Empleado</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="empleadosChart" style="height: 300px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Tabla de Ventas Recientes -->
+      <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Ventas Recientes</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Total</th>
+                  <th>Cantidad</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-ventas">
+                <!-- Datos se insertarán aquí con JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Ventas por Empleado -->
+      <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Ventas por Empleado</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Empleado</th>
+                  <th>Total Vendido</th>
+                  <th>Total de Ventas</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-empleados">
+                <!-- Datos se insertarán aquí con JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="card">
-        <div class="icon">🌟</div>
-        <h3>Visión</h3>
-        <p>Ser la ferretería líder en el sector sur de León, reconocida por nuestra amplia variedad de productos,
-            precios accesibles y excelente servicio al cliente.</p>
-    </div>
-    <div class="card">
-        <div class="icon">📍</div>
-        <h3>Dirección</h3>
-        <p>Del Rastro 3c al sur. León</p>
-    </div>
-    <div class="card">
-        <div class="icon">📞</div>
-        <h3>Teléfono del dueño</h3>
-        <p><strong>8680-0409</strong></p>
-    </div>
+  </div>
 </div>
+
+
+<!-- Scripts para gráficos con Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    try {
+      // 1. Obtener datos del backend
+      const response = await fetch('/dashboard/estadisticas');
+      if (!response.ok) {
+        throw new Error(`Error HTTP! estado: ${response.status}`);
+      }
+      const data = await response.json();
+
+      if (!data.success) throw new Error(data.message);
+
+      // 2. Mostrar datos en gráficos
+      renderCharts(data);
+      renderTables(data);
+
+    } catch (error) {
+      console.error('Error:', error);
+      document.getElementById('tabla-ventas').innerHTML = `
+      <tr><td colspan="3">Error al cargar datos: ${error.message}</td></tr>
+    `;
+    }
+  });
+
+  function renderCharts(data) {
+    // Gráfico de ventas diarias
+    if (data.ventasDiarias && data.ventasDiarias.length > 0) {
+      new Chart(document.getElementById('ventasChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: data.ventasDiarias.map(v => v.fecha),
+          datasets: [{
+            label: 'Ventas Diarias (C$)',
+            data: data.ventasDiarias.map(v => v.total),
+            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+          }]
+        }
+      });
+    }
+
+    // Gráfico de ventas por empleado
+    if (data.ventasEmpleados && data.ventasEmpleados.length > 0) {
+      new Chart(document.getElementById('empleadosChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: data.ventasEmpleados.map(e => e.nombre),
+          datasets: [{
+            label: 'Ventas por Empleado (C$)',
+            data: data.ventasEmpleados.map(e => e.total),
+            backgroundColor: [
+              '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
+            ]
+          }]
+        }
+      });
+    }
+  }
+
+  function renderTables(data) {
+    // Tabla de ventas diarias
+    const ventasTable = document.getElementById('tabla-ventas');
+    if (data.ventasDiarias && data.ventasDiarias.length > 0) {
+      ventasTable.innerHTML = data.ventasDiarias.map(v => {
+        const fecha = new Date(v.fecha);
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = String(fecha.getFullYear()).slice(-2);
+        const fechaFormateada = `${dia}-${mes}-${anio}`;
+
+        return `
+        <tr>
+          <td>${fechaFormateada}</td>
+          <td>C$${v.total?.toFixed(2) || '0.00'}</td>
+          <td>${v.cantidad_ventas || 0}</td>
+        </tr>
+      `;
+      }).join('');
+    } else {
+      ventasTable.innerHTML = '<tr><td colspan="3">No hay registros de ventas</td></tr>';
+    }
+
+    // Tabla de ventas por empleado
+    const empleadosTable = document.getElementById('tabla-empleados');
+    if (data.ventasEmpleados && data.ventasEmpleados.length > 0) {
+      empleadosTable.innerHTML = data.ventasEmpleados.map(e => `
+      <tr>
+        <td>${e.nombre || 'N/A'}</td>
+        <td>C$${e.total?.toFixed(2) || '0.00'}</td>
+        <td>${e.cantidad_ventas || 0}</td>
+      </tr>
+    `).join('');
+    } else {
+      empleadosTable.innerHTML = '<tr><td colspan="3">No hay datos de empleados</td></tr>';
+    }
+
+    // Mostrar resumen
+    if (data.resumen) {
+      const resumenElements = {
+        'ventas-totales': `C$${data.resumen.ventas_totales?.toFixed(2) || '0.00'}`,
+        'total-ventas': data.resumen.total_ventas || 0,
+        'empleados-activos': data.resumen.empleados_activos || 0,
+        'empleado-destacado': data.resumen.empleado_destacado || 'N/A'
+      };
+
+      for (const [id, value] of Object.entries(resumenElements)) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+      }
+    }
+  }
+
+</script>
+
 
 <!-- Botón Manual de Usuario -->
 <a href="manual_usuario.pdf" class="manual-btn" target="_blank">
-    📖 Manual de Usuario
+  📖 Manual de Usuario
 </a>

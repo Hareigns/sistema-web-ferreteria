@@ -1,24 +1,39 @@
+/* Reset y estilos generales */
 body {
     font-family: 'Inter', sans-serif;
-    margin: 0; /* Asegurar que no haya márgenes */
-    padding: 0; /* Asegurar que no haya padding */
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa; /* Color de fondo temporal para pruebas */
 }
 
+/* Navbar ajustada */
 .navbar {
     background: #2c3e50;
-    padding: 15px;
-    position: fixed; /* Fijar la barra en la parte superior */
+    padding: 10px 15px;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000; /* Asegurar que esté sobre otros elementos */
-    border-radius: 0; /* Eliminar cualquier borde redondeado */
+    z-index: 1000;
+    height: 60px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
 }
 
 .navbar-brand {
     font-weight: 700;
     color: #ffffff !important;
     font-size: 20px;
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.navbar-nav {
     display: flex;
     align-items: center;
 }
@@ -29,9 +44,10 @@ body {
     align-items: center;
     font-size: 16px;
     font-weight: 400;
-    padding: 10px 15px;
-    border-radius: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
     transition: background 0.3s ease;
+    margin: 0 5px;
 }
 
 .navbar-nav .nav-link:hover {
@@ -41,15 +57,53 @@ body {
 .navbar-toggler {
     border: none;
     color: white;
+    padding: 5px 10px;
 }
 
 .navbar-nav .nav-link img {
     margin-right: 8px;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
 }
 
-/* Ajustar el contenido para que no quede debajo de la navbar */
+/* Contenido principal */
 main {
-    padding-top: 70px; /* Ajuste según la altura de la navbar */
+    padding-top: 60px; /* Igual a la altura de la navbar */
+    margin: 0;
+    flex: 1;
+    width: 100%;
 }
+
+/* Contenedor del buscador - ajuste específico */
+.search-container {
+    margin: 0;
+    padding: 15px;
+    width: 100%;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Reset de márgenes para contenedores principales */
+.container, .content {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+}
+
+/* Estilos para el buscador */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+

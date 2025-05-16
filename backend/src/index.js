@@ -24,6 +24,8 @@ import { router as productosRoutes } from "./routes/productos.js";
 import { router as proveedoresRoutes } from "./routes/proveedores.js";
 import { router as ventasRoutes } from "./routes/ventas.js";
 import { router as reportesRoutes } from "./routes/reportes.js";
+import dashboardRoutes from "./routes/dashboard.js";
+
 
 // Inicialización
 const app = express();
@@ -107,6 +109,8 @@ app.use('/proveedores', proveedoresRoutes);
 app.use('/ventas', ventasRoutes);
 app.use('/reportes', reportesRoutes);
 app.use('/api/empleados', empleadosRoutes);
+app.use('/dashboard', dashboardRoutes);
+
 
 // Archivos estáticos
 const assetsPath = join(__dirname, '../../frontend/src/assets');

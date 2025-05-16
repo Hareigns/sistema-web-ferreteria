@@ -1,37 +1,51 @@
 body {
-    background: url('/images/fondoreportes.webp') no-repeat center center/cover;
+    background: url('/images/fondoinicio.webp') no-repeat center center fixed;
     background-size: cover;
     min-height: 100vh;
-    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
+    font-family: 'Arial', sans-serif;
 }
 
-/* Navbar ajustado */
+/* Navbar ajustada - versión compacta */
 .navbar {
+    background: #2c3e50;
+    padding: 8px 15px; /* Reducción del padding vertical */
     width: 100%;
-    flex-shrink: 0; /* Evita que el navbar se encoja */
-}
-
-/* Contenido principal */
-.main-content {
-    flex: 1;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    height: 56px; /* Altura fija */
+    box-sizing: border-box; /* Incluye padding en la altura */
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 20px;
-    width: 100%;
 }
 
-/* Ajustes para las tarjetas */
-.container, .content {
-    margin-top: 20px;
+/* Contenido principal pegado a la navbar */
+.main-content {
+    margin-top: 56px !important; /* Igual a la altura de la navbar */
+    padding-top: 0 !important;
     width: 100%;
-    max-width: 1200px;
+    flex: 1;
 }
 
+/* Contenedor del buscador - sin márgenes */
+.search-container {
+    margin-top: 0;
+    padding: 10px 15px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* Reset de márgenes para todos los contenedores principales */
+.container, .content, .card {
+    margin-top: 0 !important;
+}
+
+/* Ajustes específicos para cards */
 .card {
     border-radius: 15px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
@@ -39,28 +53,17 @@ body {
     margin-bottom: 20px;
 }
 
+/* Resto de estilos se mantienen igual */
 .card-header {
     border-radius: 8px 8px 0 0 !important;
     font-weight: 600;
+    background-color: rgba(44, 62, 80, 0.1);
 }
 
 .list-group-item {
     border-left: none;
     border-right: none;
     padding: 12px 20px;
-}
-
-.list-group-item:first-child {
-    border-top: none;
-}
-
-.list-group-item:last-child {
-    border-bottom: none;
-}
-
-.form-check-input {
-    transform: scale(1.2);
-    margin-right: 10px;
 }
 
 /* Footer ajustado */

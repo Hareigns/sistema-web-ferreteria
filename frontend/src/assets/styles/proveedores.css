@@ -1,5 +1,5 @@
 body {
-  background: url(/images/fondoproveedor.webp) no-repeat center center/cover;
+  background: url(/images/fondoinicio.webp) no-repeat center center/cover;
   background-size: cover;
   min-height: 100vh;
   display: flex;
@@ -8,6 +8,17 @@ body {
   justify-content: center;
   padding-top: 80px;
   /* Ajuste para evitar que la navbar cubra contenido */
+}
+
+.navbar {
+  background: #2c3e50;
+  padding: 15px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  border-radius: 0;
 }
 
 .card {
@@ -33,16 +44,6 @@ body {
   background-color: #7e7b7a;
 }
 
-.navbar {
-  background: #2c3e50;
-  padding: 15px;
-  width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  border-radius: 0;
-}
 
 #proveedoresTable {
   width: 100%;
