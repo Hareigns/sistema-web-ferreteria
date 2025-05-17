@@ -178,8 +178,7 @@ function getLocalDate() {
 // Usar al insertar/modificar
 const fechaActual = getLocalDate();
 
-// API para obtener Empleados (JSON)
-// En tu archivo de rutas (router.js), modifica el endpoint API
+// API para obtener Empleados
 router.get('/api/empleados', isLoggedIn, async (req, res) => {
   try {
     const [empleados] = await pool.query(`
@@ -196,7 +195,7 @@ router.get('/api/empleados', isLoggedIn, async (req, res) => {
         t.Compania
       FROM Empleado e
       LEFT JOIN Telefono t ON e.Cod_Empleado = t.Cod_Empleado
-      WHERE e.Estado = 'Activo'
+      ORDER BY e.Cod_Empleado ASC
     `);
     
     res.json({ 
@@ -235,13 +234,13 @@ async function telefonoExiste(numero, excluirEmpleadoId = null) {
 // Ruta PUT actualizada
 router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
   const { id } = req.params;
-  const { telefono, compania, resetPassword } = req.body;
+  const { direccion, estado, telefono, compania, resetPassword } = req.body;
 
   try {
-    // 1. Iniciar transacción para evitar condiciones de carrera
+    // 1. Iniciar transacción
     await pool.query('START TRANSACTION');
 
-    // 2. Verificar teléfono DENTRO de la transacción
+    // 2. Verificar teléfono solo si se proporciona
     if (telefono) {
       const [current] = await pool.query(
         'SELECT Numero FROM Telefono WHERE Cod_Empleado = ?', 
@@ -267,16 +266,24 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
       }
     }
 
-    // 3. Actualización segura del teléfono
+    // 3. Actualizar dirección y estado del empleado
     await pool.query(
-      'UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Empleado = ?',
-      [telefono, compania, id]
+      'UPDATE Empleado SET Direccion = ?, Estado = ? WHERE Cod_Empleado = ?',
+      [direccion, estado, id]
     );
 
-    // 4. Si se solicitó resetear la contraseña
+    // 4. Actualizar teléfono y compañía
+    if (telefono) {
+      await pool.query(
+        'UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Empleado = ?',
+        [telefono, compania, id]
+      );
+    }
+
+    // 5. Resetear contraseña si se solicita
     if (resetPassword) {
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash('1234', salt); // Contraseña temporal
+      const hashedPassword = await bcrypt.hash('1234', salt);
       
       await pool.query(
         'UPDATE Empleado SET Contraseña = ? WHERE Cod_Empleado = ?',
@@ -296,7 +303,6 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
   } catch (error) {
     await pool.query('ROLLBACK');
     
-    // Manejo específico de errores
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({
         success: false,
@@ -311,7 +317,6 @@ router.put('/api/empleados/:id', isLoggedIn, async (req, res) => {
     });
   }
 });
-
 
 router.get('/api/telefono/existe/:numero', isLoggedIn, async (req, res) => {
   try {

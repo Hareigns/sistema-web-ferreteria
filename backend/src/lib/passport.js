@@ -16,7 +16,7 @@ passport.use('local.login', new LocalStrategy(
         const empleado = result[0];
         
         if (empleado.Estado !== 'Activo') {
-          return done(null, false, { message: 'Cuenta inactiva' });
+          return done(null, false, { message: 'Empleado inactivo' });
         }
         
         // Verificar si la contraseña es temporal (1234) pero ya fue cambiada

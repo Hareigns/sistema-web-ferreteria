@@ -325,6 +325,7 @@
     const codigoEmpleado = document.getElementById("codigo_empleado").value;
     const resetPassword = document.getElementById("contrasena_temporal").checked;
 
+
     // Obtener valores
     const nombre = document.getElementById("nombre").value.trim();
     const apellido = document.getElementById("apellido").value.trim();
@@ -332,7 +333,6 @@
     const estado = document.getElementById("estado").value;
     const telefono = document.getElementById("telefono").value.trim();
     const compania = document.getElementById("compania_telefonica").value;
-    const cedula = document.getElementById("cedula").value.trim();
 
     if (!codigoEmpleado) {
       await Swal.fire("Error", "Debe seleccionar un empleado", "error");
@@ -343,7 +343,7 @@
       // Confirmación
       const confirmacion = await Swal.fire({
         title: `¿Actualizar empleado?`,
-        html: `¿Confirmas la modificación de ${nombre} ${apellido}?<br>${resetPassword ? '<b>Se restablecerá la contraseña a temporal</b>' : ''}`,
+        html: `¿Confirmas la modificación de ${nombre} ${apellido}?<br>${resetPassword ? '<b>⚠️ Se restablecerá la contraseña a temporal</b>' : ''}`,
         icon: "question",
         showCancelButton: true,
         confirmButtonText: 'Confirmar',
@@ -354,13 +354,10 @@
 
       // Preparar datos para enviar
       const payload = {
-        nombre,
-        apellido,
         direccion,
         estado,
         telefono,
         compania,
-        cedula: cedula.toUpperCase(),
         resetPassword
       };
 
