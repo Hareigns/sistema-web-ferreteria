@@ -14,46 +14,46 @@ router.get('/estadisticas', async (req, res) => {
     // Desactivar ONLY_FULL_GROUP_BY solo para esta conexión
     await pool.query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
 
-    // 1. Consulta de ventas diarias
-    const [ventasDiarias] = await pool.query(`
-      SELECT 
-        DATE_FORMAT(pv.Fecha_salida, '%Y-%m-%d') AS fecha,
-        SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS total,
-        COUNT(DISTINCT v.Cod_Venta) AS cantidad_ventas
-      FROM Venta v
-      JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      WHERE v.Estado_Venta = 'Finalizada'
-      GROUP BY DATE_FORMAT(pv.Fecha_salida, '%Y-%m-%d')
-      ORDER BY pv.Fecha_salida DESC
-      LIMIT 15
-    `);
+   // 1. Consulta de ventas diarias
+const [ventasDiarias] = await pool.query(`
+  SELECT 
+    DATE_FORMAT(pv.Fecha_salida, '%Y-%m-%d') AS fecha,
+    SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS total,
+    COUNT(DISTINCT v.Cod_Venta) AS cantidad_ventas
+  FROM Venta v
+  JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
+  WHERE v.Estado_Venta IN ('Finalizada', 'Completada', 'Completado')  -- Todos los posibles estados
+  GROUP BY DATE_FORMAT(pv.Fecha_salida, '%Y-%m-%d')
+  ORDER BY pv.Fecha_salida DESC
+  LIMIT 15
+`);
 
-    // 2. Consulta de ventas por empleado
-    const [ventasEmpleados] = await pool.query(`
-      SELECT 
-        CONCAT(e.Nombre, ' ', e.Apellido) AS nombre,
-        SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS total,
-        COUNT(DISTINCT v.Cod_Venta) AS cantidad_ventas
-      FROM Empleado e
-      JOIN Venta v ON e.Cod_Empleado = v.Cod_Empleado
-      JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      WHERE v.Estado_Venta = 'Finalizada'
-      GROUP BY e.Cod_Empleado
-      ORDER BY total DESC
-    `);
+// 2. Consulta de ventas por empleado
+const [ventasEmpleados] = await pool.query(`
+  SELECT 
+    CONCAT(e.Nombre, ' ', e.Apellido) AS nombre,
+    SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS total,
+    COUNT(DISTINCT v.Cod_Venta) AS cantidad_ventas
+  FROM Empleado e
+  JOIN Venta v ON e.Cod_Empleado = v.Cod_Empleado
+  JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
+  WHERE v.Estado_Venta IN ('Finalizada', 'Completada', 'Completado')
+  GROUP BY e.Cod_Empleado
+  ORDER BY total DESC
+`);
 
-    // 3. Datos resumen
-    const [resumen] = await pool.query(`
-      SELECT 
-        SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS ventas_totales,
-        COUNT(DISTINCT v.Cod_Venta) AS total_ventas,
-        COUNT(DISTINCT e.Cod_Empleado) AS empleados_activos,
-        (SELECT CONCAT(Nombre, ' ', Apellido) FROM Empleado ORDER BY RAND() LIMIT 1) AS empleado_destacado
-      FROM Venta v
-      JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      JOIN Empleado e ON v.Cod_Empleado = e.Cod_Empleado
-      WHERE v.Estado_Venta = 'Finalizada'
-    `);
+// 3. Datos resumen
+const [resumen] = await pool.query(`
+  SELECT 
+    SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS ventas_totales,
+    COUNT(DISTINCT v.Cod_Venta) AS total_ventas,
+    COUNT(DISTINCT e.Cod_Empleado) AS empleados_activos,
+    (SELECT CONCAT(Nombre, ' ', Apellido) FROM Empleado ORDER BY RAND() LIMIT 1) AS empleado_destacado
+  FROM Venta v
+  JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
+  JOIN Empleado e ON v.Cod_Empleado = e.Cod_Empleado
+  WHERE v.Estado_Venta IN ('Finalizada', 'Completada', 'Completado')
+`);
 
     res.json({
       success: true,

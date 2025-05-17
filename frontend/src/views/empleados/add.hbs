@@ -500,8 +500,9 @@
       }
     });
 
-    // Resetear selects
+    // Resetear selects y habilitar estado
     document.getElementById("estado").value = "Activo";
+    document.getElementById("estado").disabled = false; // Asegurar que esté habilitado
     document.getElementById("compania_telefonica").value = "Tigo";
 
     // Resetear select de empleados y checkbox
@@ -525,6 +526,7 @@
   document.getElementById("codigo_empleado").addEventListener("change", async function () {
     try {
       const selectedOption = this.options[this.selectedIndex];
+      const estadoSelect = document.getElementById("estado");
 
       if (!selectedOption?.value) {
         limpiarCampos();
@@ -533,6 +535,8 @@
           const field = document.getElementById(id);
           if (field) field.disabled = false;
         });
+        // Habilitar estado cuando no hay empleado seleccionado
+        estadoSelect.disabled = false;
         return;
       }
 
@@ -545,7 +549,16 @@
         throw new Error('Datos del empleado no cargados correctamente');
       }
 
-      // Llenar campos del formulario
+      // Bloquear/desbloquear estado según el código del empleado
+      const codigoEmpleado = parseInt(selectedOption.value);
+      if (codigoEmpleado === 1 || codigoEmpleado === 2) {
+        estadoSelect.disabled = true;
+        estadoSelect.value = "Activo"; // Forzar estado Activo para empleados 1 y 2
+      } else {
+        estadoSelect.disabled = false;
+      }
+
+      // Resto del código existente para llenar los campos...
       const fieldsToUpdate = [
         { id: 'nombre', dataset: 'nombre', required: true },
         { id: 'apellido', dataset: 'apellido' },
