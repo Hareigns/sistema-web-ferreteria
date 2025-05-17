@@ -6,14 +6,21 @@
 <div class="login-container">
   <img src="/images/logo1.webp" alt="Logo de la Ferretería">
   <h3>Iniciar Sesión</h3>
-  
+
   {{#if error}}
-    <div class="alert alert-danger">{{error}}</div>
+  <div class="alert alert-danger d-flex align-items-center">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <div>{{error}}</div>
+  </div>
   {{/if}}
-  
+
   {{#if success}}
-    <div class="alert alert-success">{{success}}</div>
+  <div class="alert alert-success d-flex align-items-center">
+    <i class="fas fa-check-circle me-2"></i>
+    <div>{{success}}</div>
+  </div>
   {{/if}}
+
 
   <form action="/login" method="post" id="loginForm">
     <div class="input-group">
@@ -30,7 +37,7 @@
       <div class="alert alert-warning mt-3">
         <i class="fas fa-exclamation-triangle"></i> Debe cambiar su contraseña temporal
       </div>
-      
+
       <div class="input-group mt-2">
         <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
         <input type="password" name="new_password" id="newPassword" placeholder="Nueva Contraseña" class="form-control">
@@ -38,7 +45,8 @@
 
       <div class="input-group mt-2">
         <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-        <input type="password" name="confirm_password" id="confirmPassword" placeholder="Confirmar Nueva Contraseña" class="form-control">
+        <input type="password" name="confirm_password" id="confirmPassword" placeholder="Confirmar Nueva Contraseña"
+          class="form-control">
       </div>
     </div>
 
@@ -59,22 +67,22 @@
     };
   }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const tempPassword = document.getElementById('tempPassword');
-  const newPasswordFields = document.getElementById('newPasswordFields');
-  
-  tempPassword.addEventListener('input', function() {
-    if (this.value === '1234') {
-      newPasswordFields.style.display = 'block';
-      document.getElementById('newPassword').required = true;
-      document.getElementById('confirmPassword').required = true;
-    } else {
-      newPasswordFields.style.display = 'none';
-      document.getElementById('newPassword').required = false;
-      document.getElementById('confirmPassword').required = false;
-    }
+  document.addEventListener('DOMContentLoaded', function () {
+    const tempPassword = document.getElementById('tempPassword');
+    const newPasswordFields = document.getElementById('newPasswordFields');
+
+    tempPassword.addEventListener('input', function () {
+      if (this.value === '1234') {
+        newPasswordFields.style.display = 'block';
+        document.getElementById('newPassword').required = true;
+        document.getElementById('confirmPassword').required = true;
+      } else {
+        newPasswordFields.style.display = 'none';
+        document.getElementById('newPassword').required = false;
+        document.getElementById('confirmPassword').required = false;
+      }
+    });
   });
-});
 </script>
 
 </form>

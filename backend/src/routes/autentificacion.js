@@ -18,33 +18,61 @@ router.post('/login', isNotLoggedIn, async (req, res, next) => {
 
     // Verificación de contraseña temporal
     if (password === '1234') {
+      // Verificar si realmente es la contraseña temporal (nuevo código)
+      const [empleado] = await pool.query('SELECT Contraseña FROM Empleado WHERE Cod_Empleado = ?', [codigo_empleado]);
+      
+      if (empleado.length === 0) {
+        return res.render('auth/login', {
+          error: 'Empleado no encontrado',
+          cssFile: 'login.css'
+        });
+      }
+
+      const isTempPassword = await bcrypt.compare('1234', empleado[0].Contraseña);
+      
+      if (!isTempPassword) {
+        return res.render('auth/login', {
+          error: 'La contraseña temporal ya fue cambiada. Use su nueva contraseña.',
+          cssFile: 'login.css'
+        });
+      }
+
+      // Validaciones para cambio de contraseña
       if (!new_password) {
-        req.flash('error', 'Debe establecer una nueva contraseña');
-        return res.redirect('/login');
+        return res.render('auth/login', {
+          error: 'Debe establecer una nueva contraseña',
+          cssFile: 'login.css'
+        });
       }
 
       if (new_password !== confirm_password) {
-        req.flash('error', 'Las contraseñas no coinciden');
-        return res.redirect('/login');
+        return res.render('auth/login', {
+          error: 'Las contraseñas no coinciden',
+          cssFile: 'login.css'
+        });
       }
 
       if (new_password.length < 6) {
-        req.flash('error', 'La contraseña debe tener al menos 6 caracteres');
-        return res.redirect('/login');
+        return res.render('auth/login', {
+          error: 'La contraseña debe tener al menos 6 caracteres',
+          cssFile: 'login.css'
+        });
       }
 
       // Actualizar la contraseña en la base de datos
-const salt = await bcrypt.genSalt(10);
-const hashedPassword = await bcrypt.hash(new_password, salt);
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(new_password, salt);
 
-const [result] = await pool.query(
-    'UPDATE Empleado SET Contraseña = ? WHERE Cod_Empleado = ?',
-    [hashedPassword, codigo_empleado]
-);
+      const [result] = await pool.query(
+        'UPDATE Empleado SET Contraseña = ? WHERE Cod_Empleado = ?',
+        [hashedPassword, codigo_empleado]
+      );
 
       if (result.affectedRows === 0) {
-        req.flash('error', 'Empleado no encontrado');
-        return res.redirect('/login');
+        return res.render('auth/login', {
+          error: 'Error al actualizar la contraseña',
+          cssFile: 'login.css'
+        });
       }
 
       req.body.password = new_password;
@@ -57,8 +85,10 @@ const [result] = await pool.query(
         return next(err);
       }
       if (!user) {
-        req.flash('error', info.message || 'Error de autenticación');
-        return res.redirect('/login');
+        return res.render('auth/login', { 
+          error: info.message || 'Error de autenticación',
+          cssFile: 'login.css'
+        });
       }
       req.logIn(user, (err) => {
         if (err) {
@@ -71,8 +101,10 @@ const [result] = await pool.query(
 
   } catch (error) {
     console.error('Error en el proceso de login:', error);
-    req.flash('error', 'Error al procesar la solicitud');
-    res.redirect('/login');
+    return res.render('auth/login', {
+      error: 'Error al procesar la solicitud',
+      cssFile: 'login.css'
+    });
   }
 });
 

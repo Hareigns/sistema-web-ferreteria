@@ -72,3 +72,36 @@ body {
   .forgot-password:hover {
     text-decoration: underline;
   }
+
+  /* Estilos para las alertas */
+.alert {
+  border-radius: 8px;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+  color: #842029;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffecb5;
+  color: #664d03;
+}
+
+.alert-success {
+  background-color: #d1e7dd;
+  border-color: #badbcc;
+  color: #0f5132;
+}
+
+.alert i {
+  font-size: 1.2rem;
+  margin-right: 10px;
+}

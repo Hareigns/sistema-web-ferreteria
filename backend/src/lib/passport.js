@@ -15,12 +15,20 @@ passport.use('local.login', new LocalStrategy(
   
         const empleado = result[0];
         
-        // Verifica si el empleado está activo
         if (empleado.Estado !== 'Activo') {
           return done(null, false, { message: 'Cuenta inactiva' });
         }
         
-        // Compara la contraseña usando bcrypt
+        // Verificar si la contraseña es temporal (1234) pero ya fue cambiada
+        if (password === '1234') {
+          const isTempPassword = await bcrypt.compare('1234', empleado.Contraseña);
+          if (!isTempPassword) {
+            return done(null, false, { 
+              message: 'La contraseña temporal ya fue cambiada. Use su nueva contraseña.' 
+            });
+          }
+        }
+        
         const isMatch = await bcrypt.compare(password, empleado.Contraseña);
         if (!isMatch) {
           return done(null, false, { message: 'Contraseña incorrecta' });
@@ -32,6 +40,7 @@ passport.use('local.login', new LocalStrategy(
       }
     }
 ));
+
   
   // Serialize y Deserialize de Passport
   passport.serializeUser((user, done) => {
