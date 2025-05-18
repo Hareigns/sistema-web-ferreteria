@@ -14,6 +14,7 @@ import { Handlebars } from "./lib/handlebars.js";
 import './lib/passport.js';
 import bodyParser from 'body-parser';
 import flash from 'express-flash';
+import fs from 'fs';
 
 // Importación de rutas
 import indexRoutes from "./routes/index.js";
@@ -52,6 +53,7 @@ app.use(cors({
     origin: 'http://localhost:5173', // Ajusta según tu puerto frontend
     credentials: true
 }));
+
 app.use(cookieParser());
 app.use(session({
     secret: 'secret',
@@ -99,6 +101,7 @@ app.use((req, res, next) => {
     next();
   });
 
+
 // Configuración de rutas
 app.use(indexRoutes);
 app.use(autentificacionRoutes);
@@ -111,11 +114,53 @@ app.use('/reportes', reportesRoutes);
 app.use('/api/empleados', empleadosRoutes);
 app.use('/dashboard', dashboardRoutes);
 
-
 // Archivos estáticos
 const assetsPath = join(__dirname, '../../frontend/src/assets');
 app.use(express.static(assetsPath));
 app.set('assets', assetsPath);
+
+
+// Agrega esta ruta nueva (reemplaza la anterior /descargar-manual/:tipo)
+app.get('/obtener-manual', (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).send('No autenticado');
+  }
+
+  const manualesPath = join(__dirname, 'manuales');
+  let archivo;
+
+  // Verifica el código del empleado desde la sesión
+  if ([1, 2].includes(req.user.Cod_Empleado)) {
+    archivo = 'Prueba_web.pdf';
+    console.log('Descargando manual de administrador para:', req.user.Cod_Empleado);
+  } else {
+    archivo = 'Prueba2_web.pdf';
+    console.log('Descargando manual de empleado para:', req.user.Cod_Empleado);
+  }
+
+  const rutaCompleta = join(manualesPath, archivo);
+  
+  if (!fs.existsSync(rutaCompleta)) {
+    console.error('Archivo no encontrado:', rutaCompleta);
+    return res.status(404).send('Manual no encontrado');
+  }
+
+  // Configura headers para forzar descarga
+  res.setHeader('Content-Disposition', `attachment; filename="${archivo}"`);
+  res.setHeader('Content-Type', 'application/pdf');
+  
+  // Stream el archivo
+  const fileStream = fs.createReadStream(rutaCompleta);
+  fileStream.pipe(res);
+  
+  fileStream.on('error', (err) => {
+    console.error('Error al enviar el archivo:', err);
+    if (!res.headersSent) {
+      res.status(500).send('Error al descargar el manual');
+    }
+  });
+});
+
 
 // Ruta para datos del empleado
 app.get('/empleados', (req, res) => {

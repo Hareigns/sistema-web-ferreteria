@@ -200,6 +200,53 @@
 
 
 <!-- Botón Manual de Usuario -->
-<a href="manual_usuario.pdf" class="manual-btn" target="_blank">
+<a href="#" id="manualUsuarioBtn" class="manual-btn">
   📖 Manual de Usuario
 </a>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    configurarManualUsuario();
+  });
+
+  async function configurarManualUsuario() {
+    const manualBtn = document.getElementById('manualUsuarioBtn');
+    
+    // Configura el botón
+    manualBtn.textContent = "📖 Descargar Manual";
+    manualBtn.onclick = async function(e) {
+      e.preventDefault();
+      
+      try {
+        // Obtener el manual desde el backend
+        const response = await fetch('/obtener-manual', {
+          credentials: 'include' // Incluye cookies para autenticación
+        });
+        
+        if (!response.ok) throw new Error('Error al descargar');
+        
+        // Crear objeto Blob y descargar
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Obtener el nombre del archivo del header Content-Disposition
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'manual.pdf';
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (filenameMatch) filename = filenameMatch[1];
+        }
+        
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al descargar el manual');
+      }
+    };
+  }
+</script>
