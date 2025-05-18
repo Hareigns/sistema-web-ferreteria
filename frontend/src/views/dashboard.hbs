@@ -3,7 +3,7 @@
 
 <div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-10">
 
       <!-- Gráficos: Ventas Mensuales y por Empleado -->
       <div class="row">
@@ -11,7 +11,7 @@
         <div class="col-md-6 mb-4">
           <div class="card shadow h-100">
             <div class="card-header bg-primary text-white">
-              <h3 class="mb-0">Ventas Mensuales</h3>
+              <h3 class="mb-0">Ventas Recientes (Últimos 15 días)</h3>
             </div>
             <div class="card-body d-flex align-items-center justify-content-center" style="height: 350px;">
               <canvas id="ventasChart"></canvas>
@@ -22,15 +22,53 @@
         <div class="col-md-6 mb-4">
           <div class="card shadow h-100">
             <div class="card-header bg-primary text-white">
-              <h3 class="mb-0">Ventas por Empleado</h3>
+              <h3 class="mb-0">Distribución de Ventas por Empleado</h3>
             </div>
-            <div class="card-body">
-              <canvas id="empleadosChart" style="height: 300px;"></canvas>
+            <div class="card-body" style="height: 350px; position: relative;">
+              <div style="height: 250px; width: 100%;">
+                <canvas id="empleadosChart"></canvas>
+              </div>
+              <div class="text-center mt-3" id="leyenda-empleados" style="overflow-x: auto; white-space: nowrap;"></div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Resumen Estadístico -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card bg-success text-white shadow">
+            <div class="card-body">
+              <h5 class="card-title">Ventas Totales</h5>
+              <p class="card-text h4" id="ventas-totales">C$0.00</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-info text-white shadow">
+            <div class="card-body">
+              <h5 class="card-title">Total de Ventas</h5>
+              <p class="card-text h4" id="total-ventas">0</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-warning text-white shadow">
+            <div class="card-body">
+              <h5 class="card-title">Empleados Activos</h5>
+              <p class="card-text h4" id="empleados-activos">0</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-danger text-white shadow">
+            <div class="card-body">
+              <h5 class="card-title">Empleado Destacado</h5>
+              <p class="card-text h4" id="empleado-destacado">N/A</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Tabla de Ventas Recientes -->
       <div class="card shadow mb-4">
@@ -39,12 +77,12 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
+            <table class="table table-striped table-hover">
+              <thead class="thead-dark">
                 <tr>
                   <th>Fecha</th>
                   <th>Total</th>
-                  <th>Cantidad</th>
+                  <th>Cantidad de Ventas</th>
                 </tr>
               </thead>
               <tbody id="tabla-ventas">
@@ -62,12 +100,12 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
+            <table class="table table-striped table-hover">
+              <thead class="thead-dark">
                 <tr>
                   <th>Empleado</th>
                   <th>Total Vendido</th>
-                  <th>Total de Ventas</th>
+                  <th>Cantidad de Ventas</th>
                 </tr>
               </thead>
               <tbody id="tabla-empleados">
@@ -81,7 +119,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- Scripts para gráficos con Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
@@ -97,49 +134,113 @@
 
       if (!data.success) throw new Error(data.message);
 
-      // 2. Mostrar datos en gráficos
+      // 2. Mostrar datos en gráficos y tablas
       renderCharts(data);
       renderTables(data);
 
     } catch (error) {
       console.error('Error:', error);
       document.getElementById('tabla-ventas').innerHTML = `
-      <tr><td colspan="3">Error al cargar datos: ${error.message}</td></tr>
-    `;
+        <tr><td colspan="3">Error al cargar datos: ${error.message}</td></tr>
+      `;
     }
   });
 
   function renderCharts(data) {
     // Gráfico de ventas diarias
     if (data.ventasDiarias && data.ventasDiarias.length > 0) {
-      new Chart(document.getElementById('ventasChart').getContext('2d'), {
+      const ventasCtx = document.getElementById('ventasChart').getContext('2d');
+      new Chart(ventasCtx, {
         type: 'bar',
         data: {
-          labels: data.ventasDiarias.map(v => v.fecha),
+          labels: data.ventasDiarias.map(v => formatDate(v.fecha)),
           datasets: [{
             label: 'Ventas Diarias (C$)',
             data: data.ventasDiarias.map(v => v.total),
-            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
           }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function (value) {
+                  return 'C$' + value.toLocaleString();
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return 'C$' + context.raw.toLocaleString();
+                }
+              }
+            }
+          }
         }
       });
     }
 
-    // Gráfico de ventas por empleado
+    // Gráfico de ventas por empleado (doughnut)
     if (data.ventasEmpleados && data.ventasEmpleados.length > 0) {
-      new Chart(document.getElementById('empleadosChart').getContext('2d'), {
+      const empleadosCtx = document.getElementById('empleadosChart').getContext('2d');
+
+      // Generar colores dinámicamente
+      const backgroundColors = data.ventasEmpleados.map((_, i) => {
+        const hue = (i * 360 / data.ventasEmpleados.length) % 360;
+        return `hsl(${hue}, 70%, 60%)`;
+      });
+
+      const empleadosChart = new Chart(empleadosCtx, {
         type: 'doughnut',
         data: {
           labels: data.ventasEmpleados.map(e => e.nombre),
           datasets: [{
-            label: 'Ventas por Empleado (C$)',
             data: data.ventasEmpleados.map(e => e.total),
-            backgroundColor: [
-              '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
-            ]
+            backgroundColor: backgroundColors,
+            borderWidth: 1
           }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${label}: C$${value.toLocaleString()} (${percentage}%)`;
+                }
+              }
+            }
+          }
         }
       });
+
+      // Creamos una leyenda personalizada debajo del gráfico
+      const leyendaContainer = document.getElementById('leyenda-empleados');
+      leyendaContainer.innerHTML = data.ventasEmpleados.map((empleado, index) => {
+        return `
+          <span class="badge badge-pill mr-2 mb-2" style="background-color:${backgroundColors[index]}; color: #333;">
+            <i class="fas fa-circle mr-1" style="color:${backgroundColors[index]}"></i>
+            ${empleado.nombre}
+          </span>
+        `;
+      }).join('');
     }
   }
 
@@ -147,21 +248,13 @@
     // Tabla de ventas diarias
     const ventasTable = document.getElementById('tabla-ventas');
     if (data.ventasDiarias && data.ventasDiarias.length > 0) {
-      ventasTable.innerHTML = data.ventasDiarias.map(v => {
-        const fecha = new Date(v.fecha);
-        const dia = String(fecha.getDate()).padStart(2, '0');
-        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-        const anio = String(fecha.getFullYear()).slice(-2);
-        const fechaFormateada = `${dia}-${mes}-${anio}`;
-
-        return `
+      ventasTable.innerHTML = data.ventasDiarias.map(v => `
         <tr>
-          <td>${fechaFormateada}</td>
-          <td>C$${v.total?.toFixed(2) || '0.00'}</td>
+          <td>${formatDate(v.fecha)}</td>
+          <td>C$${v.total?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '0.00'}</td>
           <td>${v.cantidad_ventas || 0}</td>
         </tr>
-      `;
-      }).join('');
+      `).join('');
     } else {
       ventasTable.innerHTML = '<tr><td colspan="3">No hay registros de ventas</td></tr>';
     }
@@ -170,75 +263,75 @@
     const empleadosTable = document.getElementById('tabla-empleados');
     if (data.ventasEmpleados && data.ventasEmpleados.length > 0) {
       empleadosTable.innerHTML = data.ventasEmpleados.map(e => `
-      <tr>
-        <td>${e.nombre || 'N/A'}</td>
-        <td>C$${e.total?.toFixed(2) || '0.00'}</td>
-        <td>${e.cantidad_ventas || 0}</td>
-      </tr>
-    `).join('');
+    <tr>
+      <td>${e.nombre || 'N/A'}</td>
+      <td>C$${(e.total || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+      <td>${e.cantidad_ventas || 0}</td>
+    </tr>
+  `).join('');
     } else {
       empleadosTable.innerHTML = '<tr><td colspan="3">No hay datos de empleados</td></tr>';
     }
 
     // Mostrar resumen
     if (data.resumen) {
-      const resumenElements = {
-        'ventas-totales': `C$${data.resumen.ventas_totales?.toFixed(2) || '0.00'}`,
-        'total-ventas': data.resumen.total_ventas || 0,
-        'empleados-activos': data.resumen.empleados_activos || 0,
-        'empleado-destacado': data.resumen.empleado_destacado || 'N/A'
-      };
-
-      for (const [id, value] of Object.entries(resumenElements)) {
-        const element = document.getElementById(id);
-        if (element) element.textContent = value;
-      }
+      document.getElementById('ventas-totales').textContent =
+        `C$${data.resumen.ventas_totales?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '0.00'}`;
+      document.getElementById('total-ventas').textContent =
+        data.resumen.total_ventas?.toLocaleString() || '0';
+      document.getElementById('empleados-activos').textContent =
+        data.resumen.empleados_activos?.toLocaleString() || '0';
+      document.getElementById('empleado-destacado').textContent =
+        data.resumen.empleado_destacado || 'N/A';
     }
   }
 
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
 </script>
-
 
 <!-- Botón Manual de Usuario -->
 <a href="#" id="manualUsuarioBtn" class="manual-btn">
-  📖 Manual de Usuario
+  📖 Descargar Manual
 </a>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     configurarManualUsuario();
   });
 
   async function configurarManualUsuario() {
     const manualBtn = document.getElementById('manualUsuarioBtn');
-    
-    // Configura el botón
-    manualBtn.textContent = "📖 Descargar Manual";
-    manualBtn.onclick = async function(e) {
+
+    manualBtn.onclick = async function (e) {
       e.preventDefault();
-      
+
       try {
-        // Obtener el manual desde el backend
         const response = await fetch('/obtener-manual', {
-          credentials: 'include' // Incluye cookies para autenticación
+          credentials: 'include'
         });
-        
+
         if (!response.ok) throw new Error('Error al descargar');
-        
-        // Crear objeto Blob y descargar
+
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        
-        // Obtener el nombre del archivo del header Content-Disposition
+
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = 'manual.pdf';
         if (contentDisposition) {
           const filenameMatch = contentDisposition.match(/filename="(.+)"/);
           if (filenameMatch) filename = filenameMatch[1];
         }
-        
+
         link.download = filename;
         document.body.appendChild(link);
         link.click();

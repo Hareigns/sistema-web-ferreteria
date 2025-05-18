@@ -55,32 +55,35 @@ router.get("/list", isLoggedIn, async (req, res) => {
     res.redirect('/ventas');
   }
 });
-
 router.post("/api/ventas", isLoggedIn, async (req, res) => {
   const { 
-      codigo_empleado, 
       detalles_venta,
       estado_venta = 'Completada'
   } = req.body;
 
-  if (!codigo_empleado || !detalles_venta) {
+  // Obtener el código del empleado directamente de la sesión
+  const codigo_empleado = req.user.Cod_Empleado;
+
+  if (!codigo_empleado || isNaN(codigo_empleado) || !detalles_venta) {
       return res.status(400).json({ 
           success: false, 
-          message: "Datos incompletos" 
+          message: "Datos incompletos o inválidos" 
       });
   }
+
+  console.log(`Insertando venta para empleado autenticado: ${codigo_empleado}`);
 
   let connection;
   try {
       connection = await pool.getConnection();
       await connection.beginTransaction();
 
-      // 1. Insertar la venta principal
       const [resultVenta] = await connection.query(
           `INSERT INTO Venta (Cod_Empleado, Estado_Venta) VALUES (?, ?)`,
           [codigo_empleado, estado_venta]
       );
       const codigo_venta = resultVenta.insertId;
+      console.log(`Venta ${codigo_venta} creada correctamente para empleado ${codigo_empleado}`);
 
       // 2. Procesar cada producto en la venta
       for (const detalle of detalles_venta) {
@@ -163,7 +166,11 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
       return res.status(500).json({ 
           success: false, 
           message: 'Error al registrar la venta',
-          error: error.message
+          error: error.message,
+          detalles: {
+              codigo_empleado_recibido: req.body.codigo_empleado,
+              tipo_codigo_empleado: typeof req.body.codigo_empleado
+          }
       });
   } finally {
       connection?.release();
@@ -187,19 +194,37 @@ router.get('/api/ventas', isLoggedIn, async (req, res) => {
     }
 });
 
-// Ruta para obtener el empleado logueado
+// Ruta para obtener el empleado logueado - Modificado para enviar datos más claros
 router.get('/empleados/api/empleados', isLoggedIn, async (req, res) => {
     try {
-        const empleado = req.user;  // El empleado que está autenticado está disponible en req.user
+        const empleado = req.user;  // El empleado que está autenticado
+        
+        // Verificar que el empleado tenga el código necesario
+        if (!empleado || !empleado.Cod_Empleado) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "No se pudo obtener el código del empleado" 
+            });
+        }
+
         res.json({
             success: true,
-            data: [empleado]  // Solo enviar el empleado logueado
+            data: [{
+                Cod_Empleado: empleado.Cod_Empleado,
+                Nombre: empleado.Nombre,
+                Apellido: empleado.Apellido
+            }]
         });
     } catch (error) {
         console.error("Error al obtener el empleado:", error);
-        res.status(500).json({ success: false, message: "Error en la solicitud" });
+        res.status(500).json({ 
+            success: false, 
+            message: "Error en la solicitud",
+            error: error.message 
+        });
     }
 });
+
 
 // Ruta para obtener productos filtrados por sector
 router.get("/api/productos", isLoggedIn, async (req, res) => {

@@ -408,18 +408,7 @@
         }
 
         try {
-            // Obtener datos del empleado
-            const empleadoResponse = await fetch('/empleados/api/empleados');
-            if (!empleadoResponse.ok) throw new Error('Error al obtener datos del empleado');
-
-            const empleadoData = await empleadoResponse.json();
-            const empleadoLogueado = empleadoData.data[0];
-            const codigoEmpleado = empleadoLogueado.Cod_Empleado;
-
-            if (typeof codigoEmpleado !== 'number') {
-                throw new Error('El código de empleado debe ser numérico');
-            }
-
+            
             // Calcular total
             const detallesVenta = productos.map(producto => ({
                 codigo_producto: producto.codigo_producto,
@@ -440,9 +429,8 @@
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    codigo_empleado: codigoEmpleado,
                     detalles_venta: detallesVenta,
-                    estado_venta: 'Completada'  // Puedes definir esto según sea necesario
+                    estado_venta: 'Completada'
                 })
             });
 
