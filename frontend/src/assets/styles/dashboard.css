@@ -128,3 +128,28 @@ canvas {
   height: 300px;
   width: 100%;
 }
+
+/* Cambiar color de todos los encabezados a blanco */
+h1, h2, h3, h4, h5, h6,
+.card-header h3, 
+.card-title, 
+.card-header h3.mb-0,
+.card-header .mb-0 {
+    color: white !important;
+}
+
+/* Añade esto al final de tu CSS */
+.card.bg-success .card-text,
+.card.bg-info .card-text,
+.card.bg-warning .card-text,
+.card.bg-danger .card-text {
+    color: #000000 !important;
+}
+
+/* Específicamente para los textos de las tarjetas de resumen */
+#ventas-totales,
+#total-ventas,
+#empleados-activos,
+#empleado-destacado {
+    color: #000000 !important;
+}
