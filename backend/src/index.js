@@ -190,6 +190,11 @@ app.use((err, req, res, next) => {
 // Iniciar servidor
 app.listen(app.get('port'), () => {
     console.log(`Servidor corriendo en http://localhost:${app.get('port')}`);
-});
 
+    // Ejecutar backup al iniciar el servidor
+    import('./services/backup/backupDiario.js')
+        .then(mod => mod.ejecutarBackup())
+        .then(() => console.log('🛡️ Backup ejecutado al iniciar el servidor'))
+        .catch(err => console.error('❌ Error ejecutando backup al iniciar:', err));
+});
 
