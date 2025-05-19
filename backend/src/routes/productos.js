@@ -88,33 +88,27 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
   }
 });
 
-// Ruta para obtener proveedores activos (MODIFICADA)
-router.get("/api/proveedores", isLoggedIn, async (req, res) => {
+// Ruta para obtener todos los productos (MODIFICADA CON ORDER BY)
+router.get("/api/productos", isLoggedIn, async (req, res) => {
   try {
-    const { sector } = req.query;
-    let query = 'SELECT Cod_Proveedor, Nombre, Apellido, Sector FROM Proveedor WHERE Estado = "Activo"';
-    const params = [];
-    
-    if (sector) {
-      query += ' AND Sector = ?';
-      params.push(sector);
-    }
-    
-    const [proveedores] = await pool.query(query, params);
-    res.json({
-      success: true,
-      data: proveedores.map(p => ({
-        codigo_proveedor: p.Cod_Proveedor,
-        nombre: `${p.Nombre} ${p.Apellido}`,
-        sector: p.Sector
-      }))
-    });
+    const [productos] = await pool.query(`
+      SELECT 
+        p.Cod_Producto, 
+        p.Nombre, 
+        p.Marca, 
+        p.FechaVencimiento, 
+        p.Sector, 
+        pp.Precio AS Precio_Compra, 
+        pp.Cantidad
+      FROM Producto p
+      JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
+      ORDER BY p.Cod_Producto ASC  -- Ordenar por código de producto ascendente
+    `);
+
+    res.json({ success: true, data: productos });
   } catch (error) {
-    console.error("Error al obtener proveedores:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error al obtener proveedores"
-    });
+    console.error("Error al obtener productos:", error);
+    res.status(500).json({ success: false, message: "Error al obtener productos" });
   }
 });
 
