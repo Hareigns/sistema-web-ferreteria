@@ -224,23 +224,28 @@ router.get("/api/productos", isLoggedIn, async (req, res) => {
 });
 
 
-
-// Ruta para obtener proveedores
+// Ruta para obtener proveedores (VERSIÓN CORREGIDA)
 router.get("/api/proveedores", isLoggedIn, async (req, res) => {
   try {
     const { sector } = req.query;
-    let query = 'SELECT Cod_Proveedor, Nombre, Apellido, Sector FROM Proveedor';
+    let query = 'SELECT Cod_Proveedor, Nombre, Apellido, Sector FROM Proveedor WHERE Estado = "Activo"';
     const params = [];
     
     if (sector) {
-      query += ' WHERE Sector = ?';
+      query += ' AND Sector = ?';
       params.push(sector);
     }
     
     const [proveedores] = await pool.query(query, params);
+    
+    // Formatear la respuesta como espera el frontend
     res.json({
       success: true,
-      data: proveedores
+      data: proveedores.map(p => ({
+        codigo_proveedor: p.Cod_Proveedor,
+        nombre: `${p.Nombre} ${p.Apellido}`,
+        sector: p.Sector
+      }))
     });
   } catch (error) {
     console.error("Error al obtener proveedores:", error);
