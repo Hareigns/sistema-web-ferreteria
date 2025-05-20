@@ -323,6 +323,14 @@
 
     async function exportarExcelProductos(data, nombreArchivo) {
         try {
+            // Función para obtener fecha local correcta
+            const getLocalDate = () => {
+                const now = new Date();
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            };
+
+            const fechaActual = getLocalDate();
+
             const workbook = new ExcelJS.Workbook();
             workbook.creator = 'Tu Aplicación';
             workbook.lastModifiedBy = 'Tu Aplicación';
@@ -332,7 +340,7 @@
                 properties: { tabColor: { argb: 'FF4F81BD' } }
             });
 
-            // Configuración de columnas (mejorado)
+            // Configuración de columnas
             worksheet.columns = [
                 { header: 'Código', key: 'Cod_Producto', width: 15 },
                 { header: 'Nombre', key: 'Nombre', width: 30 },
@@ -340,7 +348,7 @@
                 { header: 'Tipo', key: 'Tipo', width: 20 }
             ];
 
-            // Estilo de encabezado (optimizado)
+            // Estilo de encabezado
             const headerRow = worksheet.getRow(1);
             headerRow.fill = {
                 type: 'pattern',
@@ -350,7 +358,7 @@
             headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
             headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-            // Aplicar bordes a todas las celdas de una vez
+            // Aplicar bordes
             worksheet.eachRow({ includeEmpty: false }, row => {
                 row.eachCell(cell => {
                     cell.border = {
@@ -371,11 +379,11 @@
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             });
 
-            // Descargar
+            // Descargar con fecha correcta
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${nombreArchivo}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            a.download = `${nombreArchivo}_${fechaActual}.xlsx`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -386,5 +394,4 @@
             throw error;
         }
     }
-
 </script>
