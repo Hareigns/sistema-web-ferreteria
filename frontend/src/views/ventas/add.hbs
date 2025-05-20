@@ -546,28 +546,11 @@
 
             // Mostrar ventas
             ventas.forEach(venta => {
-                // Formatear fecha con validación
-                let fechaFormateada = 'Sin fecha';
-
-                if (venta.Fecha_salida) {
-                    try {
-                        // Asegurar que la fecha tenga formato correcto para JavaScript
-                        const fechaParts = venta.Fecha_salida.split('T')[0].split('-');
-                        const fecha = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2]);
-
-                        if (!isNaN(fecha.getTime())) {
-                            fechaFormateada = fecha.toLocaleDateString('es-ES', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric'
-                            });
-                        }
-                    } catch (e) {
-                        console.warn('Error al formatear fecha:', venta.Fecha_salida);
-                    }
-                }
-
+                // Obtener el nombre del producto del mapa
                 const nombreProducto = mapaProductos[venta.Cod_Producto] || 'Desconocido';
+
+                // Formatear fecha
+                const fechaFormateada = formatearFecha(venta.Fecha_salida);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -699,4 +682,25 @@
         return vencimiento < hoy;
     }
 
+    // Función auxiliar para formatear fechas
+    function formatearFecha(fechaISO) {
+        if (!fechaISO) return 'Sin fecha';
+
+        try {
+            // Crear fecha y ajustar a zona horaria de Nicaragua (UTC-6)
+            const fecha = new Date(fechaISO);
+            // Añadir el ajuste de zona horaria manualmente
+            fecha.setMinutes(fecha.getMinutes() + fecha.getTimezoneOffset() - (6 * 60));
+
+            // Formatear como DD/MM/YYYY
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const año = fecha.getFullYear();
+
+            return `${dia}/${mes}/${año}`;
+        } catch (e) {
+            console.warn('Error al formatear fecha:', fechaISO, e);
+            return fechaISO.split('T')[0]; // Mostrar al menos la parte de la fecha
+        }
+    }
 </script>

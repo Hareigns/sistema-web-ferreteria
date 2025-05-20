@@ -288,12 +288,25 @@
 
   function formatDate(dateString) {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+
+    try {
+      // Parsear la fecha sin modificación
+      const fecha = new Date(dateString);
+
+      // Ajustar solo la visualización (Nicaragua UTC-6)
+      const options = {
+        timeZone: 'America/Managua',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      };
+
+      return fecha.toLocaleDateString('es-NI', options);
+    } catch (e) {
+      console.error('Error formateando fecha:', dateString, e);
+      // Fallback: mostrar la fecha ISO sin hora
+      return dateString.split('T')[0].split('-').reverse().join('/');
+    }
   }
 </script>
 

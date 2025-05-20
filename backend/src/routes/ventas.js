@@ -76,18 +76,22 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
   console.log(`Insertando venta para empleado autenticado: ${codigo_empleado}`);
 
   let connection;
-  try {
-      connection = await pool.getConnection();
-      await connection.beginTransaction();
+   try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-      const [resultVenta] = await connection.query(
-          `INSERT INTO Venta (Cod_Empleado, Estado_Venta) VALUES (?, ?)`,
-          [codigo_empleado, estado_venta]
-      );
-      const codigo_venta = resultVenta.insertId;
-      console.log(`Venta ${codigo_venta} creada correctamente para empleado ${codigo_empleado}`);
+        const [resultVenta] = await connection.query(
+            `INSERT INTO Venta (Cod_Empleado, Estado_Venta) VALUES (?, ?)`,
+            [codigo_empleado, estado_venta]
+        );
+        const codigo_venta = resultVenta.insertId;
 
-      // 2. Procesar cada producto en la venta
+        // Obtener fecha actual en formato YYYY-MM-DD para Nicaragua (UTC-6)
+        const now = new Date();
+        // Ajustar a hora de Nicaragua (UTC-6)
+        const nicaraguaTime = new Date(now.getTime() - (6 * 60 * 60 * 1000));
+        const fechaVenta = nicaraguaTime.toISOString().split('T')[0];
+
       for (const detalle of detalles_venta) {
           const { codigo_producto, cantidad, precio_unitario, metodo_pago, sector } = detalle;
           
@@ -122,10 +126,10 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
           }
 
           // Insertar detalle de venta
-          await connection.query(
+           await connection.query(
               `INSERT INTO ProductVenta (Cod_Venta, Cod_Producto, Precio_Venta, Cantidad_Venta, Metodo_Pago, Sector, Fecha_salida)
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
-              [codigo_venta, codigo_producto, precio_unitario, cantidad, metodo_pago, sector, new Date().toISOString().split('T')[0]]
+              [codigo_venta, codigo_producto, precio_unitario, cantidad, metodo_pago, sector, fechaVenta]
           );
 
           // Descontar del inventario (método FIFO)

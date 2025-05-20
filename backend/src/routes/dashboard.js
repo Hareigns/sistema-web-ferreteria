@@ -14,19 +14,19 @@ router.get('/estadisticas', async (req, res) => {
     // Desactivar ONLY_FULL_GROUP_BY solo para esta conexión
     await pool.query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
 
-    // 1. Consulta de ventas diarias
-    const [ventasDiarias] = await pool.query(`
-      SELECT 
-        DATE_FORMAT(pv.Fecha_salida, '%Y-%m-%d') AS fecha,
-        SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS total,
-        COUNT(DISTINCT v.Cod_Venta) AS cantidad_ventas
-      FROM Venta v
-      JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      WHERE v.Estado_Venta IN ('Finalizada', 'Completada')
-      GROUP BY DATE_FORMAT(pv.Fecha_salida, '%Y-%m-%d')
-      ORDER BY pv.Fecha_salida DESC
-      LIMIT 15
-    `);
+    // 1. Consulta de ventas diarias con ajuste de zona horaria
+const [ventasDiarias] = await pool.query(`
+  SELECT 
+    DATE(pv.Fecha_salida) AS fecha,
+    SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS total,
+    COUNT(DISTINCT v.Cod_Venta) AS cantidad_ventas
+  FROM Venta v
+  JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
+  WHERE v.Estado_Venta IN ('Finalizada', 'Completada')
+    AND pv.Fecha_salida >= DATE(DATE_SUB(NOW(), INTERVAL 15 DAY))
+  GROUP BY DATE(pv.Fecha_salida)
+  ORDER BY fecha DESC
+`);
 
 // 2. Consulta de ventas por empleado (versión que muestra todos los empleados)
 const [ventasEmpleados] = await pool.query(`
