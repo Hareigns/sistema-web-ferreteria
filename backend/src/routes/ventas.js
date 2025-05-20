@@ -38,10 +38,11 @@ router.get("/add", isLoggedIn, (req, res) => {
 router.get("/list", isLoggedIn, async (req, res) => {
   try {
     const [ventas] = await pool.query(`
-      SELECT v.Cod_Venta, v.Fecha_Venta, pv.Cod_Producto, pv.Precio_Venta, pv.Cantidad_Venta, pv.Metodo_Pago, pv.Sector
+      SELECT v.Cod_Venta, pv.Fecha_salida, pv.Cod_Producto, pv.Precio_Venta, 
+             pv.Cantidad_Venta, pv.Metodo_Pago, pv.Sector
       FROM Venta v
       JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      ORDER BY v.Fecha_Venta DESC
+      ORDER BY pv.Fecha_salida ASC
     `);
 
     res.render("ventas/list", {
@@ -55,6 +56,7 @@ router.get("/list", isLoggedIn, async (req, res) => {
     res.redirect('/ventas');
   }
 });
+
 router.post("/api/ventas", isLoggedIn, async (req, res) => {
   const { 
       detalles_venta,
@@ -181,16 +183,22 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
 // API para obtener ventas (JSON)
 router.get('/api/ventas', isLoggedIn, async (req, res) => {
     try {
-      const [ventas] = await pool.query(`
-        SELECT v.Cod_Venta, pv.Fecha_Salida, pv.Cod_Producto, pv.Precio_Venta, pv.Cantidad_Venta, pv.Metodo_Pago, pv.Sector
-        FROM Venta v
-        JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      `);
-
-      res.json({ success: true, data: ventas });
+        const [ventas] = await pool.query(`
+            SELECT v.Cod_Venta, pv.Fecha_salida, pv.Cod_Producto, pv.Precio_Venta, 
+                   pv.Cantidad_Venta, pv.Metodo_Pago, pv.Sector
+            FROM Venta v
+            JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
+            ORDER BY pv.Fecha_salida ASC  -- Orden ascendente (mas antiguas primero)
+        `);
+        
+        res.json({ success: true, data: ventas });
     } catch (error) {
-      console.error("Error al obtener ventas:", error);
-      res.status(500).json({ success: false, error: 'Error al obtener ventas', details: error.message });
+        console.error("Error al obtener ventas:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener ventas',
+            error: error.message 
+        });
     }
 });
 

@@ -408,7 +408,7 @@
         }
 
         try {
-            
+
             // Calcular total
             const detallesVenta = productos.map(producto => ({
                 codigo_producto: producto.codigo_producto,
@@ -515,52 +515,81 @@
         document.getElementById("total").value = total.toFixed(2);
     }
 
-    function cargarHistorialVentas() {
-        // Primero obtenemos todos los productos
-        fetch('http://localhost:4000/productos/api/productos/')
-            .then(response => response.json())
-            .then(productosData => {
-                if (!productosData.success) throw new Error('Error al cargar productos');
+    async function cargarHistorialVentas() {
+        try {
+            // 1. Obtener productos primero
+            const productosResponse = await fetch('http://localhost:4000/productos/api/productos');
+            const productosData = await productosResponse.json();
 
-                const productos = productosData.data;
-                const mapaProductos = {};
-                productos.forEach(p => {
-                    mapaProductos[p.Cod_Producto] = p.Nombre;
-                });
+            if (!productosData.success) {
+                throw new Error('Error al cargar productos');
+            }
 
-                // Ahora obtenemos el historial de ventas
-                fetch('http://localhost:4000/ventas/api/ventas/')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const ventas = data.data;
-                            const tbody = document.getElementById('tablaHistorialVentas');
-                            tbody.innerHTML = '';
+            // Crear mapa de productos
+            const mapaProductos = {};
+            productosData.data.forEach(p => {
+                mapaProductos[p.Cod_Producto] = p.Nombre;
+            });
 
-                            ventas.forEach(venta => {
-                                const fecha = new Date(venta.Fecha_Salida);
-                                const fechaFormateada = `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}`;
-                                const nombreProducto = mapaProductos[venta.Cod_Producto] || 'Desconocido';
+            // 2. Obtener ventas
+            const ventasResponse = await fetch('http://localhost:4000/ventas/api/ventas');
+            const ventasData = await ventasResponse.json();
 
-                                const tr = document.createElement('tr');
-                                tr.innerHTML = `
+            if (!ventasData.success) {
+                throw new Error('Error al cargar ventas');
+            }
+
+            // Ordenar ventas por código ascendente (para ver las más antiguas primero)
+            const ventas = ventasData.data.sort((a, b) => a.Cod_Venta - b.Cod_Venta);
+            const tbody = document.getElementById('tablaHistorialVentas');
+            tbody.innerHTML = '';
+
+            // Mostrar ventas
+            ventas.forEach(venta => {
+                // Formatear fecha con validación
+                let fechaFormateada = 'Sin fecha';
+
+                if (venta.Fecha_salida) {
+                    try {
+                        // Asegurar que la fecha tenga formato correcto para JavaScript
+                        const fechaParts = venta.Fecha_salida.split('T')[0].split('-');
+                        const fecha = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2]);
+
+                        if (!isNaN(fecha.getTime())) {
+                            fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Error al formatear fecha:', venta.Fecha_salida);
+                    }
+                }
+
+                const nombreProducto = mapaProductos[venta.Cod_Producto] || 'Desconocido';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                 <td>${venta.Cod_Venta}</td>
-                <td>${nombreProducto}</td>
+                <td>${nombreProducto} (${venta.Cod_Producto})</td>
                 <td>${venta.Cantidad_Venta}</td>
                 <td>C$${venta.Precio_Venta.toFixed(2)}</td>
                 <td>${venta.Metodo_Pago}</td>
                 <td>${venta.Sector}</td>
                 <td>${fechaFormateada}</td>
-              `;
-                                tbody.appendChild(tr);
-                            });
-                        } else {
-                            console.error('Error al cargar ventas:', data);
-                        }
-                    })
-                    .catch(err => console.error('Error al cargar ventas:', err));
-            })
-            .catch(err => console.error('Error al cargar productos:', err));
+            `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (error) {
+            console.error('Error al cargar historial:', error);
+            document.getElementById('tablaHistorialVentas').innerHTML = `
+            <tr>
+                <td colspan="7" class="text-danger">Error al cargar historial: ${error.message}</td>
+            </tr>
+        `;
+        }
     }
 
     // Ejecutar al cargar la página
@@ -568,29 +597,32 @@
 
     async function cargarCodigoVenta() {
         try {
-            const response = await fetch('http://localhost:4000/ventas/api/ventas/');
+            const response = await fetch('http://localhost:4000/ventas/api/ventas');
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
             const data = await response.json();
 
             if (data.success && Array.isArray(data.data)) {
-                const ventas = data.data;
-
-                // Buscar el código máximo (asumiendo que la clave es Cod_Venta)
-                const ultimoCodigo = ventas.reduce((max, venta) => {
+                const ultimoCodigo = data.data.reduce((max, venta) => {
                     return venta.Cod_Venta > max ? venta.Cod_Venta : max;
                 }, 0);
 
-                const nuevoCodigo = ultimoCodigo + 1;
-                document.getElementById("codigoVenta").value = nuevoCodigo;
-                localStorage.setItem("codigoVenta", nuevoCodigo); // Si deseas guardarlo
+                document.getElementById("codigoVenta").value = ultimoCodigo + 1;
             } else {
-                throw new Error("No se pudo obtener la lista de ventas");
+                throw new Error(data.message || "No se pudo obtener la lista de ventas");
             }
         } catch (error) {
             console.error("Error al cargar el código de venta:", error);
+            document.getElementById("codigoVenta").value = "TEMP-" + Date.now();
+
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo obtener el código de venta desde el servidor'
+                icon: 'warning',
+                title: 'Advertencia',
+                text: 'No se pudo obtener el código de venta. Se usará un código temporal.',
+                footer: error.message
             });
         }
     }
