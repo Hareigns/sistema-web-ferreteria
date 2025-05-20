@@ -9,143 +9,129 @@ body {
     flex-direction: column;
 }
 
-.navbar {
-    width: 100%;
-    flex-shrink: 0;
-}
 
+/* ESTILOS PARA LA BARRA DE RESUMEN - VERSIÓN CONSERVANDO TUS ESTILOS */
 .summary-row {
-    background-color: #f8f9fa;
-    padding: 10px;
-    font-size: 0.9rem;
-}
-
-.card-body.loading::after {
-    content: "Cargando datos...";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.9);
-    padding: 15px 25px;
-    border-radius: 5px;
-    z-index: 1000;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-.input-group .form-select {
-    flex: 0 0 250px;
-}
-
-.input-group .form-control {
-    flex: 1 1 auto;
-}
-
-.highlight {
-    background-color: #ffeb3b;
-    font-weight: bold;
-}
-
-.card {
-    border-radius: 10px;
-}
-
-.card-header {
-    border-radius: 8px 8px 0 0 !important;
-}
-
-.form-select, .form-control {
-    border-radius: 5px;
-}
-
-.btn-primary {
-    border-radius: 5px;
-}
-
-/* ESTILOS MEJORADOS PARA LA TABLA */
-.table-container {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
-}
-
-.table-wrapper {
-    width: 100%;
-    overflow: auto;
-    max-height: 70vh;
-}
-
-#dataTable {
-    width: 100% !important;
-    margin: 0 !important;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-#dataTable thead th {
+    background-color: rgba(248, 249, 250, 0.95); /* Fondo semitransparente */
+    border-top: 2px solid #dee2e6;
+    padding: 12px 5px;
     position: sticky;
-    top: 0;
-    background-color: #343a40;
-    color: white;
+    bottom: 0;
     z-index: 10;
-    padding: 12px 15px;
-    vertical-align: middle;
-    border-bottom: 2px solid #dee2e6;
 }
 
-#dataTable tbody td {
-    padding: 10px 15px;
-    vertical-align: middle;
-    word-wrap: break-word;
-    border-bottom: 1px solid #dee2e6;
+.summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    gap: 10px;
 }
 
-/* DISTRIBUCIÓN DE COLUMNAS */
-#dataTable th:nth-child(1), #dataTable td:nth-child(1) { width: 120px; } /* Código */
-#dataTable th:nth-child(2), #dataTable td:nth-child(2) { width: 25%; min-width: 200px; } /* Nombre */
-#dataTable th:nth-child(3), #dataTable td:nth-child(3) { width: 15%; } /* Marca */
-#dataTable th:nth-child(4), #dataTable td:nth-child(4) { width: 120px; } /* Fecha Entrada */
-#dataTable th:nth-child(5), #dataTable td:nth-child(5) { width: 80px; } /* Cantidad */
-#dataTable th:nth-child(6), #dataTable td:nth-child(6) { width: 120px; } /* Fecha Vencimiento */
-#dataTable th:nth-child(7), #dataTable td:nth-child(7) { width: 20%; min-width: 180px; } /* Sector */
-#dataTable th:nth-child(8), #dataTable td:nth-child(8) { width: 120px; } /* Estado */
-
-/* TOOLTIPS PARA TEXTO LARGO */
-.cell-content {
-    display: inline-block;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.summary-item {
+    padding: 8px 15px;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-width: 160px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
 }
 
-.has-tooltip {
-    cursor: help;
-    border-bottom: 1px dotted #999;
+.summary-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* OCULTAR ELEMENTOS DE DATATABLES */
-.dataTables_length, 
-.dataTables_filter,
-.dataTables_info,
-.dataTables_paginate {
-    display: none !important;
+.summary-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #495057;
+    display: block;
+    margin-bottom: 3px;
 }
 
-/* AJUSTES PARA SCROLL */
-.table-wrapper::-webkit-scrollbar {
-    height: 8px;
-    width: 8px;
+.summary-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: block;
 }
 
-.table-wrapper::-webkit-scrollbar-thumb {
-    background: #adb5bd;
-    border-radius: 4px;
+/* ESTILOS ESPECÍFICOS PARA CADA ÍTEM */
+.summary-item:nth-child(1) { /* Total Productos */
+    border-left-color: #6c757d;
 }
 
-.table-wrapper::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
+.summary-item:nth-child(2) { /* Bajo Stock */
+    color: #ffc107;
+    border-left-color: #ffc107;
+}
+
+.summary-item:nth-child(3) { /* Próximos a vencer */
+    color: #fd7e14;
+    border-left-color: #fd7e14;
+}
+
+.summary-item:nth-child(4) { /* Vencidos */
+    color: #dc3545;
+    border-left-color: #dc3545;
+}
+
+/* ANIMACIONES PARA VALORES IMPORTANTES */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.has-alert {
+    animation: pulse 1.5s infinite;
+}
+
+.has-warning {
+    animation: pulse 1.5s infinite;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 992px) {
+    .summary-item {
+        min-width: 140px;
+        padding: 8px 10px;
+    }
+    
+    .summary-label {
+        font-size: 0.75rem;
+    }
+    
+    .summary-value {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .summary-container {
+        gap: 8px;
+    }
+    
+    .summary-item {
+        min-width: calc(50% - 20px);
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 576px) {
+    .summary-item {
+        min-width: 100%;
+    }
+    
+    .summary-row {
+        padding: 10px 0;
+    }
+}
+
+/* INTEGRACIÓN CON SCROLL EXISTENTE */
+.table-wrapper {
+    max-height: calc(70vh - 60px); /* Ajuste para el espacio del resumen */
+    overflow-y: auto; /* Mantiene tu scroll personalizado */
 }

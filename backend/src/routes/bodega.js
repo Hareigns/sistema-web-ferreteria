@@ -15,47 +15,51 @@ router.get('/list', (req, res) => {
 
 
 router.get('/api/reporte', async (req, res) => {
-    const { sector, periodo = 'todos' } = req.query;
-
-    if (!sector) {
-        return res.status(400).json({
-            success: false,
-            message: 'El parámetro sector es requerido'
-        });
-    }
+    const { sector, periodo = 'todos', search } = req.query;
 
     try {
-        // Llamada directa al procedimiento almacenado
+        // Si no hay ningún filtro, obtener todos los productos activos
+        if (!sector && !search && periodo === 'todos') {
+            const [results] = await pool.query(`
+                SELECT 
+                    p.Cod_Producto,
+                    p.Nombre,
+                    p.Marca,
+                    pp.Fecha_Entrada AS FechaEntrada,
+                    pp.Cantidad,
+                    p.FechaVencimiento,
+                    p.Sector
+                FROM 
+                    Producto p
+                JOIN 
+                    ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
+                WHERE 
+                    p.Estado = 'Activo'
+                ORDER BY pp.Fecha_Entrada DESC`);
+                
+            return res.json({
+                success: true,
+                data: results
+            });
+        }
+        
+        // Usar el SP para búsquedas con filtros
         const [results] = await pool.query(
-            'CALL sp_reporte_bodega(?, ?)', 
-            [sector, periodo]
+            'CALL sp_reporte_bodega(?, ?, ?)', 
+            [
+                sector || null,
+                periodo,
+                search || null
+            ]
         );
-        
-        // MySQL devuelve los resultados en un array peculiar
-        const data = results[0] || [];
-        
-        console.log(`Productos obtenidos: ${data.length}`);
         
         return res.json({
             success: true,
-            data: data.map(item => ({
-                Cod_Producto: item.Cod_Producto,
-                Nombre: item.Nombre,
-                Marca: item.Marca,
-                FechaEntrada: item.FechaEntrada,
-                Cantidad: item.Cantidad,
-                FechaVencimiento: item.FechaVencimiento,
-                Sector: item.Sector
-            }))
+            data: results[0] || []
         });
 
     } catch (error) {
-        console.error('Error en reporte de bodega:', {
-            message: error.message,
-            stack: error.stack,
-            sqlMessage: error.sqlMessage
-        });
-        
+        console.error('Error en reporte de bodega:', error);
         return res.status(500).json({
             success: false,
             message: 'Error al generar el reporte',
@@ -63,5 +67,19 @@ router.get('/api/reporte', async (req, res) => {
         });
     }
 });
+
+// Función auxiliar para construir condición de período
+function getPeriodCondition(periodo) {
+    switch(periodo) {
+        case 'diario':
+            return 'AND pp.Fecha_Entrada >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+        case 'semanal':
+            return 'AND pp.Fecha_Entrada >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+        case 'mensual':
+            return 'AND pp.Fecha_Entrada >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)';
+        default:
+            return '';
+    }
+}
 
 export { router };
