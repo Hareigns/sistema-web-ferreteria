@@ -105,3 +105,11 @@ body {
   font-size: 1.2rem;
   margin-right: 10px;
 }
+
+  /* Estilo adicional solo para el efecto del logo */
+  .login-container a img {
+    transition: transform 0.3s ease;
+  }
+  .login-container a:hover img {
+    transform: scale(1.1);
+  }

@@ -3,8 +3,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link rel="stylesheet" href="/styles/login.css">
 
+
 <div class="login-container">
-  <img src="/images/logo1.webp" alt="Logo de la Ferretería">
+  <a href="/" style="display: inline-block;">
+    <img src="/images/logo1.webp" alt="Logo de la Ferretería">
+  </a>
   <h3>Iniciar Sesión</h3>
 
   {{#if error}}
@@ -20,7 +23,6 @@
     <div>{{success}}</div>
   </div>
   {{/if}}
-
 
   <form action="/login" method="post" id="loginForm">
     <div class="input-group">
@@ -56,8 +58,6 @@
   </form>
 </div>
 
-
-
 <script>
   // Evita que el usuario vuelva con el botón "Atrás"
   if (window.history && window.history.pushState) {
@@ -84,6 +84,3 @@
     });
   });
 </script>
-
-</form>
-</div>
