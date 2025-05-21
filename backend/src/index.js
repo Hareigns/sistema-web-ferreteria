@@ -39,13 +39,34 @@ const viewsPath = join(__dirname, '../../frontend/src/views');
 app.set('views', viewsPath);
 
 // Configuración de Handlebars
-app.engine('.hbs', engine({
+const hbs = engine({
     defaultLayout: 'main',
     layoutsDir: join(viewsPath, 'layouts'),
     partialsDir: join(viewsPath, 'partials'),
     extname: '.hbs',
-    helpers: Handlebars
-}));
+    helpers: {
+        ...Handlebars, // Tus helpers existentes
+        notEmpty: function(obj) {
+            return obj && Object.keys(obj).length > 0;
+        },
+        keys: function(obj) {
+            return obj ? Object.keys(obj) : [];
+        },
+        length: function(array) {
+            return array ? array.length : 0;
+        },
+        gt: function(a, b) {
+            return a > b;
+        },
+        // Helper alternativo más simple
+        hasProducts: function(productosPorSector, options) {
+            return productosPorSector && Object.keys(productosPorSector).length > 0 ? 
+                   options.fn(this) : options.inverse(this);
+        }
+    }
+});
+
+app.engine('.hbs', hbs);
 app.set('view engine', '.hbs');
 
 // Middlewares esenciales

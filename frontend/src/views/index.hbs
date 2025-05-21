@@ -39,7 +39,8 @@
 <nav class="navbar navbar-expand-lg navbar-custom sticky-top" style="height: 100px;">
   <div class="container h-100">
     <a class="navbar-brand-custom h-100 d-flex align-items-center" href="/" style="padding: 0;">
-      <img src="images/logo_ferreteria.webp" alt="Logo Ferretería Las Brisas" class="h-100" style="object-fit: contain; padding: 5px 0;">
+      <img src="images/logo_ferreteria.webp" alt="Logo Ferretería Las Brisas" class="h-100"
+        style="object-fit: contain; padding: 5px 0;">
       <div class="brand-text ms-3">
         <h1 class="brand-name mb-0" style="line-height: 1.2;">Ferretería Las Brisas</h1>
         <p class="brand-subtitle mb-0" style="line-height: 1.2;">De Asososca</p>
@@ -108,82 +109,34 @@
   <div class="container">
     <h2 class="text-center section-title">Productos Destacados</h2>
 
-    <div class="row">
-      <!-- Producto 1 -->
-      <div class="col-md-6 col-lg-3">
-        <div class="card product-card h-100 border-0 shadow-sm">
-          <div class="card-body text-center p-4">
-            <div class="product-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3"
-              style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-tools" style="font-size: 1.8rem;"></i>
-            </div>
-            <h5 class="card-title product-title">Taladro Percutor 750W</h5>
-            <p class="card-text text-muted">Taladro profesional con función de percusión para trabajos exigentes.</p>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-              <span class="product-price fw-bold">$89.99</span>
-              <a href="#" class="btn btn-sm btn-product">Ver más</a>
-            </div>
+    {{#hasProducts productosPorSector}}
+      {{#each productosPorSector}}
+        <div class="mb-5">
+          <h3 class="sector-title mb-4">{{@key}}</h3>
+          <div class="row">
+            {{#each this}}
+              <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card product-card h-100 border-0 shadow-sm">
+                  <div class="card-body text-center p-4">
+                    <div class="product-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3"
+                      style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                      <i class="fas {{this.Icono}}" style="font-size: 1.8rem;"></i>
+                    </div>
+                    <h5 class="card-title product-title">{{this.Nombre_Producto}}</h5>
+                    <p class="card-text text-muted small">Vendidos: {{this.CantidadVendida}} unidades</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                      <span class="product-price fw-bold">{{this.PrecioPromedio}}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {{/each}}
           </div>
         </div>
-      </div>
-
-      <!-- Producto 2 -->
-      <div class="col-md-6 col-lg-3">
-        <div class="card product-card h-100 border-0 shadow-sm">
-          <div class="card-body text-center p-4">
-            <div class="product-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3"
-              style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-paint-roller" style="font-size: 1.8rem;"></i>
-            </div>
-            <h5 class="card-title product-title">Pintura Latex 4L</h5>
-            <p class="card-text text-muted">Pintura de alta calidad para interiores, acabado mate, amplia gama de
-              colores.</p>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-              <span class="product-price fw-bold">$32.50</span>
-              <a href="#" class="btn btn-sm btn-product">Ver más</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Producto 3 -->
-      <div class="col-md-6 col-lg-3">
-        <div class="card product-card h-100 border-0 shadow-sm">
-          <div class="card-body text-center p-4">
-            <div class="product-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3"
-              style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-cubes" style="font-size: 1.8rem;"></i>
-            </div>
-            <h5 class="card-title product-title">Bloque Cemento 15x20x40</h5>
-            <p class="card-text text-muted">Bloque de concreto estándar para construcción de muros y paredes.</p>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-              <span class="product-price fw-bold">$1.20</span>
-              <a href="#" class="btn btn-sm btn-product">Ver más</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Producto 4 -->
-      <div class="col-md-6 col-lg-3">
-        <div class="card product-card h-100 border-0 shadow-sm">
-          <div class="card-body text-center p-4">
-            <div class="product-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3"
-              style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-wrench" style="font-size: 1.8rem;"></i>
-            </div>
-            <h5 class="card-title product-title">Juego de Llaves Mixtas</h5>
-            <p class="card-text text-muted">Juego de 12 piezas en estuche, acero cromo vanadio, durabilidad
-              garantizada.</p>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-              <span class="product-price fw-bold">$45.75</span>
-              <a href="#" class="btn btn-sm btn-product">Ver más</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+      {{/each}}
+    {{else}}
+      <div class="alert alert-info">No hay productos destacados disponibles.</div>
+    {{/hasProducts}}
   </div>
 </section>
 
@@ -281,7 +234,8 @@
 
       <div class="col-lg-6">
         <div class="h-100 d-flex align-items-center justify-content-center">
-          <img src="images/persona.webp" alt="Nuestra ferretería" class="img-fluid rounded shadow" style="max-height: 400px;">
+          <img src="images/persona.webp" alt="Nuestra ferretería" class="img-fluid rounded shadow"
+            style="max-height: 400px;">
         </div>
       </div>
 
