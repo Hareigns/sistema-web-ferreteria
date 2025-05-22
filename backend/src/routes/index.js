@@ -12,9 +12,7 @@ router.get('/', isNotLoggedIn, async (req, res) => {
         // Los procedimientos almacenados pueden devolver múltiples conjuntos de resultados
         // Normalmente el primer array contiene los datos que necesitamos
         const productosDestacados = Array.isArray(results[0]) ? results[0] : results;
-        
-        // Verifica los datos recibidos
-        console.log('Productos destacados:', productosDestacados);
+    
         
         // Agrupar productos por sector
         const productosPorSector = {};
