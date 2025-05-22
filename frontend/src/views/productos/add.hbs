@@ -1,6 +1,10 @@
+<title>Registro de Productos</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="/styles/productos.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
 
 <div class="container mt-5 py-5">
   <div class="row justify-content-center">
@@ -128,7 +132,6 @@
     </div>
   </div>
 </div>
-</div>
 
 <div class="container mt-5">
   <div class="card mb-4" style="border: 1px solid #ddd;">
@@ -136,7 +139,7 @@
       <h3 class="mb-0" style="font-weight: bold; color: #333;">Inventario de Productos</h3>
       <div class="card p-4 table-responsive">
         <div class="card-body">
-          <table class="table align-middle mb-0 bg-white" id="productosTable">
+          <table class="table align-middle mb-0 bg-white display" id="productosTable" style="width:100%">
             <thead class="bg-light">
               <tr>
                 <th>Código</th>
@@ -148,8 +151,8 @@
                 <th>Fecha de Vencimiento</th>
               </tr>
             </thead>
-            <tbody id="productos-table-body">
-              <!-- Aquí se insertarán los productos registrados dinámicamente -->
+            <tbody>
+              <!-- DataTables llenará esto automáticamente -->
             </tbody>
           </table>
         </div>
@@ -158,10 +161,102 @@
   </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
   // Variables globales
   let productosTemp = [];
   const fechaActual = new Date().toISOString().split('T')[0];
+
+  // Función para cargar los productos registrados con DataTable
+  async function cargarProductos() {
+    try {
+      const response = await fetch("/productos/api/productos");
+      const data = await response.json();
+
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        $('#productosTable').DataTable({
+          paging: true,
+          searching: true,
+          ordering: true,
+          pageLength: 10,
+          lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+          language: {
+            "decimal": "",
+            "emptyTable": "No hay productos registrados",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ productos",
+            "infoEmpty": "Mostrando 0 a 0 de 0 productos",
+            "infoFiltered": "(filtrado de _MAX_ productos totales)",
+            "infoPostFix": "",
+            "thousands": ",",
+            "lengthMenu": "Mostrar _MENU_ productos",
+            "loadingRecords": "Cargando...",
+            "processing": "Procesando...",
+            "search": "Buscar:",
+            "zeroRecords": "No se encontraron productos coincidentes",
+            "paginate": {
+              "first": "Primero",
+              "last": "Último",
+              "next": "Siguiente",
+              "previous": "Anterior"
+            },
+            "aria": {
+              "sortAscending": ": activar para ordenar columna ascendente",
+              "sortDescending": ": activar para ordenar columna descendente"
+            }
+          },
+          data: data.data,
+          columns: [
+            { data: 'Cod_Producto', defaultContent: "Sin código" },
+            { data: 'Nombre', defaultContent: "Desconocido" },
+            { data: 'Sector', defaultContent: "No asignado" },
+            { data: 'Marca', defaultContent: "No especificada" },
+            { data: 'Cantidad', defaultContent: 0 },
+            {
+              data: 'Precio_Compra',
+              render: function (data) {
+                return data ? parseFloat(data).toFixed(2) : "0.00";
+              }
+            },
+            {
+              data: 'FechaVencimiento',
+              render: function (data) {
+                if (!data) return "N/A";
+                const fecha = new Date(data);
+                return `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear().toString().slice(-2)}`;
+              }
+            }
+          ],
+          destroy: true
+        });
+      } else {
+        $('#productosTable').DataTable({
+          data: [],
+          language: {
+            "emptyTable": "No hay productos registrados",
+            "info": "Mostrando 0 a 0 de 0 productos",
+            "infoEmpty": "No hay productos registrados",
+            "infoFiltered": "(filtrado de _MAX_ productos totales)",
+            "search": "Buscar:",
+            "zeroRecords": "No se encontraron productos coincidentes"
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error al cargar productos:", error);
+      $('#productosTable').DataTable({
+        data: [],
+        language: {
+          "emptyTable": "Error al cargar los productos",
+          "info": "Mostrando 0 a 0 de 0 productos",
+          "infoEmpty": "Error al cargar los productos",
+          "infoFiltered": "(filtrado de _MAX_ productos totales)",
+          "search": "Buscar:",
+          "zeroRecords": "Error al cargar los productos"
+        }
+      });
+    }
+  }
 
   // Función para cargar proveedores activos por sector
   async function cargarProveedores() {
@@ -194,17 +289,6 @@
       Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
     }
   }
-
-  // Inicialización al cargar la página
-  document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById('fecha_entrada').value = fechaActual;
-    document.getElementById('sector').addEventListener('change', cargarProveedores);
-    document.getElementById('check_vencimiento').addEventListener('change', toggleFechaVencimiento);
-    document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
-    document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
-    cargarProductos();
-    cargarSelectProductos();
-  });
 
   // Función para alternar el campo de fecha de vencimiento
   function toggleFechaVencimiento() {
@@ -511,35 +595,7 @@
     // Limpiar selección
     const selectModificar = document.getElementById('select_producto_modificar');
     if (selectModificar) selectModificar.value = '';
-
   }
-
-  // Modificar el event listener del DOMContentLoaded para incluir la carga de productos
-  document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById('fecha_entrada').value = fechaActual;
-    document.getElementById('sector').addEventListener('change', async function () {
-      await cargarProveedores.call(this);
-      this.disabled = true;
-    });
-    document.getElementById('check_vencimiento').addEventListener('change', toggleFechaVencimiento);
-    document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
-    document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
-
-    // Configuración inicial de botones de modificación
-    document.getElementById('modificarProductoButton').style.display = 'none';
-
-    // Cargar datos
-    cargarProductos();
-    cargarSelectProductos();
-  });
-
-  // Modificar la función de limpieza del formulario para que llame a limpiarFormularioProducto
-  document.getElementById('form-producto').addEventListener('reset', function () {
-    limpiarFormularioProducto();
-    productosTemp = [];
-    document.getElementById('tablaProductosTemp').innerHTML = '';
-  });
-
 
   // Función para agregar producto a la lista temporal
   function agregarProductoTemporal() {
@@ -610,15 +666,15 @@
       }
 
       tr.innerHTML = `
-        <td>${producto.codigo_producto}</td>
-        <td>${producto.nombre}</td>
-        <td>${producto.sector}</td>
-        <td>${producto.marca}</td>
-        <td>${producto.cantidad}</td>
-        <td>${producto.precio_compra.toFixed(2)}</td>
-        <td>${fechaVencimiento}</td>
-        <td><button class="btn btn-danger btn-sm eliminar-producto" data-index="${index}">❌ Eliminar</button></td>
-      `;
+          <td>${producto.codigo_producto}</td>
+          <td>${producto.nombre}</td>
+          <td>${producto.sector}</td>
+          <td>${producto.marca}</td>
+          <td>${producto.cantidad}</td>
+          <td>${producto.precio_compra.toFixed(2)}</td>
+          <td>${fechaVencimiento}</td>
+          <td><button class="btn btn-danger btn-sm eliminar-producto" data-index="${index}">❌ Eliminar</button></td>
+        `;
 
       tbody.appendChild(tr);
     });
@@ -655,7 +711,7 @@
     });
   }
 
-  // MODIFICAR LA FUNCIÓN DE LIMPIEZA PARA REACTIVAR EL SELECTOR DE SECTOR
+  // Función para guardar productos
   async function guardarProductos() {
     if (productosTemp.length === 0) {
       Swal.fire({
@@ -720,7 +776,23 @@
     });
   }
 
-  // MODIFICAR LA FUNCIÓN DE LIMPIEZA DEL FORMULARIO PARA REACTIVAR EL SECTOR
+  // Inicialización al cargar la página
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById('fecha_entrada').value = fechaActual;
+    document.getElementById('sector').addEventListener('change', cargarProveedores);
+    document.getElementById('check_vencimiento').addEventListener('change', toggleFechaVencimiento);
+    document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
+    document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
+
+    // Inicializar DataTable
+    cargarProductos();
+    cargarSelectProductos();
+
+    // Configuración inicial de botones de modificación
+    document.getElementById('modificarProductoButton').style.display = 'none';
+  });
+
+  // Evento reset del formulario
   document.getElementById('form-producto').addEventListener('reset', function () {
     // Reactivar el selector de sector al limpiar el formulario
     document.getElementById('sector').disabled = false;
@@ -728,50 +800,4 @@
     productosTemp = [];
     document.getElementById('tablaProductosTemp').innerHTML = '';
   });
-
-
-  // Función para cargar los productos registrados
-  async function cargarProductos() {
-    try {
-      const response = await fetch("/productos/api/productos");
-      const data = await response.json();
-
-      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-        const tbody = document.getElementById("productos-table-body");
-        tbody.innerHTML = "";
-
-        data.data.forEach(producto => {
-          const precioCompra = producto.Precio_Compra ? producto.Precio_Compra.toFixed(2) : "0.00";
-
-          let fechaVencimiento = producto.FechaVencimiento ? new Date(producto.FechaVencimiento) : null;
-          if (fechaVencimiento) {
-            fechaVencimiento = `${fechaVencimiento.getDate().toString().padStart(2, '0')}/${(fechaVencimiento.getMonth() + 1).toString().padStart(2, '0')}/${fechaVencimiento.getFullYear().toString().slice(-2)}`;
-          } else {
-            fechaVencimiento = "N/A";
-          }
-
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${producto.Cod_Producto || "Sin código"}</td>
-            <td>${producto.Nombre || "Desconocido"}</td>
-            <td>${producto.Sector || "No asignado"}</td>
-            <td>${producto.Marca || "No especificada"}</td>
-            <td>${producto.Cantidad || 0}</td>
-            <td>${precioCompra}</td>
-            <td>${fechaVencimiento}</td>
-          `;
-          tbody.appendChild(row);
-        });
-      } else {
-        document.getElementById("productos-table-body").innerHTML = `
-          <tr><td colspan="7" class="text-center">No hay productos registrados</td></tr>
-        `;
-      }
-    } catch (error) {
-      console.error("Error al cargar productos:", error);
-      document.getElementById("productos-table-body").innerHTML = `
-        <tr><td colspan="7" class="text-center text-danger">Error al cargar datos</td></tr>
-      `;
-    }
-  }
 </script>

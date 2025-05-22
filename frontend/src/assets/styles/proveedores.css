@@ -1,5 +1,5 @@
 body {
-  background: url(/images/fondoinicio.webp) no-repeat center center/cover;
+  background: url('/images/fondoinicio.webp') no-repeat center center fixed;
   background-size: cover;
   min-height: 100vh;
   display: flex;
@@ -7,7 +7,6 @@ body {
   align-items: center;
   justify-content: center;
   padding-top: 80px;
-  /* Ajuste para evitar que la navbar cubra contenido */
 }
 
 .navbar {
