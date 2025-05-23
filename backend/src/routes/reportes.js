@@ -11,28 +11,61 @@ router.get('/add', (req, res) => {
 });
 
 
+// Ruta para manejar el reporte de ventas
 router.post('/ventas', async (req, res) => {
-  const { filtro } = req.body;
-  console.log("Filtro recibido:", filtro);
+    try {
+        const { filtro } = req.body;
+        
+        // Validar que venga el filtro
+        if (!filtro) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'El parámetro "filtro" es requerido' 
+            });
+        }
 
-  try {
-      const [rows] = await pool.query('CALL sp_reporte_ventas(?)', [filtro]);
-      console.log("Resultado:", rows);
-      res.json(rows[0]);
-  } catch (err) {
-      console.error("Error en el procedimiento:", err);
-      res.status(500).json({ error: 'Error al generar el reporte' });
-  }
+        // Ejecutar el stored procedure
+        const [results] = await pool.query('CALL sp_reporte_ventas(?)', [filtro]);
+        
+        // MySQL devuelve los resultados en un array de arrays
+        // Tomamos el primer conjunto de resultados
+        const data = results[0] || [];
+        
+        res.json(data);
+    } catch (error) {
+        console.error('Error en /reportes/ventas:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error al generar el reporte' 
+        });
+    }
 });
 
 
+// Ruta para el reporte de productos
 router.get('/productos', async (req, res) => {
     try {
-        const [rows] = await pool.query('CALL ReporteProductosVendidos()');
-        res.json(rows[0]); // Enviar solo los datos al frontend
+        // Ejecutar el stored procedure
+        const [results] = await pool.query('CALL ReporteProductosVendidos()');
+        
+        // MySQL devuelve múltiples conjuntos de resultados para procedimientos
+        // Necesitamos el primer conjunto que contiene los datos del reporte
+        const data = results[0] || [];
+        
+        if (!Array.isArray(data)) {
+            throw new Error('Formato de respuesta inesperado de la base de datos');
+        }
+
+        res.json({
+            success: true,
+            data: data
+        });
     } catch (error) {
-        console.error('Error al obtener datos de productos:', error);
-        res.status(500).json({ error: 'Error al generar el reporte de productos' });
+        console.error('Error en /reportes/productos:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error al generar el reporte de productos' 
+        });
     }
 });
 

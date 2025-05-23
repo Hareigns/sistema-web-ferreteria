@@ -105,17 +105,22 @@
 
     document.querySelector('.btn-outline-primary').addEventListener('click', async () => {
         let filtro = null;
+        const checkboxes = {
+            diario: document.getElementById('diario'),
+            semanal: document.getElementById('semanal'),
+            mensual: document.getElementById('mensual')
+        };
 
-        if (document.getElementById('diario').checked) {
-            filtro = 'diario';
-        } else if (document.getElementById('semanal').checked) {
-            filtro = 'semanal';
-        } else if (document.getElementById('mensual').checked) {
-            filtro = 'mensual';
+        // Verificar qué checkbox está seleccionado
+        for (const [key, checkbox] of Object.entries(checkboxes)) {
+            if (checkbox.checked) {
+                filtro = key;
+                break;
+            }
         }
 
         if (!filtro) {
-            Swal.fire({
+            await Swal.fire({
                 icon: 'warning',
                 title: 'Filtro requerido',
                 text: 'Por favor selecciona un filtro primero',
@@ -133,13 +138,22 @@
                 body: JSON.stringify({ filtro })
             });
 
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Error al obtener los datos');
+            }
+
             const data = await res.json();
 
+            if (!Array.isArray(data)) {
+                throw new Error('Formato de respuesta inválido');
+            }
+
             if (data.length === 0) {
-                Swal.fire({
+                await Swal.fire({
                     icon: 'info',
                     title: 'Sin datos',
-                    text: 'No hay datos para este filtro.',
+                    text: 'No hay ventas registradas para el período seleccionado.',
                     confirmButtonText: 'OK'
                 });
                 return;
@@ -147,7 +161,7 @@
 
             await exportarExcelBonito(data, `reporte_ventas_${filtro}`);
 
-            Swal.fire({
+            await Swal.fire({
                 icon: 'success',
                 title: '¡Reporte exportado!',
                 text: 'El archivo Excel ha sido descargado exitosamente.',
@@ -158,10 +172,10 @@
 
         } catch (err) {
             console.error('Error al generar reporte:', err);
-            Swal.fire({
+            await Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Ocurrió un error al generar el reporte.',
+                text: err.message || 'Ocurrió un error al generar el reporte.',
                 confirmButtonText: 'Cerrar'
             });
         }
@@ -283,115 +297,124 @@
     });
 
     //Reporte Productos
-    document.getElementById('exportarProductos').addEventListener('click', async () => {
-        try {
-            const res = await fetch('/reportes/productos');
-            const data = await res.json();
-
-            if (data.length === 0) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Sin datos',
-                    text: 'No hay productos en el reporte.',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-
-            await exportarExcelProductos(data, 'reporte_productos');
-
-            Swal.fire({
-                icon: 'success',
-                title: '¡Reporte exportado!',
-                text: 'El archivo Excel ha sido descargado exitosamente.',
-                confirmButtonText: 'Aceptar',
-                timer: 3000,
-                timerProgressBar: true
-            });
-
-        } catch (err) {
-            console.error('Error al exportar productos:', err);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Ocurrió un error al generar el reporte.',
-                confirmButtonText: 'Cerrar'
-            });
+   document.getElementById('exportarProductos').addEventListener('click', async () => {
+    try {
+        const res = await fetch('/reportes/productos');
+        
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Error al obtener los datos');
         }
-    });
 
+        const response = await res.json();
+        
+        // Validar que la respuesta tenga el formato esperado
+        if (!response.success || !Array.isArray(response.data)) {
+            throw new Error('Respuesta del servidor inválida');
+        }
 
-    async function exportarExcelProductos(data, nombreArchivo) {
-        try {
-            // Función para obtener fecha local correcta
-            const getLocalDate = () => {
-                const now = new Date();
-                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            };
+        const data = response.data;
 
-            const fechaActual = getLocalDate();
-
-            const workbook = new ExcelJS.Workbook();
-            workbook.creator = 'Tu Aplicación';
-            workbook.lastModifiedBy = 'Tu Aplicación';
-            workbook.created = new Date();
-
-            const worksheet = workbook.addWorksheet('Productos', {
-                properties: { tabColor: { argb: 'FF4F81BD' } }
+        if (data.length === 0) {
+            await Swal.fire({
+                icon: 'info',
+                title: 'Sin datos',
+                text: 'No hay productos en el reporte.',
+                confirmButtonText: 'OK'
             });
+            return;
+        }
 
-            // Configuración de columnas
-            worksheet.columns = [
-                { header: 'Código', key: 'Cod_Producto', width: 15 },
-                { header: 'Nombre', key: 'Nombre', width: 30 },
-                { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20, style: { numFmt: '#,##0' } },
-                { header: 'Tipo', key: 'Tipo', width: 20 }
-            ];
+        await exportarExcelProductos(data, 'reporte_productos');
 
-            // Estilo de encabezado
-            const headerRow = worksheet.getRow(1);
-            headerRow.fill = {
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Reporte exportado!',
+            text: 'El archivo Excel ha sido descargado exitosamente.',
+            confirmButtonText: 'Aceptar',
+            timer: 3000,
+            timerProgressBar: true
+        });
+
+    } catch (err) {
+        console.error('Error al exportar productos:', err);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || 'Ocurrió un error al generar el reporte.',
+            confirmButtonText: 'Cerrar'
+        });
+    }
+});
+
+async function exportarExcelProductos(data, nombreArchivo) {
+    try {
+        const ExcelJS = window.ExcelJS;
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Productos');
+
+        // Definir columnas
+        worksheet.columns = [
+            { header: 'Código', key: 'Cod_Producto', width: 15 },
+            { header: 'Nombre', key: 'Nombre', width: 30 },
+            { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
+            { header: 'Tipo', key: 'Tipo', width: 20 }
+        ];
+
+        // Estilo para el encabezado
+        const headerRow = worksheet.getRow(1);
+        headerRow.eachCell(cell => {
+            cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
                 fgColor: { argb: 'FF4F81BD' }
             };
-            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.font = {
+                bold: true,
+                color: { argb: 'FFFFFFFF' }
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
 
-            // Aplicar bordes
-            worksheet.eachRow({ includeEmpty: false }, row => {
-                row.eachCell(cell => {
-                    cell.border = {
-                        top: { style: 'thin' },
-                        left: { style: 'thin' },
-                        bottom: { style: 'thin' },
-                        right: { style: 'thin' }
-                    };
-                });
+        // Agregar datos
+        data.forEach(item => {
+            worksheet.addRow({
+                Cod_Producto: item.Cod_Producto,
+                Nombre: item.Nombre,
+                CantidadVendida: item.CantidadVendida,
+                Tipo: item.Tipo
             });
+        });
 
-            // Agregar datos
-            worksheet.addRows(data);
-
-            // Generar archivo
-            const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        // Aplicar bordes a todas las celdas
+        worksheet.eachRow(row => {
+            row.eachCell(cell => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
             });
+        });
 
-            // Descargar con fecha correcta
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${nombreArchivo}_${fechaActual}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+        // Generar archivo
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${nombreArchivo}_${new Date().toISOString().slice(0,10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-        } catch (error) {
-            console.error('Error al exportar Excel:', error);
-            throw error;
-        }
+    } catch (error) {
+        console.error('Error al exportar Excel:', error);
+        throw error;
     }
+}
 </script>
