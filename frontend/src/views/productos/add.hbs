@@ -166,7 +166,9 @@
 <script>
   // Variables globales
   let productosTemp = [];
-  const fechaActual = new Date().toISOString().split('T')[0];
+  // Obtener fecha actual en formato YYYY-MM-DD sin problemas de zona horaria
+  const now = new Date();
+  const fechaActual = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
 
   // Función para cargar los productos registrados con DataTable
   async function cargarProductos() {
@@ -357,8 +359,10 @@
   // Función auxiliar para formatear fechas
   function formatDateForInput(dateString) {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+
+    // Crear fecha sin ajustar zona horaria (asume formato YYYY-MM-DD)
+    const [year, month, day] = dateString.split('T')[0].split('-');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
 
   // Función para cargar datos del producto seleccionado
@@ -412,7 +416,12 @@
         elements.sector.value = producto.Sector || '';
         elements.codigo_proveedor.value = producto.Cod_Proveedor || '';
         elements.precio_compra.value = producto.Precio_Compra || '';
+
+        // Guardar el valor original de la cantidad para comparación posterior
         elements.cantidad.value = producto.Cantidad || '';
+        elements.cantidad.dataset.originalValue = producto.Cantidad || '';
+
+        // Mostrar la fecha de entrada actual
         elements.fecha_entrada.value = formatDateForInput(producto.Fecha_Entrada) || fechaActual;
 
         // Manejar fecha de vencimiento
@@ -467,9 +476,13 @@
       return;
     }
 
-    // Obtener solo los campos editables (precio y cantidad)
+    // Obtener los valores editables
     const precio_compra = parseFloat(document.getElementById('precio_compra').value);
     const cantidad = parseInt(document.getElementById('cantidad').value);
+    const cantidadOriginal = parseInt(document.getElementById('cantidad').dataset.originalValue) || cantidad;
+
+    // Determinar si la cantidad ha cambiado
+    const cantidadModificada = cantidad !== cantidadOriginal;
 
     // Validaciones básicas
     if (isNaN(precio_compra)) {
@@ -484,7 +497,7 @@
 
     Swal.fire({
       title: '¿Confirmar modificación?',
-      text: `¿Desea actualizar el precio a ${precio_compra.toFixed(2)} y la cantidad a ${cantidad}?`,
+      text: `¿Desea actualizar el precio a ${precio_compra.toFixed(2)} y la cantidad a ${cantidad}?${cantidadModificada ? '\nLa fecha de entrada se actualizará a hoy.' : ''}`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -501,7 +514,8 @@
             },
             body: JSON.stringify({
               precio_compra: precio_compra,
-              cantidad: cantidad
+              cantidad: cantidad,
+              actualizar_fecha: cantidadModificada // Enviamos este flag al backend
             })
           });
 

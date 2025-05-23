@@ -1,8 +1,12 @@
 <title>Registro de Empleado</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/styles/empleados.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="container py-5">
   <div class="row justify-content-center">
@@ -76,13 +80,14 @@
     </div>
   </div>
 </div>
+
 <div class="row mt-4">
   <div class="col-12">
     <div class="card" style="border: 1px solid #ddd;">
       <div class="card-body text-center">
         <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Empleados</h3>
         <div class="card p-4 table-responsive">
-          <table class="table align-middle mb-0 bg-white" id="empleadosTable">
+          <table class="table align-middle mb-0 bg-white display" id="empleadosTable" style="width:100%">
             <thead class="bg-light">
               <tr>
                 <th>Código</th>
@@ -96,19 +101,18 @@
                 <th>Compañía</th>
               </tr>
             </thead>
-            <tbody id="empleados-table-body"></tbody>
+            <tbody>
+              <!-- Los datos se cargarán dinámicamente -->
+            </tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+  let empleadosTable;
 
   // Función para habilitar/deshabilitar botones según la selección
   function habilitarDeshabilitarBotones() {
@@ -124,7 +128,6 @@
       modificarButton.disabled = true;
     }
   }
-
 
   // Llamar a la función cuando la página cargue para establecer el estado inicial
   window.onload = function () {
@@ -211,65 +214,95 @@
     }
   }
 
-  // Función auxiliar para formatear fechas
-  function formatDate(dateString) {
-    if (!dateString) return '';
-
-    try {
-      // Si es un string ISO (YYYY-MM-DD)
-      if (dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
-        const [year, month, day] = dateString.split('T')[0].split('-');
-        return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-      }
-
-      // Si ya está formateada (dd/mm/yyyy)
-      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        return dateString;
-      }
-
-      return '';
-    } catch (e) {
-      console.error('Error formateando fecha:', e);
-      return '';
-    }
-  }
-
-
-  // Función para cargar empleados en la tabla (actualizada)
+  // Función para cargar empleados en la tabla con DataTables
   async function cargarEmpleadosEnTabla() {
     try {
       const response = await fetch("/empleados/api/empleados");
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
-        const tablaBody = document.getElementById("empleados-table-body");
-        tablaBody.innerHTML = "";
-
-        data.data.forEach(empleado => {
-          const row = document.createElement("tr");
-          const estadoClass = empleado.Estado === 'Activo' ? 'text-success' : 'text-danger';
-
-          // Determinar la clase para la compañía (color + negrita)
-          let companiaClass = 'fw-bold'; // Siempre aplicamos negrita
-          if (empleado.Compania === 'Tigo') {
-            companiaClass += ' text-primary'; // Azul
-          } else if (empleado.Compania === 'Claro') {
-            companiaClass += ' text-danger'; // Rojo
-          }
-
-          row.innerHTML = `
-          <td>${empleado.Cod_Empleado}</td>
-          <td>${empleado.Nombre}</td>
-          <td>${empleado.Apellido}</td>
-          <td>${empleado.Cedula || 'No definida'}</td>
-          <td>${empleado.Direccion}</td>
-          <td class="${estadoClass} fw-bold">${empleado.Estado || "No definido"}</td>
-          <td>${empleado.FechaIngresoFormateada || formatDate(empleado.FechaIngreso)}</td>
-          <td>${empleado.Telefono || "No disponible"}</td>
-          <td class="${companiaClass}">${empleado.Compania || "No disponible"}</td>
-        `;
-          tablaBody.appendChild(row);
-        });
+        // Si la tabla ya existe, solo actualizamos los datos
+        if (empleadosTable) {
+          empleadosTable.clear();
+          empleadosTable.rows.add(data.data).draw();
+        } else {
+          // Inicializar DataTable por primera vez
+          empleadosTable = $('#empleadosTable').DataTable({
+            paging: true,
+            searching: true,
+            ordering: true,
+            pageLength: 10,
+            lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+            language: {
+              "decimal": "",
+              "emptyTable": "No hay empleados registrados",
+              "info": "Mostrando _START_ a _END_ de _TOTAL_ empleados",
+              "infoEmpty": "Mostrando 0 a 0 de 0 empleados",
+              "infoFiltered": "(filtrado de _MAX_ empleados totales)",
+              "infoPostFix": "",
+              "thousands": ",",
+              "lengthMenu": "Mostrar _MENU_ empleados",
+              "loadingRecords": "Cargando...",
+              "processing": "Procesando...",
+              "search": "Buscar:",
+              "zeroRecords": "No se encontraron empleados coincidentes",
+              "paginate": {
+                "first": "Primero",
+                "last": "Último",
+                "next": "Siguiente",
+                "previous": "Anterior"
+              },
+              "aria": {
+                "sortAscending": ": activar para ordenar columna ascendente",
+                "sortDescending": ": activar para ordenar columna descendente"
+              }
+            },
+            data: data.data,
+            columns: [
+              { data: 'Cod_Empleado' },
+              { data: 'Nombre' },
+              { data: 'Apellido' },
+              {
+                data: 'Cedula',
+                render: function (data) {
+                  return data || 'No definida';
+                }
+              },
+              { data: 'Direccion' },
+              {
+                data: 'Estado',
+                render: function (data, type, row) {
+                  const estadoClass = data === 'Activo' ? 'text-success' : 'text-danger';
+                  return `<span class="${estadoClass} fw-bold">${data || "No definido"}</span>`;
+                }
+              },
+              {
+                data: 'FechaIngreso',
+                render: function (data) {
+                  return data ? formatDate(data) : 'No definida';
+                }
+              },
+              {
+                data: 'Telefono',
+                render: function (data) {
+                  return data || "No disponible";
+                }
+              },
+              {
+                data: 'Compania',
+                render: function (data) {
+                  let companiaClass = 'fw-bold';
+                  if (data === 'Tigo') {
+                    companiaClass += ' text-primary';
+                  } else if (data === 'Claro') {
+                    companiaClass += ' text-danger';
+                  }
+                  return `<span class="${companiaClass}">${data || "No disponible"}</span>`;
+                }
+              }
+            ]
+          });
+        }
       }
     } catch (error) {
       console.error("Error al obtener empleados:", error);
@@ -277,12 +310,34 @@
     }
   }
 
+  // Función auxiliar para formatear fechas
+  function formatDate(dateString) {
+    if (!dateString) return 'No especificada';
 
-  // Llamar la función cuando la página cargue
-  document.addEventListener("DOMContentLoaded", function () {
-    cargarEmpleadosEnSelect();
-    cargarEmpleadosEnTabla();
-  });
+    try {
+      // Si ya viene formateada (dd/mm/yyyy)
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateString;
+      }
+
+      // Si es formato ISO (YYYY-MM-DD)
+      if (dateString.includes('T')) {
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day}/${month}/${year}`;
+      }
+
+      // Si es otro formato, intentar con Date
+      const date = new Date(dateString);
+      if (!isNaN(date)) {
+        return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+      }
+
+      return 'Formato inválido';
+    } catch (e) {
+      console.error('Error formateando fecha:', e);
+      return 'Error al formatear';
+    }
+  }
 
   // Función para verificar si un teléfono ya existe (Frontend)
   async function verificarTelefonoExistente(telefono, codEmpleado = null) {
@@ -324,7 +379,6 @@
   async function modificarEmpleado() {
     const codigoEmpleado = document.getElementById("codigo_empleado").value;
     const resetPassword = document.getElementById("contrasena_temporal").checked;
-
 
     // Obtener valores
     const nombre = document.getElementById("nombre").value.trim();
@@ -390,6 +444,7 @@
 
       // Actualizar UI
       cargarEmpleadosEnTabla();
+      cargarEmpleadosEnSelect();
       if (estado === 'Inactivo') limpiarCampos();
 
     } catch (error) {
@@ -403,6 +458,7 @@
   }
 
   // Función para ingresar empleado (actualizada)
+  // Función para ingresar empleado (corregida)
   async function ingresarEmpleado() {
     const nombre = document.getElementById("nombre").value.trim();
     const apellido = document.getElementById("apellido").value.trim();
@@ -465,9 +521,12 @@
       const data = await response.json();
 
       if (data.success) {
+        // Usar FechaIngresoFormateada si está disponible, si no, formatear FechaIngreso
+        const fechaMostrar = data.data?.FechaIngresoFormateada || formatDate(data.data?.FechaIngreso) || 'No especificada';
+
         await Swal.fire({
           title: "¡Éxito!",
-          html: `Empleado ingresado correctamente<br>Fecha de ingreso: <b>${formatDate(data.fechaIngreso)}</b>`,
+          html: `Empleado ingresado correctamente<br>`,
           icon: "success",
           timer: 2000,
           showConfirmButton: false
@@ -484,6 +543,7 @@
       Swal.fire("Error", "Hubo un problema al ingresar el empleado", "error");
     }
   }
+
 
   function limpiarCampos() {
     // Limpiar campos de texto
@@ -643,4 +703,9 @@
     }
   }
 
+  // Llamar la función cuando la página cargue
+  document.addEventListener("DOMContentLoaded", function () {
+    cargarEmpleadosEnSelect();
+    cargarEmpleadosEnTabla();
+  });
 </script>

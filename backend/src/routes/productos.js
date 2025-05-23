@@ -156,45 +156,55 @@ router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
 
 // Ruta para actualizar un producto
 router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
-  const { codigo } = req.params;
-  const { precio_compra, cantidad } = req.body;
+    const { codigo } = req.params;
+    const { precio_compra, cantidad, actualizar_fecha } = req.body;
 
-  // Validaciones mínimas
-  if (typeof precio_compra !== 'number' || typeof cantidad !== 'number') {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Precio y cantidad deben ser números" 
-    });
-  }
+    // Validaciones mínimas
+    if (typeof precio_compra !== 'number' || typeof cantidad !== 'number') {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Precio y cantidad deben ser números" 
+        });
+    }
 
-  let connection;
-  try {
-    connection = await pool.getConnection();
-    await connection.beginTransaction();
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-    // Solo actualizamos precio y cantidad
-    await connection.query(
-      `UPDATE ProveProduct
-       SET Precio = ?, Cantidad = ?
-       WHERE Cod_Producto = ?`,
-      [precio_compra, cantidad, codigo]
-    );
+        // Si la cantidad cambió y actualizar_fecha es true, actualizamos la fecha
+        if (actualizar_fecha) {
+            await connection.query(
+                `UPDATE ProveProduct
+                 SET Precio = ?, Cantidad = ?, Fecha_Entrada = CURRENT_DATE()
+                 WHERE Cod_Producto = ?`,
+                [precio_compra, cantidad, codigo]
+            );
+        } else {
+            // Solo actualizamos precio y cantidad
+            await connection.query(
+                `UPDATE ProveProduct
+                 SET Precio = ?, Cantidad = ?
+                 WHERE Cod_Producto = ?`,
+                [precio_compra, cantidad, codigo]
+            );
+        }
 
-    await connection.commit();
-    res.json({ 
-      success: true, 
-      message: "Producto actualizado correctamente" 
-    });
-  } catch (error) {
-    await connection?.rollback();
-    console.error("Error al actualizar producto:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Error al actualizar producto" 
-    });
-  } finally {
-    connection?.release();
-  }
+        await connection.commit();
+        res.json({ 
+            success: true, 
+            message: "Producto actualizado correctamente" 
+        });
+    } catch (error) {
+        await connection?.rollback();
+        console.error("Error al actualizar producto:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error al actualizar producto" 
+        });
+    } finally {
+        connection?.release();
+    }
 });
 
 

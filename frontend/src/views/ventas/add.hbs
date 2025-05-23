@@ -163,15 +163,14 @@
         if (stockRealDisponible < cantidadNum) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Stock Insuficiente',
+                title: 'Inventario Insuficiente',
                 html: `
                 <div style="text-align: left;">
                     <p style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffeeba;">
                         <i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #ffc107;"></i>
-                        No hay suficiente stock para "${nombre}"
+                        No hay suficiente inventario para "${nombre}"
                     </p>
                     <p style="margin-top: 15px;"><strong>Disponible total:</strong> ${stockNum}</p>
-                    <p><strong>Ya reservado:</strong> ${cantidadReservada}</p>
                     <p><strong>Disponible real:</strong> ${stockRealDisponible}</p>
                     <p><strong>Solicitado:</strong> ${cantidadNum}</p>
                 </div>
@@ -357,8 +356,8 @@
         if (nuevaCantidad > stockDisponible) {
             Swal.fire({
                 icon: 'error',
-                title: 'Stock insuficiente',
-                html: `No hay suficiente stock. Disponible: ${stockDisponible}`
+                title: 'Inventario insuficiente',
+                html: `No hay suficiente inventario. Disponible: ${stockDisponible}`
             });
             return;
         }

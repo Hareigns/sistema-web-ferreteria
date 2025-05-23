@@ -1,7 +1,10 @@
 <title>Registro</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/styles/Proveedores.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <div class="container py-5">
   <div class="row justify-content-center">
@@ -79,7 +82,7 @@
     <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Proveedores</h3>
     <div class="card p-4 table-responsive">
       <div class="card-body">
-        <table class="table align-middle mb-0 bg-white" id="proveedoresTable">
+        <table class="table align-middle mb-0 bg-white display" id="proveedoresTable" style="width:100%">
           <thead class="bg-light">
             <tr>
               <th>Código</th>
@@ -91,7 +94,9 @@
               <th>Estado</th>
             </tr>
           </thead>
-          <tbody id="proveedores-table-body"></tbody>
+          <tbody>
+            <!-- Los datos se cargarán dinámicamente -->
+          </tbody>
         </table>
       </div>
     </div>
@@ -99,6 +104,7 @@
 </div>
 
 <script>
+  let proveedoresTable;
 
   // Función para cargar proveedores en el select y la tabla
   async function cargarProveedores() {
@@ -121,31 +127,67 @@
           select.appendChild(option);
         });
 
-        // Llenar tabla con proveedores ordenados
-        const tbody = document.getElementById('proveedores-table-body');
-        tbody.innerHTML = '';
-        proveedoresOrdenados.forEach(proveedor => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-          <td>${proveedor.Cod_Proveedor}</td>
-          <td>${proveedor.Nombre}</td>
-          <td>${proveedor.Apellido}</td>
-          <td>${proveedor.Telefono}</td>
-          <td>${proveedor.Compania}</td>
-          <td>${proveedor.Sector}</td>
-          <td>
-            <span class="badge ${proveedor.Estado === 'Activo' ? 'bg-success' : 'bg-danger'}">
-              ${proveedor.Estado}
-            </span>
-          </td>
-        `;
-          tbody.appendChild(tr);
-        });
+        // Llenar DataTable con proveedores ordenados
+        if (proveedoresTable) {
+          proveedoresTable.clear();
+          proveedoresTable.rows.add(proveedoresOrdenados).draw();
+        } else {
+          inicializarDataTable(proveedoresOrdenados);
+        }
       }
     } catch (error) {
       console.error('Error al cargar proveedores:', error);
       Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
     }
+  }
+
+  function inicializarDataTable(data) {
+    proveedoresTable = $('#proveedoresTable').DataTable({
+      paging: true,
+      searching: true,
+      ordering: true,
+      pageLength: 10,
+      lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+      language: {
+        "decimal": "",
+        "emptyTable": "No hay proveedores registrados",
+        "info": "Mostrando _START_ a _END_ de _TOTAL_ proveedores",
+        "infoEmpty": "Mostrando 0 a 0 de 0 proveedores",
+        "infoFiltered": "(filtrado de _MAX_ proveedores totales)",
+        "infoPostFix": "",
+        "thousands": ",",
+        "lengthMenu": "Mostrar _MENU_ proveedores",
+        "loadingRecords": "Cargando...",
+        "processing": "Procesando...",
+        "search": "Buscar:",
+        "zeroRecords": "No se encontraron proveedores coincidentes",
+        "paginate": {
+          "first": "Primero",
+          "last": "Último",
+          "next": "Siguiente",
+          "previous": "Anterior"
+        },
+        "aria": {
+          "sortAscending": ": activar para ordenar columna ascendente",
+          "sortDescending": ": activar para ordenar columna descendente"
+        }
+      },
+      data: data,
+      columns: [
+        { data: 'Cod_Proveedor' },
+        { data: 'Nombre' },
+        { data: 'Apellido' },
+        { data: 'Telefono' },
+        { data: 'Compania' },
+        { data: 'Sector' },
+        { 
+          data: 'Estado',
+          render: function(data, type, row) {
+            return `<span class="badge ${data === 'Activo' ? 'bg-success' : 'bg-danger'}">${data}</span>`;
+          }
+        }
+      ]
+    });
   }
 
   // Esta función se mantiene EXACTAMENTE como la tenías originalmente
@@ -395,5 +437,4 @@
   document.addEventListener('DOMContentLoaded', () => {
     cargarProveedores();
   });
-
 </script>
