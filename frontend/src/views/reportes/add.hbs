@@ -1,7 +1,6 @@
 <link rel="stylesheet" href="/styles/reportes.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -11,7 +10,6 @@
                     <div class="card-header bg-info text-white">
                         <h2 class="h5 mb-0">Generar Reportes</h2>
                     </div>
-
                 </div>
 
                 <!-- Sección de Reportes -->
@@ -29,26 +27,26 @@
                                             <input class="form-check-input" type="checkbox" id="diario">
                                             <label class="form-check-label" for="diario">Diario</label>
                                         </div>
-                                        <span class="badge bg-secondary ms-auto">Últimos 7 días</span>
+                                        <span class="badge bg-secondary ms-auto">Últimas 24 horas</span>
                                     </div>
                                     <div class="list-group-item d-flex align-items-center">
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" id="semanal">
                                             <label class="form-check-label" for="semanal">Semanal</label>
                                         </div>
-                                        <span class="badge bg-secondary ms-auto">Últimas 4 semanas</span>
+                                        <span class="badge bg-secondary ms-auto">Últimas 7 días</span>
                                     </div>
                                     <div class="list-group-item d-flex align-items-center">
                                         <div class="form-check me-3">
                                             <input class="form-check-input" type="checkbox" id="mensual">
                                             <label class="form-check-label" for="mensual">Mensual</label>
                                         </div>
-                                        <span class="badge bg-secondary ms-auto">Últimos 12 meses</span>
+                                        <span class="badge bg-secondary ms-auto">Últimos meses</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent">
-                                <button class="btn btn-sm btn-outline-primary">
+                                <button id="exportarVentas" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-download me-1"></i>Exportar selección
                                 </button>
                             </div>
@@ -93,328 +91,352 @@
     </div>
 </div>
 
-
-
-<script src="reportes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
-
-
 <script>
-
-    document.querySelector('.btn-outline-primary').addEventListener('click', async () => {
-        let filtro = null;
-        const checkboxes = {
-            diario: document.getElementById('diario'),
-            semanal: document.getElementById('semanal'),
-            mensual: document.getElementById('mensual')
-        };
-
-        // Verificar qué checkbox está seleccionado
-        for (const [key, checkbox] of Object.entries(checkboxes)) {
-            if (checkbox.checked) {
-                filtro = key;
-                break;
-            }
+    // Configuración centralizada
+    const reportConfig = {
+        ventas: {
+            endpoint: '/reportes/ventas',
+            filters: ['diario', 'semanal', 'mensual']
+        },
+        productos: {
+            endpoint: '/reportes/productos'
         }
+    };
 
-        if (!filtro) {
-            await Swal.fire({
-                icon: 'warning',
-                title: 'Filtro requerido',
-                text: 'Por favor selecciona un filtro primero',
-                confirmButtonText: 'Entendido'
-            });
-            return;
-        }
+    // Utilidades comunes
+    const reportUtils = {
+        showAlert: async (icon, title, text, confirmText = 'Aceptar') => {
+            return Swal.fire({ icon, title, text, confirmButtonText });
+        },
 
-        try {
-            const res = await fetch('/reportes/ventas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ filtro })
-            });
+        handleError: async (error, context = '') => {
+            console.error(`Error en ${context}:`, error);
+            await reportUtils.showAlert(
+                'error',
+                'Error',
+                error.message || 'Ocurrió un error inesperado',
+                'Cerrar'
+            );
+        },
 
+        fetchData: async (url, method = 'GET', body = null) => {
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
+
+            const res = await fetch(url, options);
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.message || 'Error al obtener los datos');
+                throw new Error(errorData.message || 'Error en la solicitud');
             }
+            return res.json();
+        }
+    };
 
-            const data = await res.json();
+    // Funcionalidad de reportes
+    const reportHandlers = {
+        ventas: {
+            getSelectedFilter: () => {
+                for (const filter of reportConfig.ventas.filters) {
+                    if (document.getElementById(filter).checked) {
+                        return filter;
+                    }
+                }
+                return null;
+            },
 
-            if (!Array.isArray(data)) {
-                throw new Error('Formato de respuesta inválido');
+            exportToExcel: async (data, filter) => {
+                try {
+                    const ExcelJS = window.ExcelJS;
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('Reporte Ventas');
+
+                    // Preparar datos con la cantidad de ventas
+                    const processedData = data.map(item => ({
+                        Cod_Venta: item.Cod_Venta,
+                        Cod_Producto: item.Cod_Producto,
+                        Nombre_Producto: item.Nombre_Producto,
+                        Cantidad_Venta: item.Cantidad_Venta,
+                        Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
+                        Fecha_Venta: new Date(item.Fecha_Venta).toLocaleDateString('es-ES')
+                    }));
+
+                    // Configurar columnas con anchos personalizados
+                    worksheet.columns = [
+                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
+                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                        { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
+                        { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 18 }, // Ajustado a 18
+                        { header: 'Monto Total', key: 'Monto_Total', width: 15 },
+                        { header: 'Fecha Venta', key: 'Fecha_Venta', width: 15 }
+                    ];
+
+                    // Aplicar estilo a los encabezados
+                    const headerRow = worksheet.getRow(1);
+                    headerRow.eachCell(cell => {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF4F81BD' }
+                        };
+                        cell.font = {
+                            bold: true,
+                            color: { argb: 'FF000000' },
+                            size: 12 // Tamaño de fuente aumentado
+                        };
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                        cell.alignment = {
+                            vertical: 'middle',
+                            horizontal: 'center',
+                            wrapText: true // Permite ajuste de texto
+                        };
+                    });
+
+                    // Ajustar específicamente la columna de Cantidad Vendida
+                    worksheet.getColumn('Cantidad_Venta').eachCell(cell => {
+                        cell.alignment = {
+                            vertical: 'middle',
+                            horizontal: 'center'
+                        };
+                    });
+
+                    // Agregar datos
+                    processedData.forEach(item => {
+                        const row = worksheet.addRow([
+                            item.Cod_Venta,
+                            item.Cod_Producto,
+                            item.Nombre_Producto,
+                            item.Cantidad_Venta,
+                            item.Monto_Total,
+                            item.Fecha_Venta
+                        ]);
+
+                        row.eachCell(cell => {
+                            cell.border = {
+                                top: { style: 'thin' },
+                                left: { style: 'thin' },
+                                bottom: { style: 'thin' },
+                                right: { style: 'thin' }
+                            };
+                        });
+                    });
+
+                    // Calcular y agregar totales
+                    const totalVentas = processedData.reduce((sum, item) => sum + item.Monto_Total, 0);
+                    const totalCantidad = processedData.reduce((sum, item) => sum + item.Cantidad_Venta, 0);
+
+                    const totalRow = worksheet.addRow([
+                        '',
+                        '',
+                        'Totales',
+                        totalCantidad,
+                        totalVentas,
+                        ''
+                    ]);
+
+                    totalRow.eachCell((cell, colNumber) => {
+                        cell.font = { bold: true };
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF4F81BD' }
+                        };
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                        if (colNumber === 5) cell.numFmt = '#,##0.00';
+                    });
+
+                    // Autoajustar el ancho de las columnas basado en el contenido
+                    worksheet.columns.forEach(column => {
+                        let maxLength = 0;
+                        column.eachCell({ includeEmpty: true }, cell => {
+                            let columnLength = cell.value ? cell.value.toString().length : 0;
+                            if (columnLength > maxLength) {
+                                maxLength = columnLength;
+                            }
+                        });
+                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                    });
+
+                    // Asegurar que "Cantidad Vendida" tenga un mínimo de 18
+                    if (worksheet.getColumn('Cantidad_Venta').width < 18) {
+                        worksheet.getColumn('Cantidad_Venta').width = 18;
+                    }
+
+                    // Descargar archivo
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reporte_ventas_${filter}.xlsx`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    throw new Error(`Error al exportar Excel: ${error.message}`);
+                }
+            },
+
+            generateReport: async () => {
+                try {
+                    const filter = reportHandlers.ventas.getSelectedFilter();
+
+                    if (!filter) {
+                        await reportUtils.showAlert('warning', 'Filtro requerido', 'Por favor selecciona un filtro primero');
+                        return;
+                    }
+
+                    const data = await reportUtils.fetchData(
+                        reportConfig.ventas.endpoint,
+                        'POST',
+                        { filtro: filter }
+                    );
+
+                    // Ajustado para recibir array directo del backend
+                    if (!Array.isArray(data)) {
+                        throw new Error('Formato de respuesta inválido');
+                    }
+
+                    if (data.length === 0) {
+                        await reportUtils.showAlert('info', 'Sin datos', 'No hay ventas registradas para el período seleccionado.');
+                        return;
+                    }
+
+                    await reportHandlers.ventas.exportToExcel(data, filter);
+                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
+
+                } catch (error) {
+                    await reportUtils.handleError(error, 'generación de reporte de ventas');
+                }
             }
+        },
 
-            if (data.length === 0) {
-                await Swal.fire({
-                    icon: 'info',
-                    title: 'Sin datos',
-                    text: 'No hay ventas registradas para el período seleccionado.',
-                    confirmButtonText: 'OK'
-                });
-                return;
+        productos: {
+            exportToExcel: async (data) => {
+                try {
+                    const ExcelJS = window.ExcelJS;
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('Productos');
+
+                    // Ajustado para manejar la nueva estructura de productos
+                    const processedData = data.topProducts.map(item => ({
+                        ...item,
+                        Tipo: 'Top Producto'
+                    })).concat(
+                        data.worstProducts.map(item => ({
+                            ...item,
+                            Tipo: 'Peor Producto'
+                        })),
+                        data.notSoldProducts.map(item => ({
+                            ...item,
+                            Tipo: 'No Vendido'
+                        }))
+                    );
+
+                    // Configurar columnas
+                    worksheet.columns = [
+                        { header: 'Código', key: 'Cod_Producto', width: 15 },
+                        { header: 'Nombre', key: 'Nombre', width: 30 },
+                        { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
+                        { header: 'Tipo', key: 'Tipo', width: 20 }
+                    ];
+
+                    // Estilo encabezados
+                    worksheet.getRow(1).eachCell(cell => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F81BD' } };
+                        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    });
+
+                    // Agregar datos
+                    processedData.forEach(item => {
+                        worksheet.addRow({
+                            Cod_Producto: item.Cod_Producto,
+                            Nombre: item.Nombre,
+                            CantidadVendida: item.CantidadVendida || 0,
+                            Tipo: item.Tipo
+                        });
+                    });
+
+                    // Aplicar bordes
+                    worksheet.eachRow(row => {
+                        row.eachCell(cell => {
+                            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                        });
+                    });
+
+                    // Descargar archivo
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reporte_productos_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    throw new Error(`Error al exportar Excel: ${error.message}`);
+                }
+            },
+
+            generateReport: async () => {
+                try {
+                    const response = await reportUtils.fetchData(reportConfig.productos.endpoint);
+
+                    // Ajustado para la nueva estructura de respuesta
+                    if (!response.success || !response.data) {
+                        throw new Error('Respuesta del servidor inválida');
+                    }
+
+                    if (response.data.topProducts.length === 0 &&
+                        response.data.worstProducts.length === 0 &&
+                        response.data.notSoldProducts.length === 0) {
+                        await reportUtils.showAlert('info', 'Sin datos', 'No hay productos en el reporte.');
+                        return;
+                    }
+
+                    await reportHandlers.productos.exportToExcel(response.data);
+                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
+
+                } catch (error) {
+                    await reportUtils.handleError(error, 'generación de reporte de productos');
+                }
             }
-
-            await exportarExcelBonito(data, `reporte_ventas_${filtro}`);
-
-            await Swal.fire({
-                icon: 'success',
-                title: '¡Reporte exportado!',
-                text: 'El archivo Excel ha sido descargado exitosamente.',
-                confirmButtonText: 'Aceptar',
-                timer: 3000,
-                timerProgressBar: true
-            });
-
-        } catch (err) {
-            console.error('Error al generar reporte:', err);
-            await Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.message || 'Ocurrió un error al generar el reporte.',
-                confirmButtonText: 'Cerrar'
-            });
         }
+    };
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+        // Asignar eventos
+        document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
+        document.getElementById('exportarProductos').addEventListener('click', reportHandlers.productos.generateReport);
+
+        // Manejar selección única de checkboxes
+        reportConfig.ventas.filters.forEach(filter => {
+            document.getElementById(filter).addEventListener('change', function () {
+                if (this.checked) {
+                    reportConfig.ventas.filters
+                        .filter(f => f !== filter)
+                        .forEach(otherFilter => {
+                            document.getElementById(otherFilter).checked = false;
+                        });
+                }
+            });
+        });
     });
-
-
-    // Función para exportar los datos a Excel
-    async function exportarExcelBonito(data, nombreArchivo) {
-        const dataLimpia = data.map(item => ({
-            Cod_Venta: item.Cod_Venta,
-            Cod_Producto: item.Cod_Producto,
-            Nombre_Producto: item.Nombre_Producto,
-            Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
-            Fecha_Venta: new Date(item.Fecha_Venta).toLocaleDateString('es-ES')
-        }));
-
-
-        const ExcelJS = window.ExcelJS;
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Reporte');
-
-        // Añadir encabezados
-        const headers = Object.keys(dataLimpia[0]);
-        worksheet.addRow(headers);
-
-        const headerRow = worksheet.getRow(1);
-        headerRow.eachCell(cell => {
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FF4F81BD' }
-            };
-            cell.font = {
-                bold: true,
-                color: { argb: 'FFFFFFFF' }
-            };
-            cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' }
-            };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        });
-
-        // Agregar los datos
-        dataLimpia.forEach(item => {
-            const row = worksheet.addRow(Object.values(item));
-            row.eachCell(cell => {
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' }
-                };
-            });
-        });
-
-        const total = dataLimpia.reduce((sum, item) => sum + parseFloat(item.Monto_Total), 0);
-
-        // Agregar fila de total de ventas
-        const totalRow = worksheet.addRow(['', '', 'Total de Ventas', total, '']);
-
-        totalRow.eachCell((cell, colNumber) => {
-            cell.font = { bold: true };
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FF4F81BD' }
-            };
-            cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' }
-            };
-            if (colNumber === 4) {
-                cell.numFmt = '#,##0.00'; // ✅ Formato US: 1,283.89
-            }
-        });
-
-        // Ajustar anchos
-        worksheet.columns.forEach(column => {
-            column.width = 20;
-        });
-
-        // Descargar el archivo
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nombreArchivo + '.xlsx';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-
-    // Aseguramos que solo se pueda seleccionar un checkbox
-    document.getElementById('diario').addEventListener('change', () => {
-        if (document.getElementById('diario').checked) {
-            document.getElementById('semanal').checked = false;
-            document.getElementById('mensual').checked = false;
-        }
-    });
-
-    document.getElementById('semanal').addEventListener('change', () => {
-        if (document.getElementById('semanal').checked) {
-            document.getElementById('diario').checked = false;
-            document.getElementById('mensual').checked = false;
-        }
-    });
-
-    document.getElementById('mensual').addEventListener('change', () => {
-        if (document.getElementById('mensual').checked) {
-            document.getElementById('diario').checked = false;
-            document.getElementById('semanal').checked = false;
-        }
-    });
-
-    //Reporte Productos
-   document.getElementById('exportarProductos').addEventListener('click', async () => {
-    try {
-        const res = await fetch('/reportes/productos');
-        
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.message || 'Error al obtener los datos');
-        }
-
-        const response = await res.json();
-        
-        // Validar que la respuesta tenga el formato esperado
-        if (!response.success || !Array.isArray(response.data)) {
-            throw new Error('Respuesta del servidor inválida');
-        }
-
-        const data = response.data;
-
-        if (data.length === 0) {
-            await Swal.fire({
-                icon: 'info',
-                title: 'Sin datos',
-                text: 'No hay productos en el reporte.',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
-
-        await exportarExcelProductos(data, 'reporte_productos');
-
-        await Swal.fire({
-            icon: 'success',
-            title: '¡Reporte exportado!',
-            text: 'El archivo Excel ha sido descargado exitosamente.',
-            confirmButtonText: 'Aceptar',
-            timer: 3000,
-            timerProgressBar: true
-        });
-
-    } catch (err) {
-        console.error('Error al exportar productos:', err);
-        await Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: err.message || 'Ocurrió un error al generar el reporte.',
-            confirmButtonText: 'Cerrar'
-        });
-    }
-});
-
-async function exportarExcelProductos(data, nombreArchivo) {
-    try {
-        const ExcelJS = window.ExcelJS;
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Productos');
-
-        // Definir columnas
-        worksheet.columns = [
-            { header: 'Código', key: 'Cod_Producto', width: 15 },
-            { header: 'Nombre', key: 'Nombre', width: 30 },
-            { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
-            { header: 'Tipo', key: 'Tipo', width: 20 }
-        ];
-
-        // Estilo para el encabezado
-        const headerRow = worksheet.getRow(1);
-        headerRow.eachCell(cell => {
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FF4F81BD' }
-            };
-            cell.font = {
-                bold: true,
-                color: { argb: 'FFFFFFFF' }
-            };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        });
-
-        // Agregar datos
-        data.forEach(item => {
-            worksheet.addRow({
-                Cod_Producto: item.Cod_Producto,
-                Nombre: item.Nombre,
-                CantidadVendida: item.CantidadVendida,
-                Tipo: item.Tipo
-            });
-        });
-
-        // Aplicar bordes a todas las celdas
-        worksheet.eachRow(row => {
-            row.eachCell(cell => {
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' }
-                };
-            });
-        });
-
-        // Generar archivo
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${nombreArchivo}_${new Date().toISOString().slice(0,10)}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-    } catch (error) {
-        console.error('Error al exportar Excel:', error);
-        throw error;
-    }
-}
 </script>
