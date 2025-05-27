@@ -34,7 +34,7 @@
                                             <input class="form-check-input" type="checkbox" id="semanal">
                                             <label class="form-check-label" for="semanal">Semanal</label>
                                         </div>
-                                        <span class="badge bg-secondary ms-auto">Últimas 7 días</span>
+                                        <span class="badge bg-secondary ms-auto">Últimos 7 días</span>
                                     </div>
                                     <div class="list-group-item d-flex align-items-center">
                                         <div class="form-check me-3">
@@ -153,24 +153,48 @@
                     const workbook = new ExcelJS.Workbook();
                     const worksheet = workbook.addWorksheet('Reporte Ventas');
 
-                    // Preparar datos con la cantidad de ventas
-                    const processedData = data.map(item => ({
-                        Cod_Venta: item.Cod_Venta,
-                        Cod_Producto: item.Cod_Producto,
-                        Nombre_Producto: item.Nombre_Producto,
-                        Cantidad_Venta: item.Cantidad_Venta,
-                        Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
-                        Fecha_Venta: new Date(item.Fecha_Venta).toLocaleDateString('es-ES')
-                    }));
+                    // Función mejorada para formatear la fecha
+                    const formatDate = (dateString) => {
+                        // Parsear la fecha manualmente para evitar problemas de zona horaria
+                        const parts = dateString.split('-'); // Asume formato YYYY-MM-DD
+                        if (parts.length === 3) {
+                            return `${parts[2]}/${parts[1]}/${parts[0]}`; // Formato DD/MM/YYYY
+                        }
+                        // Si el formato no es el esperado, usar la fecha actual como fallback
+                        const now = new Date();
+                        return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+                    };
 
-                    // Configurar columnas con anchos personalizados
+                    // Preparar datos con el formato de fecha deseado
+                    const processedData = data.map(item => {
+                        // Verificar la fecha recibida del servidor
+                        console.log('Fecha recibida del servidor:', item.Fecha_Venta);
+
+                        return {
+                            Cod_Venta: item.Cod_Venta,
+                            Cod_Producto: item.Cod_Producto,
+                            Nombre_Producto: item.Nombre_Producto,
+                            Cantidad_Venta: item.Cantidad_Venta,
+                            Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
+                            Fecha_Venta: formatDate(item.Fecha_Venta) // Aplicamos el formato deseado
+                        };
+                    });
+
+                    // Configurar columnas
                     worksheet.columns = [
                         { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
                         { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
                         { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
-                        { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 18 }, // Ajustado a 18
+                        { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 18 },
                         { header: 'Monto Total', key: 'Monto_Total', width: 15 },
-                        { header: 'Fecha Venta', key: 'Fecha_Venta', width: 15 }
+                        {
+                            header: 'Fecha Venta',
+                            key: 'Fecha_Venta',
+                            width: 15,
+                            style: {
+                                numFmt: 'd/m/yyyy' // Formato día/mes/año sin ceros iniciales
+                            }
+                        }
                     ];
 
                     // Aplicar estilo a los encabezados
@@ -183,8 +207,8 @@
                         };
                         cell.font = {
                             bold: true,
-                            color: { argb: 'FF000000' },
-                            size: 12 // Tamaño de fuente aumentado
+                            color: { argb: 'FFFFFFFF' },
+                            size: 12
                         };
                         cell.border = {
                             top: { style: 'thin' },
@@ -192,19 +216,7 @@
                             bottom: { style: 'thin' },
                             right: { style: 'thin' }
                         };
-                        cell.alignment = {
-                            vertical: 'middle',
-                            horizontal: 'center',
-                            wrapText: true // Permite ajuste de texto
-                        };
-                    });
-
-                    // Ajustar específicamente la columna de Cantidad Vendida
-                    worksheet.getColumn('Cantidad_Venta').eachCell(cell => {
-                        cell.alignment = {
-                            vertical: 'middle',
-                            horizontal: 'center'
-                        };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
                     });
 
                     // Agregar datos
@@ -215,8 +227,15 @@
                             item.Nombre_Producto,
                             item.Cantidad_Venta,
                             item.Monto_Total,
-                            item.Fecha_Venta
+                            item.Fecha_Venta // Usamos el valor ya formateado
                         ]);
+
+                        // Forzar el formato de fecha en Excel
+                        const fechaCell = row.getCell(6); // Columna F (Fecha_Venta)
+                        fechaCell.numFmt = 'd/m/yyyy'; // Formato exacto que deseas
+
+                        // Si persisten problemas, usar esto como alternativa:
+                        // fechaCell.value = { text: item.Fecha_Venta }; // Tratar como texto puro
 
                         row.eachCell(cell => {
                             cell.border = {
@@ -228,7 +247,7 @@
                         });
                     });
 
-                    // Calcular y agregar totales
+                    // Resto del código (totales, descarga, etc.)
                     const totalVentas = processedData.reduce((sum, item) => sum + item.Monto_Total, 0);
                     const totalCantidad = processedData.reduce((sum, item) => sum + item.Cantidad_Venta, 0);
 
@@ -257,7 +276,7 @@
                         if (colNumber === 5) cell.numFmt = '#,##0.00';
                     });
 
-                    // Autoajustar el ancho de las columnas basado en el contenido
+                    // Autoajustar columnas
                     worksheet.columns.forEach(column => {
                         let maxLength = 0;
                         column.eachCell({ includeEmpty: true }, cell => {
@@ -269,9 +288,10 @@
                         column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
                     });
 
-                    // Asegurar que "Cantidad Vendida" tenga un mínimo de 18
-                    if (worksheet.getColumn('Cantidad_Venta').width < 18) {
-                        worksheet.getColumn('Cantidad_Venta').width = 18;
+                    // Verificación final antes de exportar
+                    console.log('Datos a exportar:', processedData);
+                    if (processedData.length > 0) {
+                        console.log('Primera fecha a exportar:', processedData[0].Fecha_Venta);
                     }
 
                     // Descargar archivo
@@ -285,6 +305,7 @@
                     URL.revokeObjectURL(url);
 
                 } catch (error) {
+                    console.error('Error detallado al exportar:', error);
                     throw new Error(`Error al exportar Excel: ${error.message}`);
                 }
             },
@@ -304,7 +325,8 @@
                         { filtro: filter }
                     );
 
-                    // Ajustado para recibir array directo del backend
+                    // Verificación de datos recibidos
+                    console.log("Datos recibidos del servidor:", data);
                     if (!Array.isArray(data)) {
                         throw new Error('Formato de respuesta inválido');
                     }
@@ -312,6 +334,12 @@
                     if (data.length === 0) {
                         await reportUtils.showAlert('info', 'Sin datos', 'No hay ventas registradas para el período seleccionado.');
                         return;
+                    }
+
+                    // Verificar la primera fecha recibida
+                    if (data[0]) {
+                        console.log("Primera fecha recibida:", data[0].Fecha_Venta,
+                            "Tipo:", typeof data[0].Fecha_Venta);
                     }
 
                     await reportHandlers.ventas.exportToExcel(data, filter);
