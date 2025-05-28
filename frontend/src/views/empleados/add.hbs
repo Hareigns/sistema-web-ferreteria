@@ -1,16 +1,16 @@
 <title>Registro de Empleado</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/styles/empleados.css">
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
 
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-lg-10">
-      <div class="card p-4">
+      <div class="card shadow-lg p-4">
         <div class="card-body">
           <h3 class="text-center mb-4">Registro de Empleados</h3>
-          <form action="api/empleados" method="post" id="empleadoForm">
+          <form id="empleadoForm">
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="nombre" class="form-label">Nombre</label>
@@ -76,37 +76,58 @@
     </div>
   </div>
 </div>
-<div class="row mt-4">
-  <div class="col-12">
-    <div class="card" style="border: 1px solid #ddd;">
-      <div class="card-body text-center">
-        <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Empleados</h3>
-        <div class="card p-4 table-responsive">
-          <table class="table align-middle mb-0 bg-white" id="empleadosTable">
-            <thead class="bg-light">
-              <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Cédula</th>
-                <th>Dirección</th>
-                <th>Estado</th>
-                <th>F. Ingreso</th>
-                <th>Teléfono</th>
-                <th>Compañía</th>
-              </tr>
-            </thead>
-            <tbody id="empleados-table-body"></tbody>
-          </table>
-        </div>
+<div class="card mb-4" style="border: 1px solid #ddd;">
+  <div class="card-body text-center">
+    <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Empleados</h3>
+    <div class="card p-4 table-responsive">
+      <div class="card-body">
+        <table class="table align-middle mb-0 bg-white display" id="empleadosTable" style="width:100%">
+          <thead class="bg-light">
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Cédula</th>
+              <th>Dirección</th>
+              <th>Estado</th>
+              <th>F. Ingreso</th>
+              <th>Teléfono</th>
+              <th>Compañía</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // Asegurar compatibilidad
+  $(document).ready(function () {
+    // Inicializar dropdowns manualmente si es necesario
+    if (typeof bootstrap !== 'undefined') {
+      var dropdowns = document.querySelectorAll('.dropdown-toggle');
+      dropdowns.forEach(function (dropdown) {
+        new bootstrap.Dropdown(dropdown);
+      });
+    } else {
+      console.warn('Bootstrap no está cargado correctamente');
+    }
+
+    // Manejar clics en el dropdown de usuario
+    $('.navbar .dropdown').on('show.bs.dropdown', function () {
+      $(this).find('.dropdown-menu').addClass('show');
+    }).on('hide.bs.dropdown', function () {
+      $(this).find('.dropdown-menu').removeClass('show');
+    });
+  });
+</script>
 
 <script>
 
@@ -234,42 +255,23 @@
     }
   }
 
+  let empleadosTable;
 
-  // Función para cargar empleados en la tabla (actualizada)
   async function cargarEmpleadosEnTabla() {
     try {
       const response = await fetch("/empleados/api/empleados");
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
-        const tablaBody = document.getElementById("empleados-table-body");
-        tablaBody.innerHTML = "";
+        const empleadosOrdenados = [...data.data].sort((a, b) => a.Cod_Empleado - b.Cod_Empleado);
 
-        data.data.forEach(empleado => {
-          const row = document.createElement("tr");
-          const estadoClass = empleado.Estado === 'Activo' ? 'text-success' : 'text-danger';
+        // Verificar si DataTable ya está inicializado
+        if ($.fn.DataTable.isDataTable('#empleadosTable')) {
+          empleadosTable.destroy();
+          $('#empleadosTable').empty();
+        }
 
-          // Determinar la clase para la compañía (color + negrita)
-          let companiaClass = 'fw-bold'; // Siempre aplicamos negrita
-          if (empleado.Compania === 'Tigo') {
-            companiaClass += ' text-primary'; // Azul
-          } else if (empleado.Compania === 'Claro') {
-            companiaClass += ' text-danger'; // Rojo
-          }
-
-          row.innerHTML = `
-          <td>${empleado.Cod_Empleado}</td>
-          <td>${empleado.Nombre}</td>
-          <td>${empleado.Apellido}</td>
-          <td>${empleado.Cedula || 'No definida'}</td>
-          <td>${empleado.Direccion}</td>
-          <td class="${estadoClass} fw-bold">${empleado.Estado || "No definido"}</td>
-          <td>${empleado.FechaIngresoFormateada || formatDate(empleado.FechaIngreso)}</td>
-          <td>${empleado.Telefono || "No disponible"}</td>
-          <td class="${companiaClass}">${empleado.Compania || "No disponible"}</td>
-        `;
-          tablaBody.appendChild(row);
-        });
+        inicializarDataTableEmpleados(empleadosOrdenados);
       }
     } catch (error) {
       console.error("Error al obtener empleados:", error);
@@ -277,6 +279,85 @@
     }
   }
 
+  function inicializarDataTableEmpleados(data) {
+    // Verificar si jQuery está disponible
+    if (typeof $ === 'undefined') {
+      console.error('Error: jQuery no está cargado. DataTables requiere jQuery.');
+      Swal.fire({
+        title: 'Error de configuración',
+        text: 'La tabla no puede inicializarse porque falta jQuery',
+        icon: 'error'
+      });
+      return;
+    }
+
+    empleadosTable = $('#empleadosTable').DataTable({
+      paging: true,
+      searching: true,
+      ordering: true,
+      pageLength: 10,
+      lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+      language: {
+        "decimal": "",
+        "emptyTable": "No hay empleados registrados",
+        "info": "Mostrando _START_ a _END_ de _TOTAL_ empleados",
+        "infoEmpty": "Mostrando 0 a 0 de 0 empleados",
+        "infoFiltered": "(filtrado de _MAX_ empleados totales)",
+        "infoPostFix": "",
+        "thousands": ",",
+        "lengthMenu": "Mostrar _MENU_ empleados",
+        "loadingRecords": "Cargando...",
+        "processing": "Procesando...",
+        "search": "Buscar:",
+        "zeroRecords": "No se encontraron empleados coincidentes",
+        "paginate": {
+          "first": "Primero",
+          "last": "Último",
+          "next": "Siguiente",
+          "previous": "Anterior"
+        }
+      },
+      data: data,
+      columns: [
+        { data: 'Cod_Empleado' },
+        { data: 'Nombre' },
+        { data: 'Apellido' },
+        {
+          data: 'Cedula',
+          render: function (data) {
+            return data || 'No definida';
+          }
+        },
+        { data: 'Direccion' },
+        {
+          data: 'Estado',
+          render: function (data) {
+            return `<span class="badge ${data === 'Activo' ? 'bg-success' : 'bg-danger'}">${data || 'No definido'}</span>`;
+          }
+        },
+        {
+          data: 'FechaIngreso',
+          render: function (data, type, row) {
+            return row.FechaIngresoFormateada || formatDate(data) || 'No definida';
+          }
+        },
+        {
+          data: 'Telefono',
+          render: function (data) {
+            return data || 'No disponible';
+          }
+        },
+        {
+          data: 'Compania',
+          render: function (data) {
+            const companiaClass = data === 'Tigo' ? 'text-primary fw-bold' :
+              data === 'Claro' ? 'text-danger fw-bold' : 'fw-bold';
+            return `<span class="${companiaClass}">${data || 'No disponible'}</span>`;
+          }
+        }
+      ]
+    });
+  }
 
   // Llamar la función cuando la página cargue
   document.addEventListener("DOMContentLoaded", function () {
@@ -644,3 +725,33 @@
   }
 
 </script>
+
+<script>
+        // Solución definitiva para el dropdown del navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manejar clicks en el dropdown manualmente
+            document.querySelectorAll('.dropdown-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var menu = this.nextElementSibling;
+                    menu.classList.toggle('show');
+                });
+            });
+
+            // Cerrar dropdown al hacer click fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
+                        menu.classList.remove('show');
+                    });
+                }
+            });
+
+            // Reinicializar dropdowns después de DataTables
+            if ($.fn.DataTable.isDataTable('#empleadosTable')) {
+                $('#empleadosTable').on('init.dt', function() {
+                    new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
+                });
+            }
+        });
+    </script>
