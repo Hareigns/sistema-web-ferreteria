@@ -290,6 +290,8 @@
         document.getElementById("cantidad").value = "";
         document.getElementById("precio").value = "";
         document.getElementById("metodoPago").value = "";
+        document.getElementById("descripcionProducto").textContent = "";  // Esta línea limpia la descripción
+        document.getElementById("descripcionProducto").style.display = "none";  // Y la oculta
 
         actualizarTotales();
     });

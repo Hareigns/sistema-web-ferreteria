@@ -18,9 +18,8 @@ router.get('/add', (req, res) => {
 });
 
 // Ruta para manejar el reporte de ventas
-// Ruta para manejar el reporte de ventas
 router.post('/ventas', asyncHandler(async (req, res) => {
-    const { filtro } = req.body;
+    const { filtro, fecha } = req.body;
     
     // Validación mejorada
     if (!filtro || !VALID_FILTERS.includes(filtro)) {
@@ -30,19 +29,35 @@ router.post('/ventas', asyncHandler(async (req, res) => {
         });
     }
 
+    if (!fecha) {
+        return res.status(400).json({ 
+            success: false, 
+            message: `Parámetro "fecha" es requerido` 
+        });
+    }
+
     let connection;
     try {
         connection = await pool.getConnection();
         
+        // Procesar la fecha según el filtro
+        let fechaParam = fecha;
+        if (filtro === 'semanal') {
+            // Extraer año y semana del formato YYYY-WWW
+            const [year, week] = fecha.split('-W');
+            fechaParam = `${year}-${week}`; // Formato: YYYY-WW (sin la W)
+        }
+
         // Usar transacción para mayor seguridad
         await connection.beginTransaction();
         
-        const [results] = await connection.query('CALL sp_reporte_ventas(?)', [filtro]);
+        // Llamar al procedimiento almacenado con ambos parámetros
+        const [results] = await connection.query('CALL sp_reporte_ventas(?, ?)', [filtro, fechaParam]);
         await connection.commit();
         
-        // Cambio clave: Devolver directamente el array de resultados
+        // Devolver directamente el array de resultados
         const data = Array.isArray(results[0]) ? results[0] : [];
-        res.json(data); // Solo enviamos el array de datos
+        res.json(data);
         
     } catch (error) {
         if (connection) {

@@ -1,5 +1,7 @@
 <link rel="stylesheet" href="/styles/reportes.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -22,26 +24,35 @@
                             </div>
                             <div class="card-body">
                                 <div class="list-group list-group-flush">
-                                    <div class="list-group-item d-flex align-items-center">
+                                    <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="checkbox" id="diario">
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario" checked>
                                             <label class="form-check-label" for="diario">Diario</label>
                                         </div>
-                                        <span class="badge bg-secondary ms-auto">Últimas 24 horas</span>
+                                        <div class="mt-2" id="fechaDiario">
+                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el día:</label>
+                                            <input type="date" class="form-control form-control-sm" id="fechaDiarioInput" value="<?php echo date('Y-m-d'); ?>">
+                                        </div>
                                     </div>
-                                    <div class="list-group-item d-flex align-items-center">
+                                    <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="checkbox" id="semanal">
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="semanal">
                                             <label class="form-check-label" for="semanal">Semanal</label>
                                         </div>
-                                        <span class="badge bg-secondary ms-auto">Últimos 7 días</span>
+                                        <div class="mt-2 d-none" id="fechaSemanal">
+                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la semana:</label>
+                                            <input type="week" class="form-control form-control-sm" id="fechaSemanalInput" value="<?php echo date('Y-\WW'); ?>">
+                                        </div>
                                     </div>
-                                    <div class="list-group-item d-flex align-items-center">
+                                    <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="checkbox" id="mensual">
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="mensual">
                                             <label class="form-check-label" for="mensual">Mensual</label>
                                         </div>
-                                        <span class="badge bg-secondary ms-auto">Últimos meses</span>
+                                        <div class="mt-2 d-none" id="fechaMensual">
+                                            <label for="fechaMensualInput" class="form-label small">Seleccione el mes:</label>
+                                            <input type="month" class="form-control form-control-sm" id="fechaMensualInput" value="<?php echo date('Y-m'); ?>">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -93,6 +104,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     // Configuración centralizada
@@ -109,7 +121,7 @@
     // Utilidades comunes
     const reportUtils = {
         showAlert: async (icon, title, text, confirmText = 'Aceptar') => {
-            return Swal.fire({ icon, title, text, confirmButtonText });
+            return Swal.fire({ icon, title, text, confirmButtonText: confirmText });
         },
 
         handleError: async (error, context = '') => {
@@ -139,12 +151,15 @@
     const reportHandlers = {
         ventas: {
             getSelectedFilter: () => {
-                for (const filter of reportConfig.ventas.filters) {
-                    if (document.getElementById(filter).checked) {
-                        return filter;
-                    }
-                }
-                return null;
+                const selectedRadio = document.querySelector('input[name="filtroVentas"]:checked');
+                if (!selectedRadio) return null;
+                
+                return {
+                    tipo: selectedRadio.id,
+                    fecha: selectedRadio.id === 'diario' ? document.getElementById('fechaDiarioInput').value :
+                           selectedRadio.id === 'semanal' ? document.getElementById('fechaSemanalInput').value :
+                           document.getElementById('fechaMensualInput').value
+                };
             },
 
             exportToExcel: async (data, filter) => {
@@ -153,30 +168,25 @@
                     const workbook = new ExcelJS.Workbook();
                     const worksheet = workbook.addWorksheet('Reporte Ventas');
 
-                    // Función mejorada para formatear la fecha
+                    // Función para formatear la fecha
                     const formatDate = (dateString) => {
-                        // Parsear la fecha manualmente para evitar problemas de zona horaria
-                        const parts = dateString.split('-'); // Asume formato YYYY-MM-DD
+                        const parts = dateString.split('-');
                         if (parts.length === 3) {
-                            return `${parts[2]}/${parts[1]}/${parts[0]}`; // Formato DD/MM/YYYY
+                            return `${parts[2]}/${parts[1]}/${parts[0]}`;
                         }
-                        // Si el formato no es el esperado, usar la fecha actual como fallback
                         const now = new Date();
                         return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
                     };
 
-                    // Preparar datos con el formato de fecha deseado
+                    // Preparar datos con el formato de fecha
                     const processedData = data.map(item => {
-                        // Verificar la fecha recibida del servidor
-                        console.log('Fecha recibida del servidor:', item.Fecha_Venta);
-
                         return {
                             Cod_Venta: item.Cod_Venta,
                             Cod_Producto: item.Cod_Producto,
                             Nombre_Producto: item.Nombre_Producto,
                             Cantidad_Venta: item.Cantidad_Venta,
                             Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
-                            Fecha_Venta: formatDate(item.Fecha_Venta) // Aplicamos el formato deseado
+                            Fecha_Venta: formatDate(item.Fecha_Venta)
                         };
                     });
 
@@ -191,9 +201,7 @@
                             header: 'Fecha Venta',
                             key: 'Fecha_Venta',
                             width: 15,
-                            style: {
-                                numFmt: 'd/m/yyyy' // Formato día/mes/año sin ceros iniciales
-                            }
+                            style: { numFmt: 'd/m/yyyy' }
                         }
                     ];
 
@@ -227,13 +235,11 @@
                             item.Nombre_Producto,
                             item.Cantidad_Venta,
                             item.Monto_Total,
-                            item.Fecha_Venta // Usamos el valor ya formateado
+                            item.Fecha_Venta
                         ]);
 
-                        // Forzar el formato de fecha en Excel
-                        const fechaCell = row.getCell(6); // Columna F (Fecha_Venta)
-                        fechaCell.numFmt = 'd/m/yyyy'; // Formato exacto que deseas
-
+                        const fechaCell = row.getCell(6);
+                        fechaCell.numFmt = 'd/m/yyyy';
 
                         row.eachCell(cell => {
                             cell.border = {
@@ -245,7 +251,7 @@
                         });
                     });
 
-                    // Resto del código (totales, descarga, etc.)
+                    // Calcular totales
                     const totalVentas = processedData.reduce((sum, item) => sum + item.Monto_Total, 0);
                     const totalCantidad = processedData.reduce((sum, item) => sum + item.Cantidad_Venta, 0);
 
@@ -286,12 +292,6 @@
                         column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
                     });
 
-                    // Verificación final antes de exportar
-                    console.log('Datos a exportar:', processedData);
-                    if (processedData.length > 0) {
-                        console.log('Primera fecha a exportar:', processedData[0].Fecha_Venta);
-                    }
-
                     // Descargar archivo
                     const buffer = await workbook.xlsx.writeBuffer();
                     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -310,21 +310,22 @@
 
             generateReport: async () => {
                 try {
-                    const filter = reportHandlers.ventas.getSelectedFilter();
-
-                    if (!filter) {
-                        await reportUtils.showAlert('warning', 'Filtro requerido', 'Por favor selecciona un filtro primero');
+                    const filterInfo = reportHandlers.ventas.getSelectedFilter();
+                    
+                    if (!filterInfo || !filterInfo.fecha) {
+                        await reportUtils.showAlert('warning', 'Datos requeridos', 'Por favor selecciona un filtro y una fecha');
                         return;
                     }
 
                     const data = await reportUtils.fetchData(
                         reportConfig.ventas.endpoint,
                         'POST',
-                        { filtro: filter }
+                        { 
+                            filtro: filterInfo.tipo,
+                            fecha: filterInfo.fecha
+                        }
                     );
 
-                    // Verificación de datos recibidos
-                    console.log("Datos recibidos del servidor:", data);
                     if (!Array.isArray(data)) {
                         throw new Error('Formato de respuesta inválido');
                     }
@@ -334,13 +335,7 @@
                         return;
                     }
 
-                    // Verificar la primera fecha recibida
-                    if (data[0]) {
-                        console.log("Primera fecha recibida:", data[0].Fecha_Venta,
-                            "Tipo:", typeof data[0].Fecha_Venta);
-                    }
-
-                    await reportHandlers.ventas.exportToExcel(data, filter);
+                    await reportHandlers.ventas.exportToExcel(data, filterInfo.tipo);
                     await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
 
                 } catch (error) {
@@ -356,14 +351,12 @@
                     const workbook = new ExcelJS.Workbook();
                     const worksheet = workbook.addWorksheet('Productos');
 
-                    // Combinar todos los productos manteniendo sus tipos originales
                     const processedData = [
                         ...data.topProducts,
                         ...data.worstProducts,
                         ...data.notSoldProducts
                     ];
 
-                    // Configurar columnas
                     worksheet.columns = [
                         { header: 'Código', key: 'Cod_Producto', width: 15 },
                         { header: 'Nombre', key: 'Nombre', width: 30 },
@@ -371,31 +364,32 @@
                         { header: 'Tipo', key: 'Tipo', width: 20 }
                     ];
 
-                    // Estilo encabezados
                     worksheet.getRow(1).eachCell(cell => {
                         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F81BD' } };
                         cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                         cell.alignment = { vertical: 'middle', horizontal: 'center' };
                     });
 
-                    // Agregar datos manteniendo el tipo original
                     processedData.forEach(item => {
                         worksheet.addRow({
                             Cod_Producto: item.Cod_Producto,
                             Nombre: item.Nombre,
                             CantidadVendida: item.CantidadVendida || 0,
-                            Tipo: item.Tipo // Usamos el tipo que viene del backend
+                            Tipo: item.Tipo
                         });
                     });
 
-                    // Aplicar bordes
                     worksheet.eachRow(row => {
                         row.eachCell(cell => {
-                            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                            cell.border = { 
+                                top: { style: 'thin' }, 
+                                left: { style: 'thin' }, 
+                                bottom: { style: 'thin' }, 
+                                right: { style: 'thin' } 
+                            };
                         });
                     });
 
-                    // Descargar archivo
                     const buffer = await workbook.xlsx.writeBuffer();
                     const now = new Date();
                     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -417,7 +411,6 @@
                 try {
                     const response = await reportUtils.fetchData(reportConfig.productos.endpoint);
 
-                    // Ajustado para la nueva estructura de respuesta
                     if (!response.success || !response.data) {
                         throw new Error('Respuesta del servidor inválida');
                     }
@@ -445,17 +438,24 @@
         document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
         document.getElementById('exportarProductos').addEventListener('click', reportHandlers.productos.generateReport);
 
-        // Manejar selección única de checkboxes
-        reportConfig.ventas.filters.forEach(filter => {
-            document.getElementById(filter).addEventListener('change', function () {
-                if (this.checked) {
-                    reportConfig.ventas.filters
-                        .filter(f => f !== filter)
-                        .forEach(otherFilter => {
-                            document.getElementById(otherFilter).checked = false;
-                        });
+        // Mostrar/ocultar campos de fecha según el filtro seleccionado
+        document.querySelectorAll('input[name="filtroVentas"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.getElementById('fechaDiario').classList.add('d-none');
+                document.getElementById('fechaSemanal').classList.add('d-none');
+                document.getElementById('fechaMensual').classList.add('d-none');
+                
+                if (this.id === 'diario') {
+                    document.getElementById('fechaDiario').classList.remove('d-none');
+                } else if (this.id === 'semanal') {
+                    document.getElementById('fechaSemanal').classList.remove('d-none');
+                } else if (this.id === 'mensual') {
+                    document.getElementById('fechaMensual').classList.remove('d-none');
                 }
             });
         });
+
+        // Inicializar con el filtro diario visible
+        document.getElementById('fechaDiario').classList.remove('d-none');
     });
 </script>
