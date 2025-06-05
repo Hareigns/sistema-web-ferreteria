@@ -21,21 +21,22 @@ router.get('/api/reporte', async (req, res) => {
         // Si no hay ningún filtro, obtener todos los productos activos
         if (!sector && !search && periodo === 'todos') {
             const [results] = await pool.query(`
-                SELECT 
-                    p.Cod_Producto,
-                    p.Nombre,
-                    p.Marca,
-                    pp.Fecha_Entrada AS FechaEntrada,
-                    pp.Cantidad,
-                    p.FechaVencimiento,
-                    p.Sector
-                FROM 
-                    Producto p
-                JOIN 
-                    ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
-                WHERE 
-                    p.Estado = 'Activo'
-                ORDER BY pp.Fecha_Entrada DESC`);
+    SELECT 
+        p.Cod_Producto,
+        p.Nombre,
+        p.Marca,
+        pp.Fecha_Entrada AS FechaEntrada,
+        pp.Cantidad,
+        p.FechaVencimiento,
+        p.Sector,
+        p.Descripcion  -- Añadir este campo
+    FROM 
+        Producto p
+    JOIN 
+        ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
+    WHERE 
+        p.Estado = 'Activo'
+    ORDER BY pp.Fecha_Entrada DESC`);
                 
             return res.json({
                 success: true,

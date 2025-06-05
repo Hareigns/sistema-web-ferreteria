@@ -135,3 +135,21 @@ body {
     max-height: calc(70vh - 60px); /* Ajuste para el espacio del resumen */
     overflow-y: auto; /* Mantiene tu scroll personalizado */
 }
+
+/* Agrega esto a tu bodega.css */
+.has-tooltip {
+    cursor: help;
+    border-bottom: 1px dotted #666;
+}
+
+.tooltip-inner {
+    max-width: 300px;
+    text-align: left;
+}
+
+/* Estilo para la descripción */
+.small.text-muted {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 2px;
+}

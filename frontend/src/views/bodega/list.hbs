@@ -73,6 +73,7 @@
                                         <th>Código Producto</th>
                                         <th>Nombre</th>
                                         <th>Marca</th>
+                                        <th>Ubicación</th>
                                         <th>Fecha Entrada</th>
                                         <th>Cantidad</th>
                                         <th>Fecha Vencimiento</th>
@@ -179,6 +180,14 @@
                     }
                 },
                 {
+                    data: 'Descripcion',
+                    defaultContent: 'N/A',
+                    render: function (data) {
+                        if (!data) return 'N/A';
+                        return `<span class="cell-content">${data}</span>`;
+                    }
+                },
+                {
                     data: 'FechaEntrada',
                     render: function (data) {
                         return `<span class="cell-content">${formatDateForDisplay(data)}</span>`;
@@ -243,10 +252,10 @@
                     }
                 }
             ],
-            initComplete: function() {
+            initComplete: function () {
                 updateSummary();
             },
-            drawCallback: function() {
+            drawCallback: function () {
                 updateSummary();
             }
         });

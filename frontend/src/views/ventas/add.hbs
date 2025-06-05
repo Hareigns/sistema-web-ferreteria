@@ -11,7 +11,8 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label for="codigoVenta" class="form-label">Código de Venta:</label>
-                            <input type="text" id="codigoVenta" class="form-control" placeholder="Código de Venta" disabled>
+                            <input type="text" id="codigoVenta" class="form-control" placeholder="Código de Venta"
+                                disabled>
                         </div>
                         <div class="col-md-4">
                             <label for="sector" class="form-label">Sector:</label>
@@ -31,10 +32,13 @@
                             <select id="nombreProducto" class="form-select">
                                 <option value="" disabled selected>Seleccione un producto</option>
                             </select>
+                            <!-- Agregar este div para mostrar la descripción -->
+                            <div id="descripcionProducto" class="mt-2 small text-muted" style="display: none;"></div>
                         </div>
                         <div class="col-md-2">
                             <label for="cantidad" class="form-label">Cantidad:</label>
-                            <input type="number" id="cantidad" class="form-control" placeholder="Cantidad" min="1" required>
+                            <input type="number" id="cantidad" class="form-control" placeholder="Cantidad" min="1"
+                                required>
                         </div>
                         <div class="col-md-2">
                             <label for="precio" class="form-label">Precio:</label>
@@ -56,7 +60,9 @@
                     </div>
 
                     <div class="mt-4">
-                        <h5 class="text-center" style="background-color: #80c7e0; color: #fff; padding: 8px; border-radius: 5px;">Lista de Productos</h5>
+                        <h5 class="text-center"
+                            style="background-color: #80c7e0; color: #fff; padding: 8px; border-radius: 5px;">Lista de
+                            Productos</h5>
                         <table class="table table-light table-striped text-center">
                             <thead class="table-secondary">
                                 <tr>
@@ -91,9 +97,12 @@
                     </div>
 
                     <div class="mt-5">
-                        <h5 class="text-center" style="background-color: #007bff; color: #fff; padding: 8px; border-radius: 5px;">Historial de Ventas</h5>
+                        <h5 class="text-center"
+                            style="background-color: #007bff; color: #fff; padding: 8px; border-radius: 5px;">Historial
+                            de Ventas</h5>
                         <div class="card p-3 table-responsive" style="border: 1px solid #ddd;">
-                            <table class="table align-middle mb-0 bg-white table-striped text-center display" id="tablaHistorialVentas" style="width:100%">
+                            <table class="table align-middle mb-0 bg-white table-striped text-center display"
+                                id="tablaHistorialVentas" style="width:100%">
                                 <thead class="bg-light">
                                     <tr>
                                         <th>Código Venta</th>
@@ -536,7 +545,7 @@
 
             // Ordenar ventas por fecha descendente (más recientes primero)
             const ventas = ventasData.data.sort((a, b) => new Date(b.Fecha_salida) - new Date(a.Fecha_salida));
-            
+
             // Inicializar DataTable
             $('#tablaHistorialVentas').DataTable({
                 paging: true,
@@ -572,24 +581,24 @@
                 columns: [
                     { data: 'Cod_Venta' },
                     { data: 'Cod_Producto' },
-                    { 
+                    {
                         data: 'Cod_Producto',
-                        render: function(data) {
+                        render: function (data) {
                             return mapaProductos[data] || 'Desconocido';
                         }
                     },
                     { data: 'Cantidad_Venta' },
-                    { 
+                    {
                         data: 'Precio_Venta',
-                        render: function(data) {
+                        render: function (data) {
                             return `C$${parseFloat(data).toFixed(2)}`;
                         }
                     },
                     { data: 'Metodo_Pago' },
                     { data: 'Sector' },
-                    { 
+                    {
                         data: 'Fecha_salida',
-                        render: function(data) {
+                        render: function (data) {
                             return formatearFecha(data);
                         }
                     }
@@ -685,6 +694,7 @@
                         option.dataset.precio = producto.Precio_Compra;
                         option.dataset.stock = producto.Cantidad;
                         option.dataset.vencimiento = producto.FechaVencimiento;
+                        option.dataset.descripcion = producto.Descripcion; // Agregar la descripción
                         selectProducto.appendChild(option);
                     }
                 });
@@ -696,6 +706,18 @@
         const precio = productoSeleccionado.dataset.precio;
         const precioConIVA = (precio * 1.25).toFixed(2);
         document.getElementById("precio").value = precioConIVA;
+
+        // Mostrar la descripción del producto
+        const descripcion = productoSeleccionado.dataset.descripcion;
+        const descripcionElement = document.getElementById("descripcionProducto");
+
+        if (descripcion) {
+            descripcionElement.textContent = `Ubicación: ${descripcion}`;
+            descripcionElement.style.display = "block";
+        } else {
+            descripcionElement.textContent = "";
+            descripcionElement.style.display = "none";
+        }
     });
 
     document.getElementById("sector").addEventListener("change", function () {
@@ -728,7 +750,7 @@
     }
 
     // Inicializar al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         cargarHistorialVentas();
         cargarCodigoVenta();
         cargarSectores();
