@@ -356,20 +356,12 @@
                     const workbook = new ExcelJS.Workbook();
                     const worksheet = workbook.addWorksheet('Productos');
 
-                    // Ajustado para manejar la nueva estructura de productos
-                    const processedData = data.topProducts.map(item => ({
-                        ...item,
-                        Tipo: 'Top Producto'
-                    })).concat(
-                        data.worstProducts.map(item => ({
-                            ...item,
-                            Tipo: 'Peor Producto'
-                        })),
-                        data.notSoldProducts.map(item => ({
-                            ...item,
-                            Tipo: 'No Vendido'
-                        }))
-                    );
+                    // Combinar todos los productos manteniendo sus tipos originales
+                    const processedData = [
+                        ...data.topProducts,
+                        ...data.worstProducts,
+                        ...data.notSoldProducts
+                    ];
 
                     // Configurar columnas
                     worksheet.columns = [
@@ -386,13 +378,13 @@
                         cell.alignment = { vertical: 'middle', horizontal: 'center' };
                     });
 
-                    // Agregar datos
+                    // Agregar datos manteniendo el tipo original
                     processedData.forEach(item => {
                         worksheet.addRow({
                             Cod_Producto: item.Cod_Producto,
                             Nombre: item.Nombre,
                             CantidadVendida: item.CantidadVendida || 0,
-                            Tipo: item.Tipo
+                            Tipo: item.Tipo // Usamos el tipo que viene del backend
                         });
                     });
 

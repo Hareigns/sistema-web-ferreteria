@@ -233,39 +233,61 @@
   // Modificar el evento change del select de ubicación
   document.getElementById('ubicacion').addEventListener('change', function () {
     if (this.value === 'custom') {
+      // Obtener todas las opciones existentes del select
+      const select = document.getElementById('ubicacion');
+      const existingOptions = Array.from(select.options)
+        .map(option => option.value)
+        .filter(value => value !== 'custom' && value !== ''); // Excluir valores especiales
+
       Swal.fire({
         title: 'Ingresar ubicación personalizada',
         input: 'text',
-        inputPlaceholder: 'Ej: Estante 2 Repisa 4 Espacio 2',
+        inputPlaceholder: 'Ej: Estante 4, Repisa 3, Espacio 1',
         showCancelButton: true,
         confirmButtonText: 'Guardar',
         cancelButtonText: 'Cancelar',
         inputValidator: (value) => {
+          // Expresión regular para validar el formato exacto
+          const regex = /^Estante\s\d{1,2},\sRepisa\s\d{1,2},\sEspacio\s\d{1,2}$/;
+
           if (!value) {
             return 'Debe ingresar una ubicación';
+          }
+
+          if (!regex.test(value)) {
+            return 'Formato incorrecto. Use: Estante 1, Repisa 1, Espacio 1';
+          }
+
+          // Validar que no exista ya en las opciones
+          if (existingOptions.includes(value)) {
+            return 'Esta ubicación ya existe en la lista';
+          }
+
+          // Validar rangos numéricos
+          const numeros = value.match(/\d+/g);
+          if (numeros) {
+            const estante = parseInt(numeros[0]);
+            const repisa = parseInt(numeros[1]);
+            const espacio = parseInt(numeros[2]);
+
+            if (estante < 1 || estante > 11) return 'Estante debe estar entre 1 y 8';
+            if (repisa < 1 || repisa > 6) return 'Repisa debe estar entre 1 y 6';
+            if (espacio < 1 || espacio > 4) return 'Espacio debe estar entre 1 y 4';
           }
         }
       }).then((result) => {
         if (result.isConfirmed) {
-          const select = document.getElementById('ubicacion');
+          const value = result.value;
 
-          // Verificar si ya existe
-          let existe = false;
-          for (let i = 0; i < select.options.length; i++) {
-            if (select.options[i].value === result.value) {
-              existe = true;
-              break;
-            }
-          }
-
-          // Si no existe, agregarla
-          if (!existe) {
-            const newOption = new Option(result.value, result.value);
+          // Verificar nuevamente por si acaso (doble validación)
+          if (!existingOptions.includes(value)) {
+            const newOption = new Option(value, value);
             select.add(newOption);
+            select.value = value;
+          } else {
+            Swal.fire('Error', 'Esta ubicación ya existe', 'error');
+            this.value = '';
           }
-
-          // Seleccionar la nueva opción
-          select.value = result.value;
         } else {
           // Si cancela, volver a la selección por defecto
           this.value = '';
@@ -758,6 +780,13 @@
     if (/^E\d+R\d+E\d+$/.test(ubicacionValor)) {
       const partes = ubicacionValor.match(/E(\d+)R(\d+)E(\d+)/);
       ubicacionTexto = `Estante ${partes[1]}, Repisa ${partes[2]}, Espacio ${partes[3]}`;
+    } else {
+      // Si no es una abreviatura, asegurarse que sigue el formato correcto
+      const regex = /^Estante\s\d{1,2},\sRepisa\s\d{1,2},\sEspacio\s\d{1,2}$/;
+      if (!regex.test(ubicacionTexto)) {
+        Swal.fire('Error', 'El formato de ubicación no es válido', 'error');
+        return;
+      }
     }
 
     const fechaVencimiento = document.getElementById('check_vencimiento').checked ? form.fecha_vencimiento.value : null;

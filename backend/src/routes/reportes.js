@@ -69,11 +69,14 @@ router.get('/productos', asyncHandler(async (req, res) => {
         const [results] = await connection.query('CALL ReporteProductosVendidos()');
         await connection.commit();
         
-        // Mejor manejo de múltiples resultados de procedimientos almacenados
+        // Los resultados vienen en un solo array con el tipo incluido
+        const allProducts = Array.isArray(results[0]) ? results[0] : [];
+        
+        // Separar por tipo según lo que indica el procedimiento almacenado
         const responseData = {
-            topProducts: Array.isArray(results[0]) ? results[0] : [],
-            worstProducts: Array.isArray(results[1]) ? results[1] : [],
-            notSoldProducts: Array.isArray(results[2]) ? results[2] : []
+            topProducts: allProducts.filter(p => p.Tipo === 'Más Vendido'),
+            worstProducts: allProducts.filter(p => p.Tipo === 'Menos Vendido'),
+            notSoldProducts: allProducts.filter(p => p.Tipo === 'No Vendido')
         };
 
         res.json({
