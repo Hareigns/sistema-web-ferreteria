@@ -5,7 +5,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
-
 <div class="container mt-5 py-5">
   <div class="row justify-content-center">
     <div class="col-lg-10">
@@ -13,6 +12,7 @@
         <div class="card-body">
           <h3 class="text-center mb-4">Registro de Productos</h3>
           <form id="form-producto">
+            <!-- Fila 1: Código y Nombre -->
             <div class="row g-3">
               <div class="col-md-6">
                 <label for="codigo_producto" class="form-label">Código Producto</label>
@@ -24,6 +24,7 @@
               </div>
             </div>
 
+            <!-- Fila 2: Sector y Proveedor -->
             <div class="row g-3 mt-2">
               <div class="col-md-6">
                 <label for="sector" class="form-label">Sector</label>
@@ -42,6 +43,7 @@
               </div>
             </div>
 
+            <!-- Fila 3: Precio y Cantidad -->
             <div class="row g-3 mt-2">
               <div class="col-md-6">
                 <label for="precio_compra" class="form-label">Precio Compra</label>
@@ -54,16 +56,28 @@
               </div>
             </div>
 
+            <!-- Fila 4: Marca y Ubicación -->
             <div class="row g-3 mt-2">
               <div class="col-md-6">
                 <label for="marca" class="form-label">Marca</label>
                 <input type="text" id="marca" name="marca" class="form-control" required>
               </div>
               <div class="col-md-6">
+                <label for="ubicacion" class="form-label">Ubicación en Almacén</label>
+                <select id="ubicacion" name="ubicacion" class="form-select" required>
+                  <option value="" disabled selected>Seleccione una ubicación</option>
+                  <!-- Las opciones se generarán con JavaScript -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Fila 5: Fechas -->
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
                 <label for="fecha_entrada" class="form-label">Fecha Entrada</label>
                 <input type="date" id="fecha_entrada" name="fecha_entrada" class="form-control" disabled>
               </div>
-              <div class="mb-3">
+              <div class="col-md-6">
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-check">
@@ -79,38 +93,44 @@
               </div>
             </div>
 
+            <!-- Botón Agregar -->
             <div class="text-center mt-3">
               <button id="agregarProducto" type="button" class="btn-agregar">➕ Agregar a Lista</button>
+            </div>
 
-              <div class="mt-4">
-                <h5 class="text-center"
-                  style="background-color: #80c7e0; color: #fff; padding: 8px; border-radius: 5px;">
-                  Lista de Productos a Registrar</h5>
-                <table class="table table-light table-striped text-center">
-                  <thead class="table-secondary">
-                    <tr>
-                      <th>Código</th>
-                      <th>Nombre</th>
-                      <th>Sector</th>
-                      <th>Marca</th>
-                      <th>Cantidad</th>
-                      <th>Precio</th>
-                      <th>Vencimiento</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tablaProductosTemp">
-                    <!-- Aquí se agregarán dinámicamente los productos antes de guardar -->
-                  </tbody>
-                </table>
-              </div>
-              <div class="d-flex justify-content-between mt-3">
-                <button id="guardarProductos" type="button" class="btn-guardar">💾 Guardar Productos</button>
-                <button type="reset" class="btn-limpiar">Limpiar</button>
-              </div>
+            <!-- Lista Temporal -->
+            <div class="mt-4">
+              <h5 class="text-center" style="background-color: #80c7e0; color: #fff; padding: 8px; border-radius: 5px;">
+                Lista de Productos a Registrar</h5>
+              <table class="table table-light table-striped text-center">
+                <thead class="table-secondary">
+                  <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Sector</th>
+                    <th>Marca</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Vencimiento</th>
+                    <th>Ubicación</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaProductosTemp">
+                  <!-- Aquí se agregarán dinámicamente los productos antes de guardar -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Botones Guardar y Limpiar -->
+            <div class="d-flex justify-content-between mt-3">
+              <button id="guardarProductos" type="button" class="btn-guardar">💾 Guardar Productos</button>
+              <button type="reset" class="btn-limpiar">Limpiar</button>
             </div>
           </form>
         </div>
+
+        <!-- Sección Modificar Producto -->
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="text-center mb-3">Modificar Producto</h5>
@@ -133,6 +153,7 @@
   </div>
 </div>
 
+<!-- Tabla de Inventario -->
 <div class="container mt-5">
   <div class="card mb-4" style="border: 1px solid #ddd;">
     <div class="card-body text-center">
@@ -146,9 +167,10 @@
                 <th>Nombre</th>
                 <th>Sector</th>
                 <th>Marca</th>
+                <th>Ubicación</th>
                 <th>Cantidad</th>
                 <th>Precio</th>
-                <th>Fecha de Vencimiento</th>
+                <th>Vencimiento</th>
               </tr>
             </thead>
             <tbody>
@@ -161,6 +183,7 @@
   </div>
 </div>
 
+
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
@@ -170,14 +193,130 @@
   const now = new Date();
   const fechaActual = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
 
-  // Función para cargar los productos registrados con DataTable
+
+  // Generar opciones de ubicación (estante 1-6, repisa 1-6, espacio 1-6)
+  function generarOpcionesUbicacion() {
+    const select = document.getElementById('ubicacion');
+
+    // Limpiar opciones existentes (excepto la primera)
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+
+    // Generar todas las combinaciones estándar
+    for (let estante = 1; estante <= 8; estante++) {
+      for (let repisa = 1; repisa <= 6; repisa++) {
+        for (let espacio = 1; espacio <= 4; espacio++) {
+          const texto = `Estante ${estante}, Repisa ${repisa}, Espacio ${espacio}`;
+          const valor = `E${estante}R${repisa}E${espacio}`;
+          const option = new Option(texto, valor);
+          select.add(option);
+        }
+      }
+    }
+
+    // Agregar opción para ubicación personalizada
+    const customOption = new Option('-- Otra ubicación --', 'custom');
+    select.add(customOption);
+  }
+
+  // Función auxiliar para verificar si una ubicación ya existe en el select
+  function ubicacionExisteEnSelect(select, ubicacion) {
+    for (let i = 0; i < select.options.length; i++) {
+      if (select.options[i].value === ubicacion) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Modificar el evento change del select de ubicación
+  document.getElementById('ubicacion').addEventListener('change', function () {
+    if (this.value === 'custom') {
+      Swal.fire({
+        title: 'Ingresar ubicación personalizada',
+        input: 'text',
+        inputPlaceholder: 'Ej: Estante 2 Repisa 4 Espacio 2',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Debe ingresar una ubicación';
+          }
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const select = document.getElementById('ubicacion');
+
+          // Verificar si ya existe
+          let existe = false;
+          for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === result.value) {
+              existe = true;
+              break;
+            }
+          }
+
+          // Si no existe, agregarla
+          if (!existe) {
+            const newOption = new Option(result.value, result.value);
+            select.add(newOption);
+          }
+
+          // Seleccionar la nueva opción
+          select.value = result.value;
+        } else {
+          // Si cancela, volver a la selección por defecto
+          this.value = '';
+        }
+      });
+    }
+  });
+
+  // Función para cargar los productos registrados con DataTable (MODIFICADA)
   async function cargarProductos() {
     try {
       const response = await fetch("/productos/api/productos");
       const data = await response.json();
+      console.log("Datos recibidos para DataTable:", data); // Debug
+
+      if ($.fn.DataTable.isDataTable('#productosTable')) {
+        $('#productosTable').DataTable().destroy();
+      }
+
+      $('#productosTable tbody').empty();
 
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
         $('#productosTable').DataTable({
+          data: data.data,
+          columns: [
+            { data: 'Cod_Producto' },
+            { data: 'Nombre' },
+            { data: 'Sector' },
+            { data: 'Marca' },
+            {
+              data: 'Descripcion',
+              render: function (data) {
+                return data || 'Sin ubicación';
+              }
+            },
+            { data: 'Cantidad' },
+            {
+              data: 'Precio_Compra',
+              render: function (data) {
+                return data ? parseFloat(data).toFixed(2) : '0.00';
+              }
+            },
+            {
+              data: 'FechaVencimiento',
+              render: function (data) {
+                if (!data) return "N/A";
+                const fecha = new Date(data);
+                return `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}`;
+              }
+            }
+          ],
           paging: true,
           searching: true,
           ordering: true,
@@ -201,46 +340,15 @@
               "last": "Último",
               "next": "Siguiente",
               "previous": "Anterior"
-            },
-            "aria": {
-              "sortAscending": ": activar para ordenar columna ascendente",
-              "sortDescending": ": activar para ordenar columna descendente"
             }
-          },
-          data: data.data,
-          columns: [
-            { data: 'Cod_Producto', defaultContent: "Sin código" },
-            { data: 'Nombre', defaultContent: "Desconocido" },
-            { data: 'Sector', defaultContent: "No asignado" },
-            { data: 'Marca', defaultContent: "No especificada" },
-            { data: 'Cantidad', defaultContent: 0 },
-            {
-              data: 'Precio_Compra',
-              render: function (data) {
-                return data ? parseFloat(data).toFixed(2) : "0.00";
-              }
-            },
-            {
-              data: 'FechaVencimiento',
-              render: function (data) {
-                if (!data) return "N/A";
-                const fecha = new Date(data);
-                return `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear().toString().slice(-2)}`;
-              }
-            }
-          ],
-          destroy: true
+          }
         });
       } else {
+        // Mostrar tabla vacía con mensaje
         $('#productosTable').DataTable({
           data: [],
           language: {
-            "emptyTable": "No hay productos registrados",
-            "info": "Mostrando 0 a 0 de 0 productos",
-            "infoEmpty": "No hay productos registrados",
-            "infoFiltered": "(filtrado de _MAX_ productos totales)",
-            "search": "Buscar:",
-            "zeroRecords": "No se encontraron productos coincidentes"
+            "emptyTable": "No hay productos registrados"
           }
         });
       }
@@ -249,14 +357,10 @@
       $('#productosTable').DataTable({
         data: [],
         language: {
-          "emptyTable": "Error al cargar los productos",
-          "info": "Mostrando 0 a 0 de 0 productos",
-          "infoEmpty": "Error al cargar los productos",
-          "infoFiltered": "(filtrado de _MAX_ productos totales)",
-          "search": "Buscar:",
-          "zeroRecords": "Error al cargar los productos"
+          "emptyTable": "Error al cargar los productos"
         }
       });
+      Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
     }
   }
 
@@ -367,7 +471,6 @@
 
   // Función para cargar datos del producto seleccionado
   async function cargarDatosProducto(codigoProducto) {
-    // Obtener elementos de forma segura
     const getElement = (id) => document.getElementById(id) || console.error(`Elemento no encontrado: ${id}`);
 
     const elements = {
@@ -378,6 +481,7 @@
       precio_compra: getElement('precio_compra'),
       cantidad: getElement('cantidad'),
       marca: getElement('marca'),
+      ubicacion: getElement('ubicacion'),
       fecha_entrada: getElement('fecha_entrada'),
       check_vencimiento: getElement('check_vencimiento'),
       fecha_vencimiento: getElement('fecha_vencimiento'),
@@ -386,12 +490,6 @@
       guardarButton: getElement('guardarProductos')
     };
 
-    // Verificar que los elementos esenciales existan
-    if (!elements.codigo_producto || !elements.modificarButton || !elements.agregarButton) {
-      console.error('Elementos críticos no encontrados');
-      return;
-    }
-
     if (!codigoProducto) {
       elements.modificarButton.disabled = true;
       return;
@@ -399,12 +497,10 @@
 
     try {
       const response = await fetch(`/productos/api/productos/${codigoProducto}`);
-
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const data = await response.json();
+      console.log("Datos recibidos del producto:", data); // Debug
 
       if (data.success && data.data) {
         const producto = data.data;
@@ -416,15 +512,36 @@
         elements.sector.value = producto.Sector || '';
         elements.codigo_proveedor.value = producto.Cod_Proveedor || '';
         elements.precio_compra.value = producto.Precio_Compra || '';
-
-        // Guardar el valor original de la cantidad para comparación posterior
         elements.cantidad.value = producto.Cantidad || '';
         elements.cantidad.dataset.originalValue = producto.Cantidad || '';
-
-        // Mostrar la fecha de entrada actual
         elements.fecha_entrada.value = formatDateForInput(producto.Fecha_Entrada) || fechaActual;
 
-        // Manejar fecha de vencimiento
+        // Manejar la ubicación (similar a como funciona sector)
+        if (producto.Descripcion) {
+          // Verificar si la ubicación existe en las opciones
+          let ubicacionEncontrada = false;
+          for (let i = 0; i < elements.ubicacion.options.length; i++) {
+            if (elements.ubicacion.options[i].value === producto.Descripcion) {
+              elements.ubicacion.value = producto.Descripcion;
+              ubicacionEncontrada = true;
+              break;
+            }
+          }
+
+          // Si no está en las opciones, agregarla (similar a sector)
+          if (!ubicacionEncontrada) {
+            const option = document.createElement('option');
+            option.value = producto.Descripcion;
+            option.textContent = producto.Descripcion;
+            elements.ubicacion.appendChild(option);
+            elements.ubicacion.value = producto.Descripcion;
+          }
+        } else {
+          elements.ubicacion.value = '';
+        }
+
+
+        // Resto del código para manejar fechas y bloquear campos...
         if (producto.FechaVencimiento) {
           elements.check_vencimiento.checked = true;
           elements.fecha_vencimiento.disabled = false;
@@ -435,7 +552,7 @@
           elements.fecha_vencimiento.value = '';
         }
 
-        // Bloquear campos (solo permitir editar precio y cantidad)
+        // Bloquear campos no editables
         elements.codigo_producto.readOnly = true;
         elements.nombre.readOnly = true;
         elements.marca.readOnly = true;
@@ -445,32 +562,27 @@
         elements.check_vencimiento.disabled = true;
         elements.fecha_vencimiento.disabled = true;
 
-        // Habilitar solo precio y cantidad
+        // Habilitar campos editables (precio, cantidad y ubicación)
         elements.precio_compra.readOnly = false;
         elements.cantidad.readOnly = false;
+        elements.ubicacion.disabled = false;
 
-        // Cambiar visibilidad de botones (de forma segura)
-        if (elements.agregarButton) elements.agregarButton.style.display = 'none';
-        if (elements.guardarButton) elements.guardarButton.style.display = 'none';
-        if (elements.modificarButton) {
-          elements.modificarButton.disabled = false;
-          elements.modificarButton.style.display = 'block';
-        }
+        // Mostrar botón de modificación
+        elements.agregarButton.style.display = 'none';
+        elements.guardarButton.style.display = 'none';
+        elements.modificarButton.disabled = false;
+        elements.modificarButton.style.display = 'block';
       }
     } catch (error) {
       console.error('Error al cargar datos del producto:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudieron cargar los datos del producto'
-      });
+      Swal.fire('Error', 'No se pudieron cargar los datos del producto', 'error');
     }
   }
+
 
   // Función para modificar el producto
   async function modificarProducto() {
     const codigoProducto = document.getElementById('select_producto_modificar').value;
-
     if (!codigoProducto) {
       Swal.fire('Error', 'Debe seleccionar un producto', 'error');
       return;
@@ -479,34 +591,53 @@
     // Obtener los valores editables
     const precio_compra = parseFloat(document.getElementById('precio_compra').value);
     const cantidad = parseInt(document.getElementById('cantidad').value);
-    const cantidadOriginal = parseInt(document.getElementById('cantidad').dataset.originalValue) || cantidad;
+    const ubicacionValor = document.getElementById('ubicacion').value;
+    let ubicacionTexto = ubicacionValor;
 
-    // Determinar si la cantidad ha cambiado
+    // Convertir la abreviatura a texto completo si es una ubicación estándar
+    if (/^E\d+R\d+E\d+$/.test(ubicacionValor)) {
+      const partes = ubicacionValor.match(/E(\d+)R(\d+)E(\d+)/);
+      ubicacionTexto = `Estante ${partes[1]}, Repisa ${partes[2]}, Espacio ${partes[3]}`;
+    }
+
+    const cantidadOriginal = parseInt(document.getElementById('cantidad').dataset.originalValue) || cantidad;
     const cantidadModificada = cantidad !== cantidadOriginal;
 
-    // Validaciones básicas
+    // Validaciones
     if (isNaN(precio_compra)) {
       Swal.fire('Error', 'El precio debe ser un número válido', 'error');
       return;
     }
-
     if (isNaN(cantidad)) {
       Swal.fire('Error', 'La cantidad debe ser un número válido', 'error');
+      return;
+    }
+    if (!ubicacionValor) {
+      Swal.fire('Error', 'Debe seleccionar una ubicación', 'error');
       return;
     }
 
     Swal.fire({
       title: '¿Confirmar modificación?',
-      text: `¿Desea actualizar el precio a ${precio_compra.toFixed(2)} y la cantidad a ${cantidad}?${cantidadModificada ? '\nLa fecha de entrada se actualizará a hoy.' : ''}`,
+      html: `¿Desea actualizar:<br>
+                - Precio: ${precio_compra.toFixed(2)}<br>
+                - Cantidad: ${cantidad}<br>
+                - Ubicación: ${ubicacionTexto}<br>
+                ${cantidadModificada ? '<br>La fecha de entrada se actualizará a hoy.' : ''}`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
       confirmButtonText: 'Sí, modificar',
       cancelButtonText: 'Cancelar'
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
+          console.log("Enviando datos:", {
+            precio_compra,
+            cantidad,
+            descripcion: ubicacionTexto, // Enviamos la versión completa
+            actualizar_fecha: cantidadModificada
+          });
+
           const response = await fetch(`/productos/api/productos/${codigoProducto}`, {
             method: 'PUT',
             headers: {
@@ -515,11 +646,15 @@
             body: JSON.stringify({
               precio_compra: precio_compra,
               cantidad: cantidad,
-              actualizar_fecha: cantidadModificada // Enviamos este flag al backend
+              descripcion: ubicacionTexto, // Guardamos la versión completa
+              actualizar_fecha: cantidadModificada
             })
           });
 
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
           const result = await response.json();
+          console.log("Respuesta del servidor:", result);
 
           if (result.success) {
             Swal.fire('Éxito', 'Producto modificado correctamente', 'success')
@@ -529,11 +664,11 @@
                 limpiarFormularioProducto();
               });
           } else {
-            Swal.fire('Error', result.message || 'No se pudo modificar el producto', 'error');
+            throw new Error(result.message || 'No se pudo modificar el producto');
           }
         } catch (error) {
           console.error('Error al modificar producto:', error);
-          Swal.fire('Error', 'Error al conectar con el servidor', 'error');
+          Swal.fire('Error', error.message || 'Error al conectar con el servidor', 'error');
         }
       }
     });
@@ -580,6 +715,12 @@
       fechaVencimiento.disabled = true;
     }
 
+    const ubicacion = document.getElementById('ubicacion');
+    if (ubicacion) {
+      ubicacion.disabled = false;
+      ubicacion.value = '';
+    }
+
     // 4. Manejar el select de modificación
     const selectModificar = document.getElementById('select_producto_modificar');
     if (selectModificar) {
@@ -604,12 +745,21 @@
     }
   }
 
-  // Función para agregar producto a la lista temporal
+  // Función para agregar producto a la lista temporal (MODIFICADA)
   function agregarProductoTemporal() {
     const form = document.getElementById('form-producto');
     const codigoProducto = form.codigo_producto.value;
     const nombre = form.nombre.value;
     const marca = form.marca.value;
+    const ubicacionValor = form.ubicacion.value;
+    let ubicacionTexto = ubicacionValor;
+
+    // Convertir la abreviatura a texto completo si es una ubicación estándar
+    if (/^E\d+R\d+E\d+$/.test(ubicacionValor)) {
+      const partes = ubicacionValor.match(/E(\d+)R(\d+)E(\d+)/);
+      ubicacionTexto = `Estante ${partes[1]}, Repisa ${partes[2]}, Espacio ${partes[3]}`;
+    }
+
     const fechaVencimiento = document.getElementById('check_vencimiento').checked ? form.fecha_vencimiento.value : null;
     const sector = form.sector.value;
     const codigoProveedor = form.codigo_proveedor.value;
@@ -618,7 +768,7 @@
     const fechaEntrada = form.fecha_entrada.value;
 
     // Validación de campos obligatorios
-    if (!codigoProducto || !nombre || !marca || !sector || !codigoProveedor || isNaN(precioCompra) || isNaN(cantidad)) {
+    if (!codigoProducto || !nombre || !marca || !ubicacionValor || !sector || !codigoProveedor || isNaN(precioCompra) || isNaN(cantidad)) {
       Swal.fire({
         icon: 'warning',
         title: 'Campos incompletos',
@@ -627,11 +777,13 @@
       return;
     }
 
-    // Crear objeto producto
+    // Crear objeto producto con descripción completa
     const producto = {
       codigo_producto: codigoProducto,
       nombre: nombre,
       marca: marca,
+      descripcion: ubicacionTexto, // Guardamos la versión completa
+      ubicacion: ubicacionValor, // Guardamos también la abreviatura para mostrar en tabla temporal
       fecha_vencimiento: fechaVencimiento,
       sector: sector,
       codigo_proveedor: codigoProveedor,
@@ -657,7 +809,7 @@
     document.getElementById('fecha_vencimiento').disabled = true;
   }
 
-  // Función para actualizar la tabla temporal
+  // Función para actualizar la tabla temporal (MODIFICADA)
   function actualizarTablaTemporal() {
     const tbody = document.getElementById('tablaProductosTemp');
     tbody.innerHTML = '';
@@ -673,14 +825,15 @@
       }
 
       tr.innerHTML = `
-          <td>${producto.codigo_producto}</td>
-          <td>${producto.nombre}</td>
-          <td>${producto.sector}</td>
-          <td>${producto.marca}</td>
-          <td>${producto.cantidad}</td>
-          <td>${producto.precio_compra.toFixed(2)}</td>
-          <td>${fechaVencimiento}</td>
-          <td><button class="btn btn-danger btn-sm eliminar-producto" data-index="${index}">❌ Eliminar</button></td>
+            <td>${producto.codigo_producto}</td>
+            <td>${producto.nombre}</td>
+            <td>${producto.sector}</td>
+            <td>${producto.marca}</td>
+            <td>${producto.cantidad}</td>
+            <td>${producto.precio_compra.toFixed(2)}</td>
+            <td>${fechaVencimiento}</td>
+            <td>${producto.ubicacion || 'N/A'}</td> <!-- Mostramos la abreviatura en la tabla temporal -->
+            <td><button class="btn btn-danger btn-sm eliminar-producto" data-index="${index}">❌ Eliminar</button></td>
         `;
 
       tbody.appendChild(tr);
@@ -791,9 +944,12 @@
     document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
     document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
 
-    // Inicializar DataTable
+    // Inicializar DataTable y select de productos
     cargarProductos();
     cargarSelectProductos();
+
+    // Generar opciones de ubicación (ahora incluye cargar ubicaciones existentes)
+    generarOpcionesUbicacion();
 
     // Configuración inicial de botones de modificación
     document.getElementById('modificarProductoButton').style.display = 'none';

@@ -40,12 +40,15 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    for (const producto of productos) {
-      const { 
-        codigo_producto, nombre, marca, fecha_vencimiento, 
-        sector, codigo_proveedor, precio_compra, 
-        cantidad, fecha_entrada 
-      } = producto;
+     for (const producto of productos) {
+        const { 
+            codigo_producto, nombre, marca, fecha_vencimiento, 
+            sector, codigo_proveedor, precio_compra, 
+            cantidad, fecha_entrada, ubicacion, descripcion 
+        } = producto;
+
+        // Usar ubicacion si descripcion no está definida
+        const descripcionFinal = descripcion || ubicacion || null;
 
       if (!codigo_producto || !nombre || !codigo_proveedor) {
         throw new Error("Producto con datos incompletos");
@@ -64,10 +67,10 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
       }
 
       await connection.query(
-        `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector)
-         VALUES (?, ?, ?, ?, ?)`,
-        [codigo_producto, nombre, marca, fechaVencimientoValida, sector]
-      );
+            `INSERT INTO Producto (Cod_Producto, Nombre, Marca, FechaVencimiento, Sector, Descripcion)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [codigo_producto, nombre, marca, fechaVencimientoValida, sector, descripcionFinal]
+        );
 
       await connection.query(
         `INSERT INTO ProveProduct (Cod_Proveedor, Cod_Producto, Fecha_Entrada, Precio, Cantidad)
@@ -98,11 +101,12 @@ router.get("/api/productos", isLoggedIn, async (req, res) => {
         p.Marca, 
         p.FechaVencimiento, 
         p.Sector, 
+        p.Descripcion,
         pp.Precio AS Precio_Compra, 
         pp.Cantidad
       FROM Producto p
       JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
-      ORDER BY p.Cod_Producto ASC  -- Ordenar por código de producto ascendente
+      ORDER BY p.Cod_Producto ASC
     `);
 
     res.json({ success: true, data: productos });
@@ -125,6 +129,7 @@ router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
         p.Marca, 
         p.FechaVencimiento, 
         p.Sector, 
+        p.Descripcion,
         pp.Precio AS Precio_Compra, 
         pp.Cantidad,
         pp.Fecha_Entrada,
@@ -157,7 +162,7 @@ router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
 // Ruta para actualizar un producto
 router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     const { codigo } = req.params;
-    const { precio_compra, cantidad, actualizar_fecha } = req.body;
+    const { precio_compra, cantidad, descripcion, actualizar_fecha } = req.body;
 
     // Validaciones mínimas
     if (typeof precio_compra !== 'number' || typeof cantidad !== 'number') {
@@ -172,7 +177,15 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
         connection = await pool.getConnection();
         await connection.beginTransaction();
 
-        // Si la cantidad cambió y actualizar_fecha es true, actualizamos la fecha
+        // Actualizar descripción (ubicación) en la tabla Producto
+        await connection.query(
+            `UPDATE Producto
+             SET Descripcion = ?
+             WHERE Cod_Producto = ?`,
+            [descripcion, codigo]
+        );
+
+        // Actualizar precio y cantidad (y fecha si es necesario)
         if (actualizar_fecha) {
             await connection.query(
                 `UPDATE ProveProduct
@@ -181,7 +194,6 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
                 [precio_compra, cantidad, codigo]
             );
         } else {
-            // Solo actualizamos precio y cantidad
             await connection.query(
                 `UPDATE ProveProduct
                  SET Precio = ?, Cantidad = ?
@@ -207,6 +219,24 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
     }
 });
 
+router.get("/api/ubicaciones", isLoggedIn, async (req, res) => {
+    try {
+        const [ubicaciones] = await pool.query(
+            "SELECT DISTINCT Descripcion FROM Producto WHERE Descripcion IS NOT NULL AND Descripcion != ''"
+        );
+        
+        res.json({
+            success: true,
+            data: ubicaciones.map(u => u.Descripcion)
+        });
+    } catch (error) {
+        console.error("Error al obtener ubicaciones:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error al obtener ubicaciones"
+        });
+    }
+});
 
 // Ruta para obtener todos los productos
 router.get("/api/productos", isLoggedIn, async (req, res) => {

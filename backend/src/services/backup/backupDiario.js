@@ -8,8 +8,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BACKUP_DIR = path.join(__dirname, '../../../backups');
 
 export async function ejecutarBackup() {
-    const DATE = new Date().toISOString().split('T')[0];
-    const BACKUP_FILE = path.join(BACKUP_DIR, `backup_completo_${DATE}.sql`);
+    const now = new Date();
+    const fechaActual = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+    const BACKUP_FILE = path.join(BACKUP_DIR, `backup_completo_${fechaActual}.sql`);
 
     // Crear directorio si no existe
     if (!fs.existsSync(BACKUP_DIR)) {

@@ -234,8 +234,6 @@
                         const fechaCell = row.getCell(6); // Columna F (Fecha_Venta)
                         fechaCell.numFmt = 'd/m/yyyy'; // Formato exacto que deseas
 
-                        // Si persisten problemas, usar esto como alternativa:
-                        // fechaCell.value = { text: item.Fecha_Venta }; // Tratar como texto puro
 
                         row.eachCell(cell => {
                             cell.border = {
@@ -407,11 +405,12 @@
 
                     // Descargar archivo
                     const buffer = await workbook.xlsx.writeBuffer();
+                    const now = new Date();
                     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `reporte_productos_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                    a.download = `reporte_productos_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);

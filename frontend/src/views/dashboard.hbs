@@ -37,7 +37,7 @@
       <!-- Resumen Estadístico -->
       <div class="row mb-4">
         <div class="col-md-3">
-          <div class="card bg-success text-white shadow">
+          <div class="card shadow" style="background-color: #1e8449; color: white;">
             <div class="card-body">
               <h5 class="card-title">Ventas Totales</h5>
               <p class="card-text h4" id="ventas-totales">C$0.00</p>
@@ -45,7 +45,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card bg-info text-white shadow">
+          <div class="card shadow" style="background-color: #2874a6; color: white;">
             <div class="card-body">
               <h5 class="card-title">Total de Ventas</h5>
               <p class="card-text h4" id="total-ventas">0</p>
@@ -53,7 +53,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card bg-warning text-white shadow">
+          <div class="card shadow" style="background-color: #ff6016; color: white;">
             <div class="card-body">
               <h5 class="card-title">Empleados Activos</h5>
               <p class="card-text h4" id="empleados-activos">0</p>
@@ -61,7 +61,7 @@
           </div>
         </div>
         <div class="col-md-3">
-          <div class="card bg-danger text-white shadow">
+          <div class="card shadow" style="background-color: #cf4334; color: white;">
             <div class="card-body">
               <h5 class="card-title">Empleado Destacado</h5>
               <p class="card-text h4" id="empleado-destacado">N/A</p>
@@ -157,8 +157,8 @@
           datasets: [{
             label: 'Ventas Diarias (C$)',
             data: data.ventasDiarias.map(v => v.total),
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(41, 128, 185, 0.9)', // Azul más oscuro
+            borderColor: 'rgba(41, 128, 185, 1)',
             borderWidth: 1
           }]
         },
@@ -192,10 +192,21 @@
     if (data.ventasEmpleados && data.ventasEmpleados.length > 0) {
       const empleadosCtx = document.getElementById('empleadosChart').getContext('2d');
 
-      // Generar colores dinámicamente
+      // Paleta de colores oscuros predefinida
+      const darkColors = [
+        'rgba(192, 57, 43, 0.9)',   // Rojo oscuro
+        'rgba(41, 128, 185, 0.9)',  // Azul oscuro
+        'rgba(39, 174, 96, 0.9)',   // Verde oscuro
+        'rgba(142, 68, 173, 0.9)',  // Morado oscuro
+        'rgba(243, 156, 18, 0.9)',   // Naranja oscuro
+        'rgba(44, 62, 80, 0.9)',     // Azul muy oscuro
+        'rgba(211, 84, 0, 0.9)',     // Rojo-naranja oscuro
+        'rgba(26, 188, 156, 0.9)'    // Verde azulado oscuro
+      ];
+
+      // Generar colores de la paleta, repitiendo si hay más empleados que colores
       const backgroundColors = data.ventasEmpleados.map((_, i) => {
-        const hue = (i * 360 / data.ventasEmpleados.length) % 360;
-        return `hsl(${hue}, 70%, 60%)`;
+        return darkColors[i % darkColors.length];
       });
 
       const empleadosChart = new Chart(empleadosCtx, {
@@ -205,6 +216,7 @@
           datasets: [{
             data: data.ventasEmpleados.map(e => e.total),
             backgroundColor: backgroundColors,
+            borderColor: '#fff', // Borde blanco para mejor contraste
             borderWidth: 1
           }]
         },
@@ -235,7 +247,7 @@
       const leyendaContainer = document.getElementById('leyenda-empleados');
       leyendaContainer.innerHTML = data.ventasEmpleados.map((empleado, index) => {
         return `
-          <span class="badge badge-pill mr-2 mb-2" style="background-color:${backgroundColors[index]}; color: #333;">
+          <span class="badge badge-pill mr-2 mb-2" style="background-color:${backgroundColors[index]}; color: #000000; font-weight: bold;">
             <i class="fas fa-circle mr-1" style="color:${backgroundColors[index]}"></i>
             ${empleado.nombre}
           </span>

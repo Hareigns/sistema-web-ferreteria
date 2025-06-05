@@ -84,6 +84,11 @@ body {
   margin-right: 8px;
 }
 
+.btn-home {
+  border: 2px solid white;
+  background-color: transparent;
+}
+
 .btn-login {
   border: 2px solid white;
   background-color: transparent;

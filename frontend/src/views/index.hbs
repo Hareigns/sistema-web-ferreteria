@@ -54,8 +54,8 @@
 
     <div class="collapse navbar-collapse h-100" id="navbarNav">
       <ul class="navbar-nav ms-auto h-100">
-        <li class="nav-item d-flex align-items-center h-100">
-          <a class="nav-link nav-link-custom active" href="/">
+        <li class="nav-item ms-lg-3 d-flex align-items-center h-100">
+          <a class="nav-link nav-link-custom btn-home" href="/">
             <i class="fas fa-home me-1"></i> Inicio
           </a>
         </li>
@@ -110,32 +110,32 @@
     <h2 class="text-center section-title">Productos Destacados</h2>
 
     {{#hasProducts productosPorSector}}
-      {{#each productosPorSector}}
-        <div class="mb-5">
-          <h3 class="sector-title mb-4">{{@key}}</h3>
-          <div class="row">
-            {{#each this}}
-              <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card product-card h-100 border-0 shadow-sm">
-                  <div class="card-body text-center p-4">
-                    <div class="product-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3"
-                      style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                      <i class="fas {{this.Icono}}" style="font-size: 1.8rem;"></i>
-                    </div>
-                    <h5 class="card-title product-title">{{this.Nombre_Producto}}</h5>
-                    <p class="card-text text-muted small">Vendidos: {{this.CantidadVendida}} unidades</p>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                      <span class="product-price fw-bold">{{this.PrecioPromedio}}</span>
-                    </div>
-                  </div>
-                </div>
+    {{#each productosPorSector}}
+    <div class="mb-5">
+      <h3 class="sector-title mb-4">{{@key}}</h3>
+      <div class="row">
+        {{#each this}}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card product-card h-100 border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+              <div class="product-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3"
+                style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas {{this.Icono}}" style="font-size: 1.8rem;"></i>
               </div>
-            {{/each}}
+              <h5 class="card-title product-title">{{this.Nombre_Producto}}</h5>
+              <p class="card-text text-muted small">Vendidos: {{this.CantidadVendida}} unidades</p>
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <span class="product-price fw-bold">{{this.PrecioPromedio}}</span>
+              </div>
+            </div>
           </div>
         </div>
-      {{/each}}
+        {{/each}}
+      </div>
+    </div>
+    {{/each}}
     {{else}}
-      <div class="alert alert-info">No hay productos destacados disponibles.</div>
+    <div class="alert alert-info">No hay productos destacados disponibles.</div>
     {{/hasProducts}}
   </div>
 </section>
