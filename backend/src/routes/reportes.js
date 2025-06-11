@@ -121,6 +121,48 @@ router.get('/productos', asyncHandler(async (req, res) => {
     }
 }));
 
+// Ruta para el reporte de productos detallado
+router.get('/productos-detallado', asyncHandler(async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const [results] = await connection.query(`
+            SELECT 
+                p.Cod_Producto,
+                p.Nombre,
+                p.Marca,
+                CONCAT(pr.Nombre, ' ', pr.Apellido) AS NombreProveedor,
+                p.Sector,
+                pp.Fecha_Entrada,
+                pp.Cantidad,
+                pp.Precio,
+                p.FechaVencimiento
+            FROM Producto p
+            JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
+            JOIN Proveedor pr ON pp.Cod_Proveedor = pr.Cod_Proveedor
+            WHERE pr.Estado = 'Activo'
+            ORDER BY p.Nombre, pp.Fecha_Entrada
+        `);
+        
+        res.json({
+            success: true,
+            data: results,
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                count: results.length
+            }
+        });
+    } catch (error) {
+        console.error('Error en /reportes/productos-detallado:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener el reporte detallado de productos'
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+}));
+
 // Middleware para manejo de errores no capturados
 router.use((err, req, res, next) => {
     console.error('Error no manejado:', err);

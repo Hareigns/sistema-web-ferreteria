@@ -75,3 +75,20 @@ body {
     color: white;
     flex-shrink: 0;
 }
+
+/* Nuevos estilos para el dropdown del navbar */
+        .navbar .dropdown-menu {
+            position: absolute !important;
+            right: 0 !important;
+            left: auto !important;
+            z-index: 1001 !important;
+            display: none;
+        }
+        
+        .navbar .dropdown-menu.show {
+            display: block !important;
+        }
+        
+        div.dataTables_wrapper {
+            z-index: 0 !important;
+        }

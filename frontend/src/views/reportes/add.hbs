@@ -22,77 +22,106 @@
                             <div class="card-header bg-primary text-white">
                                 <h2 class="h5 mb-0">Reporte de Ventas</h2>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body pb-2"> <!-- Agregado pb-2 para reducir padding inferior -->
                                 <div class="list-group list-group-flush">
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario" checked>
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario"
+                                                checked>
                                             <label class="form-check-label" for="diario">Diario</label>
                                         </div>
                                         <div class="mt-2" id="fechaDiario">
-                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el día:</label>
-                                            <input type="date" class="form-control form-control-sm" id="fechaDiarioInput" value="<?php echo date('Y-m-d'); ?>">
+                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el
+                                                día:</label>
+                                            <input type="date" class="form-control form-control-sm"
+                                                id="fechaDiarioInput">
                                         </div>
                                     </div>
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="semanal">
+                                            <input class="form-check-input" type="radio" name="filtroVentas"
+                                                id="semanal">
                                             <label class="form-check-label" for="semanal">Semanal</label>
                                         </div>
                                         <div class="mt-2 d-none" id="fechaSemanal">
-                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la semana:</label>
-                                            <input type="week" class="form-control form-control-sm" id="fechaSemanalInput" value="<?php echo date('Y-\WW'); ?>">
+                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la
+                                                semana:</label>
+                                            <input type="week" class="form-control form-control-sm"
+                                                id="fechaSemanalInput">
                                         </div>
                                     </div>
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="mensual">
+                                            <input class="form-check-input" type="radio" name="filtroVentas"
+                                                id="mensual">
                                             <label class="form-check-label" for="mensual">Mensual</label>
                                         </div>
                                         <div class="mt-2 d-none" id="fechaMensual">
-                                            <label for="fechaMensualInput" class="form-label small">Seleccione el mes:</label>
-                                            <input type="month" class="form-control form-control-sm" id="fechaMensualInput" value="<?php echo date('Y-m'); ?>">
+                                            <label for="fechaMensualInput" class="form-label small">Seleccione el
+                                                mes:</label>
+                                            <input type="month" class="form-control form-control-sm"
+                                                id="fechaMensualInput">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-footer bg-transparent">
-                                <button id="exportarVentas" class="btn btn-sm btn-outline-primary">
+                            <div class="card-footer bg-transparent py-2">
+                                <!-- Agregado py-2 para reducir espacio vertical -->
+                                <button id="exportarVentas" class="btn btn-sm btn-outline-primary w-100">
+                                    <!-- Agregado w-100 -->
                                     <i class="fas fa-download me-1"></i>Exportar selección
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Reporte de Productos -->
+                    <!-- Reporte Combinado de Productos -->
                     <div class="col-md-6 mb-4">
                         <div class="card h-100">
                             <div class="card-header bg-success text-white">
                                 <h2 class="h5 mb-0">Reporte de Productos</h2>
                             </div>
+
                             <div class="card-body">
-                                <div class="list-group list-group-flush">
-                                    <div class="list-group-item d-flex align-items-center">
-                                        <span class="badge bg-success me-3">+</span>
-                                        <span>Producto + vendido</span>
-                                        <span class="badge bg-primary ms-auto">Top 5</span>
+                                <!-- Sección de Productos Vendidos -->
+                                <div class="mb-4 pb-3 border-bottom">
+                                    <h5 class="text-center mb-3">Productos Vendidos</h5>
+                                    <div class="list-group list-group-flush mb-3">
+                                        <div class="list-group-item d-flex align-items-center">
+                                            <span class="badge bg-success me-3">+</span>
+                                            <span>Producto + vendido</span>
+                                            <span class="badge bg-primary ms-auto">Top 5</span>
+                                        </div>
+                                        <div class="list-group-item d-flex align-items-center">
+                                            <span class="badge bg-danger me-3">-</span>
+                                            <span>Producto - vendido</span>
+                                            <span class="badge bg-primary ms-auto">Peores 5</span>
+                                        </div>
+                                        <div class="list-group-item d-flex align-items-center">
+                                            <span class="badge bg-warning me-3">○</span>
+                                            <span>Producto no vendido</span>
+                                            <span class="badge bg-primary ms-auto">Sin ventas</span>
+                                        </div>
                                     </div>
-                                    <div class="list-group-item d-flex align-items-center">
-                                        <span class="badge bg-danger me-3">-</span>
-                                        <span>Producto - vendido</span>
-                                        <span class="badge bg-primary ms-auto">Peores 5</span>
-                                    </div>
-                                    <div class="list-group-item d-flex align-items-center">
-                                        <span class="badge bg-warning me-3">○</span>
-                                        <span>Producto no vendido</span>
-                                        <span class="badge bg-primary ms-auto">Sin ventas</span>
+                                    <div class="text-center">
+                                        <button id="exportarProductos" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-file-earmark-excel me-1"></i> Exportar Vendidos
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <button id="exportarProductos" class="btn btn-sm btn-outline-success">
-                                    <i class="bi bi-file-earmark-excel"></i> Exportar reporte
-                                </button>
+
+                                <!-- Sección de Productos Adquiridos -->
+                                <div class="pt-3">
+                                    <h5 class="text-center mb-3">Productos Adquiridos</h5>
+                                    <p class="card-text text-center small mb-3">Listado completo de productos con
+                                        proveedores y fechas</p>
+                                    <div class="text-center">
+                                        <button id="exportarProductosDetallado"
+                                            class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-file-export me-1"></i> Exportar Adquiridos
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -153,12 +182,12 @@
             getSelectedFilter: () => {
                 const selectedRadio = document.querySelector('input[name="filtroVentas"]:checked');
                 if (!selectedRadio) return null;
-                
+
                 return {
                     tipo: selectedRadio.id,
                     fecha: selectedRadio.id === 'diario' ? document.getElementById('fechaDiarioInput').value :
-                           selectedRadio.id === 'semanal' ? document.getElementById('fechaSemanalInput').value :
-                           document.getElementById('fechaMensualInput').value
+                        selectedRadio.id === 'semanal' ? document.getElementById('fechaSemanalInput').value :
+                            document.getElementById('fechaMensualInput').value
                 };
             },
 
@@ -311,7 +340,7 @@
             generateReport: async () => {
                 try {
                     const filterInfo = reportHandlers.ventas.getSelectedFilter();
-                    
+
                     if (!filterInfo || !filterInfo.fecha) {
                         await reportUtils.showAlert('warning', 'Datos requeridos', 'Por favor selecciona un filtro y una fecha');
                         return;
@@ -320,7 +349,7 @@
                     const data = await reportUtils.fetchData(
                         reportConfig.ventas.endpoint,
                         'POST',
-                        { 
+                        {
                             filtro: filterInfo.tipo,
                             fecha: filterInfo.fecha
                         }
@@ -381,11 +410,11 @@
 
                     worksheet.eachRow(row => {
                         row.eachCell(cell => {
-                            cell.border = { 
-                                top: { style: 'thin' }, 
-                                left: { style: 'thin' }, 
-                                bottom: { style: 'thin' }, 
-                                right: { style: 'thin' } 
+                            cell.border = {
+                                top: { style: 'thin' },
+                                left: { style: 'thin' },
+                                bottom: { style: 'thin' },
+                                right: { style: 'thin' }
                             };
                         });
                     });
@@ -429,6 +458,160 @@
                     await reportUtils.handleError(error, 'generación de reporte de productos');
                 }
             }
+        },
+
+        productosDetallado: {
+            exportToExcel: async (data) => {
+                try {
+                    // Ordenar los datos por fecha de entrada (más reciente primero)
+                    const datosOrdenados = [...data].sort((a, b) => {
+                        const fechaA = new Date(a.Fecha_Entrada);
+                        const fechaB = new Date(b.Fecha_Entrada);
+                        return fechaB - fechaA; // Orden descendente
+                    });
+
+                    const ExcelJS = window.ExcelJS;
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('Productos Detallados');
+
+                    // Configurar columnas (se mantiene igual)
+                    worksheet.columns = [
+                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                        { header: 'Nombre', key: 'Nombre', width: 25 },
+                        { header: 'Marca', key: 'Marca', width: 20 },
+                        { header: 'Proveedor', key: 'NombreProveedor', width: 25 },
+                        { header: 'Sector', key: 'Sector', width: 20 },
+                        { header: 'Fecha Entrada', key: 'Fecha_Entrada', width: 15 },
+                        { header: 'Cantidad', key: 'Cantidad', width: 12 },
+                        { header: 'Precio', key: 'Precio', width: 15, style: { numFmt: '#,##0.00' } },
+                        { header: 'Fecha Vencimiento', key: 'FechaVencimiento', width: 18 }
+                    ];
+
+                    // Estilo para encabezados
+                    const headerRow = worksheet.getRow(1);
+                    headerRow.eachCell(cell => {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF4F81BD' }
+                        };
+                        cell.font = {
+                            bold: true,
+                            color: { argb: 'FFFFFFFF' },
+                            size: 12
+                        };
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    });
+
+                    // Función para formatear fechas
+                    const formatDate = (dateString) => {
+                        if (!dateString) return 'N/A';
+
+                        const date = new Date(dateString);
+                        if (isNaN(date.getTime())) return 'N/A';
+
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                        const year = date.getFullYear();
+
+                        return `${day}/${month}/${year}`;
+                    };
+
+                    // Agregar datos
+                    datosOrdenados.forEach(item => {
+                        const rowData = {
+                            Cod_Producto: item.Cod_Producto,
+                            Nombre: item.Nombre,
+                            Marca: item.Marca,
+                            NombreProveedor: item.NombreProveedor,
+                            Sector: item.Sector,
+                            Fecha_Entrada: formatDate(item.Fecha_Entrada),
+                            Cantidad: item.Cantidad,
+                            Precio: item.Precio,
+                            FechaVencimiento: formatDate(item.FechaVencimiento)
+                        };
+
+                        const row = worksheet.addRow(rowData);
+
+                        // Formatear celda de precio
+                        const precioCell = row.getCell('Precio');
+                        precioCell.numFmt = '#,##0.00';
+
+                        // Bordes para todas las celdas
+                        row.eachCell(cell => {
+                            cell.border = {
+                                top: { style: 'thin' },
+                                left: { style: 'thin' },
+                                bottom: { style: 'thin' },
+                                right: { style: 'thin' }
+                            };
+                        });
+                    });
+
+                    // Autoajustar columnas
+                    worksheet.columns.forEach(column => {
+                        let maxLength = 0;
+                        column.eachCell({ includeEmpty: true }, cell => {
+                            let columnLength = cell.value ? cell.value.toString().length : 0;
+                            if (columnLength > maxLength) {
+                                maxLength = columnLength;
+                            }
+                        });
+                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                    });
+
+                    // Generar buffer y descargar
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    });
+                    const url = URL.createObjectURL(blob);
+
+                    // Crear enlace y simular click
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reporte_productos_detallados_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+
+                    // Limpiar
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+
+                } catch (error) {
+                    console.error('Error detallado al exportar:', error);
+                    throw new Error(`Error al exportar Excel: ${error.message}`);
+                }
+            },
+
+            generateReport: async () => {
+                try {
+                    const response = await reportUtils.fetchData('/reportes/productos-detallado');
+
+                    if (!response.success || !response.data) {
+                        throw new Error('Respuesta del servidor inválida');
+                    }
+
+                    if (response.data.length === 0) {
+                        await reportUtils.showAlert('info', 'Sin datos', 'No hay productos en el reporte.');
+                        return;
+                    }
+
+                    await reportHandlers.productosDetallado.exportToExcel(response.data);
+                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
+
+                } catch (error) {
+                    await reportUtils.handleError(error, 'generación de reporte de productos detallado');
+                }
+            }
         }
     };
 
@@ -437,14 +620,15 @@
         // Asignar eventos
         document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
         document.getElementById('exportarProductos').addEventListener('click', reportHandlers.productos.generateReport);
+        document.getElementById('exportarProductosDetallado').addEventListener('click', reportHandlers.productosDetallado.generateReport);
 
         // Mostrar/ocultar campos de fecha según el filtro seleccionado
         document.querySelectorAll('input[name="filtroVentas"]').forEach(radio => {
-            radio.addEventListener('change', function() {
+            radio.addEventListener('change', function () {
                 document.getElementById('fechaDiario').classList.add('d-none');
                 document.getElementById('fechaSemanal').classList.add('d-none');
                 document.getElementById('fechaMensual').classList.add('d-none');
-                
+
                 if (this.id === 'diario') {
                     document.getElementById('fechaDiario').classList.remove('d-none');
                 } else if (this.id === 'semanal') {
@@ -457,5 +641,35 @@
 
         // Inicializar con el filtro diario visible
         document.getElementById('fechaDiario').classList.remove('d-none');
+    });
+</script>
+
+<script>
+    // Solución definitiva para el dropdown del navbar
+    document.addEventListener('DOMContentLoaded', function () {
+        // Manejar clicks en el dropdown manualmente
+        document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                var menu = this.nextElementSibling;
+                menu.classList.toggle('show');
+            });
+        });
+
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(function (menu) {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        // Reinicializar dropdowns después de DataTables
+        if ($.fn.DataTable.isDataTable('#empleadosTable')) {
+            $('#empleadosTable').on('init.dt', function () {
+                new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
+            });
+        }
     });
 </script>
