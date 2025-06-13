@@ -15,6 +15,56 @@ body {
   line-height: 1.6;
 }
 
+/* Estilos para el menú desplegable de secciones */
+.dropdown-center {
+  display: inline-block;
+}
+
+.top-bar .dropdown-menu {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 10px 0;
+  margin-top: 10px;
+  border-left: 4px solid var(--accent-color);
+  background-color: var(--text-dark);
+}
+
+.top-bar .dropdown-item {
+  color: white;
+  padding: 8px 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.top-bar .dropdown-item:hover {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: var(--accent-color);
+  padding-left: 20px;
+}
+
+.top-bar .dropdown-item i {
+  width: 20px;
+  text-align: center;
+}
+
+.top-bar .dropdown-toggle::after {
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+.top-bar .dropdown-toggle {
+  background: none;
+  border: none;
+  color: white;
+  padding: 0;
+  margin-right: 25px;
+}
+
+.top-bar .dropdown-toggle:hover {
+  color: var(--accent-color);
+}
+
 /* Barra de navegación */
 .navbar-custom {
   background-color: var(--primary-color);
@@ -43,6 +93,10 @@ body {
 
 .navbar-brand-custom:hover img {
   transform: scale(1.05);
+}
+
+.navbar-custom.sticky-top {
+  height: 100px; /* Ajusta según necesidad */
 }
 
 .brand-text {
@@ -336,3 +390,4 @@ footer {
     margin: 1.5rem 0;
   }
 }
+

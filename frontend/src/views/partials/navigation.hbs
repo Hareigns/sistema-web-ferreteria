@@ -17,15 +17,19 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <div class="navbar-nav ms-auto">
+        {{#if esAdmin}}
         <a class="nav-link" href="/proveedores/add">
           <img src="/images/iconperson.webp" alt="Proveedores">
           Proveedores
         </a>
+        {{/if}}
 
+        {{#if esAdmin}}
         <a class="nav-link" href="/productos/add">
           <img src="/images/iconproduct.webp" alt="Productos">
           Productos
         </a>
+        {{/if}}
 
         <a class="nav-link" href="/ventas/add">
           <img src="/images/iconshop.webp" alt="Ventas">
