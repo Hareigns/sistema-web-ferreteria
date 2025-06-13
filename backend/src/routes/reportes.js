@@ -209,6 +209,75 @@ router.get('/ganancias', asyncHandler(async (req, res) => {
     }
 }));
 
+// Ruta para obtener lista de empleados
+router.get('/empleados', asyncHandler(async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const [results] = await connection.query(`
+            SELECT Cod_Empleado, Nombre, Apellido 
+            FROM Empleado 
+            WHERE Estado = 'Activo'
+            ORDER BY Nombre, Apellido
+        `);
+        
+        res.json({
+            success: true,
+            data: results
+        });
+    } catch (error) {
+        console.error('Error en /reportes/empleados:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener la lista de empleados'
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+}));
+
+// Ruta para ventas por empleado
+router.post('/ventas-empleado', asyncHandler(async (req, res) => {
+    const { filtro, fecha, empleado_id } = req.body;
+    
+    if (!filtro || !VALID_FILTERS.includes(filtro)) {
+        return res.status(400).json({ 
+            success: false, 
+            message: `Parámetro "filtro" inválido. Valores aceptados: ${VALID_FILTERS.join(', ')}` 
+        });
+    }
+
+    if (!fecha || !empleado_id) {
+        return res.status(400).json({ 
+            success: false, 
+            message: `Parámetros "fecha" y "empleado_id" son requeridos` 
+        });
+    }
+
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+        
+        const [results] = await connection.query('CALL sp_reporte_ventas_empleado(?, ?, ?)', [filtro, fecha, empleado_id]);
+        await connection.commit();
+        
+        const data = Array.isArray(results[0]) ? results[0] : [];
+        res.json(data);
+        
+    } catch (error) {
+        if (connection) await connection.rollback();
+        console.error('Error en /reportes/ventas-empleado:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: DEFAULT_ERROR_MESSAGE,
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+}));
+
 
 // Middleware para manejo de errores no capturados
 router.use((err, req, res, next) => {

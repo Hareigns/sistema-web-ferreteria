@@ -5,7 +5,7 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <div class="card shadow-lg p-4">
                 <div class="card-body">
                     <!-- Formulario para generar reportes -->
@@ -134,10 +134,37 @@
                             <div class="card-body">
                                 <p class="card-text text-center small mb-3">Listado completo de productos con
                                     proveedores y fechas</p>
-                                <div class="text-center">
+                                <div class="text-center mt-auto"> <!-- Añadido mt-auto -->
                                     <button id="exportarProductosDetallado" class="btn btn-sm btn-outline-secondary">
                                         <i class="fas fa-file-export me-1"></i> Exportar Adquiridos
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nuevo Reporte de Ventas por Empleado -->
+                    <div class="col-md-12 mt-4">
+                        <div class="card shadow-lg">
+                            <div class="card-header bg-purple text-white">
+                                <h2 class="h5 mb-0">Reporte de Ventas por Empleado</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="row justify-content-center"> <!-- Cambiado a justify-content-center -->
+                                    <div class="col-md-8"> <!-- Reducido el ancho para mejor centrado -->
+                                        <div class="mb-3">
+                                            <label for="selectEmpleado" class="form-label">Seleccionar Empleado:</label>
+                                            <select class="form-select" id="selectEmpleado">
+                                                <option value="" selected disabled>-- Seleccione un empleado --</option>
+                                                <!-- Las opciones se llenarán dinámicamente -->
+                                            </select>
+                                        </div>
+                                        <div class="text-center"> <!-- Contenedor centrado para el botón -->
+                                            <button id="exportarVentasEmpleado" class="btn btn-outline-purple w-100">
+                                                <i class="fas fa-user-tie me-2"></i>Exportar Ventas del Empleado
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -146,732 +173,892 @@
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Añadí jQuery para solucionar el segundo error -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
-    // Configuración centralizada
-    const reportConfig = {
-        ventas: {
-            endpoint: '/reportes/ventas',
-            filters: ['diario', 'semanal', 'mensual']
-        },
-        productos: {
-            endpoint: '/reportes/productos'
-        },
-        ganancias: {
-            endpoint: '/reportes/ganancias'
-        }
-    };
-
-    // Utilidades comunes
-    const reportUtils = {
-        showAlert: async (icon, title, text, confirmText = 'Aceptar') => {
-            return Swal.fire({ icon, title, text, confirmButtonText: confirmText });
-        },
-
-        handleError: async (error, context = '') => {
-            console.error(`Error en ${context}:`, error);
-            await reportUtils.showAlert(
-                'error',
-                'Error',
-                error.message || 'Ocurrió un error inesperado',
-                'Cerrar'
-            );
-        },
-
-        fetchData: async (url, method = 'GET', body = null) => {
-            const options = { method, headers: { 'Content-Type': 'application/json' } };
-            if (body) options.body = JSON.stringify(body);
-
-            const res = await fetch(url, options);
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Error en la solicitud');
+    <script>
+        // Configuración centralizada
+        const reportConfig = {
+            ventas: {
+                endpoint: '/reportes/ventas',
+                filters: ['diario', 'semanal', 'mensual']
+            },
+            productos: {
+                endpoint: '/reportes/productos'
+            },
+            ganancias: {
+                endpoint: '/reportes/ganancias'
+            },
+            empleados: {
+                endpoint: '/reportes/empleados',
+                endpointVentas: '/reportes/ventas-empleado'
             }
-            return res.json();
-        }
-    };
+        };
 
-    // Funcionalidad de reportes
-    const reportHandlers = {
-        ventas: {
-            getSelectedFilter: () => {
-                const selectedRadio = document.querySelector('input[name="filtroVentas"]:checked');
-                if (!selectedRadio) return null;
-
-                return {
-                    tipo: selectedRadio.id,
-                    fecha: selectedRadio.id === 'diario' ? document.getElementById('fechaDiarioInput').value :
-                        selectedRadio.id === 'semanal' ? document.getElementById('fechaSemanalInput').value :
-                            document.getElementById('fechaMensualInput').value
-                };
+        // Utilidades comunes
+        const reportUtils = {
+            showAlert: async (icon, title, text, confirmText = 'Aceptar') => {
+                return Swal.fire({ icon, title, text, confirmButtonText: confirmText });
             },
 
-            exportToExcel: async (data, filter) => {
-                try {
-                    const ExcelJS = window.ExcelJS;
-                    const workbook = new ExcelJS.Workbook();
-                    const worksheet = workbook.addWorksheet('Reporte Ventas');
+            handleError: async (error, context = '') => {
+                console.error(`Error en ${context}:`, error);
+                await reportUtils.showAlert(
+                    'error',
+                    'Error',
+                    error.message || 'Ocurrió un error inesperado',
+                    'Cerrar'
+                );
+            },
 
-                    // Función para formatear la fecha
-                    const formatDate = (dateString) => {
-                        const parts = dateString.split('-');
-                        if (parts.length === 3) {
-                            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-                        }
-                        const now = new Date();
-                        return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+            fetchData: async (url, method = 'GET', body = null) => {
+                const options = { method, headers: { 'Content-Type': 'application/json' } };
+                if (body) options.body = JSON.stringify(body);
+
+                const res = await fetch(url, options);
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || 'Error en la solicitud');
+                }
+                return res.json();
+            }
+        };
+
+        // Funcionalidad de reportes
+        const reportHandlers = {
+            ventas: {
+                getSelectedFilter: () => {
+                    const selectedRadio = document.querySelector('input[name="filtroVentas"]:checked');
+                    if (!selectedRadio) return null;
+
+                    return {
+                        tipo: selectedRadio.id,
+                        fecha: selectedRadio.id === 'diario' ? document.getElementById('fechaDiarioInput').value :
+                            selectedRadio.id === 'semanal' ? document.getElementById('fechaSemanalInput').value :
+                                document.getElementById('fechaMensualInput').value
                     };
+                },
 
-                    // Preparar datos con el formato de fecha
-                    const processedData = data.map(item => {
-                        return {
-                            Cod_Venta: item.Cod_Venta,
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre_Producto: item.Nombre_Producto,
-                            Cantidad_Venta: item.Cantidad_Venta,
-                            Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
-                            Fecha_Venta: formatDate(item.Fecha_Venta)
-                        };
-                    });
+                exportToExcel: async (data, filter) => {
+                    try {
+                        const ExcelJS = window.ExcelJS;
+                        const workbook = new ExcelJS.Workbook();
+                        const worksheet = workbook.addWorksheet('Reporte Ventas');
 
-                    // Configurar columnas
-                    worksheet.columns = [
-                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
-                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
-                        { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
-                        { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 18 },
-                        { header: 'Monto Total', key: 'Monto_Total', width: 15 },
-                        {
-                            header: 'Fecha Venta',
-                            key: 'Fecha_Venta',
-                            width: 15,
-                            style: { numFmt: 'd/m/yyyy' }
-                        }
-                    ];
+                        // Función para formatear la fecha
+                        const formatDate = (dateString) => {
+                            const parts = dateString.split('-');
+                            if (parts.length === 3) {
+                                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                            }
+                            const now = new Date();
+                            return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+                        };
 
-                    // Aplicar estilo a los encabezados
-                    const headerRow = worksheet.getRow(1);
-                    headerRow.eachCell(cell => {
-                        cell.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FF4F81BD' }
-                        };
-                        cell.font = {
-                            bold: true,
-                            color: { argb: 'FFFFFFFF' },
-                            size: 12
-                        };
-                        cell.border = {
-                            top: { style: 'thin' },
-                            left: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            right: { style: 'thin' }
-                        };
-                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                    });
+                        // Preparar datos con el formato de fecha
+                        const processedData = data.map(item => {
+                            return {
+                                Cod_Venta: item.Cod_Venta,
+                                Cod_Producto: item.Cod_Producto,
+                                Nombre_Producto: item.Nombre_Producto,
+                                Cantidad_Venta: item.Cantidad_Venta,
+                                Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
+                                Fecha_Venta: formatDate(item.Fecha_Venta)
+                            };
+                        });
 
-                    // Agregar datos
-                    processedData.forEach(item => {
-                        const row = worksheet.addRow([
-                            item.Cod_Venta,
-                            item.Cod_Producto,
-                            item.Nombre_Producto,
-                            item.Cantidad_Venta,
-                            item.Monto_Total,
-                            item.Fecha_Venta
+                        // Configurar columnas
+                        worksheet.columns = [
+                            { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
+                            { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                            { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
+                            { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 18 },
+                            { header: 'Monto Total', key: 'Monto_Total', width: 15 },
+                            {
+                                header: 'Fecha Venta',
+                                key: 'Fecha_Venta',
+                                width: 15,
+                                style: { numFmt: 'd/m/yyyy' }
+                            }
+                        ];
+
+                        // Aplicar estilo a los encabezados
+                        const headerRow = worksheet.getRow(1);
+                        headerRow.eachCell(cell => {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FF4F81BD' }
+                            };
+                            cell.font = {
+                                bold: true,
+                                color: { argb: 'FFFFFFFF' },
+                                size: 12
+                            };
+                            cell.border = {
+                                top: { style: 'thin' },
+                                left: { style: 'thin' },
+                                bottom: { style: 'thin' },
+                                right: { style: 'thin' }
+                            };
+                            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        });
+
+                        // Agregar datos
+                        processedData.forEach(item => {
+                            const row = worksheet.addRow([
+                                item.Cod_Venta,
+                                item.Cod_Producto,
+                                item.Nombre_Producto,
+                                item.Cantidad_Venta,
+                                item.Monto_Total,
+                                item.Fecha_Venta
+                            ]);
+
+                            const fechaCell = row.getCell(6);
+                            fechaCell.numFmt = 'd/m/yyyy';
+
+                            row.eachCell(cell => {
+                                cell.border = {
+                                    top: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    right: { style: 'thin' }
+                                };
+                            });
+                        });
+
+                        // Calcular totales
+                        const totalVentas = processedData.reduce((sum, item) => sum + item.Monto_Total, 0);
+                        const totalCantidad = processedData.reduce((sum, item) => sum + item.Cantidad_Venta, 0);
+
+                        const totalRow = worksheet.addRow([
+                            '',
+                            '',
+                            'Totales',
+                            totalCantidad,
+                            totalVentas,
+                            ''
                         ]);
 
-                        const fechaCell = row.getCell(6);
-                        fechaCell.numFmt = 'd/m/yyyy';
-
-                        row.eachCell(cell => {
+                        totalRow.eachCell((cell, colNumber) => {
+                            cell.font = { bold: true };
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FF4F81BD' }
+                            };
                             cell.border = {
                                 top: { style: 'thin' },
                                 left: { style: 'thin' },
                                 bottom: { style: 'thin' },
                                 right: { style: 'thin' }
                             };
+                            if (colNumber === 5) cell.numFmt = '#,##0.00';
                         });
-                    });
 
-                    // Calcular totales
-                    const totalVentas = processedData.reduce((sum, item) => sum + item.Monto_Total, 0);
-                    const totalCantidad = processedData.reduce((sum, item) => sum + item.Cantidad_Venta, 0);
-
-                    const totalRow = worksheet.addRow([
-                        '',
-                        '',
-                        'Totales',
-                        totalCantidad,
-                        totalVentas,
-                        ''
-                    ]);
-
-                    totalRow.eachCell((cell, colNumber) => {
-                        cell.font = { bold: true };
-                        cell.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FF4F81BD' }
-                        };
-                        cell.border = {
-                            top: { style: 'thin' },
-                            left: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            right: { style: 'thin' }
-                        };
-                        if (colNumber === 5) cell.numFmt = '#,##0.00';
-                    });
-
-                    // Autoajustar columnas
-                    worksheet.columns.forEach(column => {
-                        let maxLength = 0;
-                        column.eachCell({ includeEmpty: true }, cell => {
-                            let columnLength = cell.value ? cell.value.toString().length : 0;
-                            if (columnLength > maxLength) {
-                                maxLength = columnLength;
-                            }
+                        // Autoajustar columnas
+                        worksheet.columns.forEach(column => {
+                            let maxLength = 0;
+                            column.eachCell({ includeEmpty: true }, cell => {
+                                let columnLength = cell.value ? cell.value.toString().length : 0;
+                                if (columnLength > maxLength) {
+                                    maxLength = columnLength;
+                                }
+                            });
+                            column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
                         });
-                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
-                    });
 
-                    // Descargar archivo
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `reporte_ventas_${filter}.xlsx`;
-                    a.click();
-                    URL.revokeObjectURL(url);
+                        // Descargar archivo
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `reporte_ventas_${filter}.xlsx`;
+                        a.click();
+                        URL.revokeObjectURL(url);
 
-                } catch (error) {
-                    console.error('Error detallado al exportar:', error);
-                    throw new Error(`Error al exportar Excel: ${error.message}`);
-                }
-            },
-
-            generateReport: async () => {
-                try {
-                    const filterInfo = reportHandlers.ventas.getSelectedFilter();
-
-                    if (!filterInfo || !filterInfo.fecha) {
-                        await reportUtils.showAlert('warning', 'Datos requeridos', 'Por favor selecciona un filtro y una fecha');
-                        return;
+                    } catch (error) {
+                        console.error('Error detallado al exportar:', error);
+                        throw new Error(`Error al exportar Excel: ${error.message}`);
                     }
+                },
 
-                    const data = await reportUtils.fetchData(
-                        reportConfig.ventas.endpoint,
-                        'POST',
-                        {
-                            filtro: filterInfo.tipo,
-                            fecha: filterInfo.fecha
+                generateReport: async () => {
+                    try {
+                        const filterInfo = reportHandlers.ventas.getSelectedFilter();
+
+                        if (!filterInfo || !filterInfo.fecha) {
+                            await reportUtils.showAlert('warning', 'Datos requeridos', 'Por favor selecciona un filtro y una fecha');
+                            return;
                         }
-                    );
 
-                    if (!Array.isArray(data)) {
-                        throw new Error('Formato de respuesta inválido');
+                        const data = await reportUtils.fetchData(
+                            reportConfig.ventas.endpoint,
+                            'POST',
+                            {
+                                filtro: filterInfo.tipo,
+                                fecha: filterInfo.fecha
+                            }
+                        );
+
+                        if (!Array.isArray(data)) {
+                            throw new Error('Formato de respuesta inválido');
+                        }
+
+                        if (data.length === 0) {
+                            await reportUtils.showAlert('info', 'Sin datos', 'No hay ventas registradas para el período seleccionado.');
+                            return;
+                        }
+
+                        await reportHandlers.ventas.exportToExcel(data, filterInfo.tipo);
+                        await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
+
+                    } catch (error) {
+                        await reportUtils.handleError(error, 'generación de reporte de ventas');
                     }
-
-                    if (data.length === 0) {
-                        await reportUtils.showAlert('info', 'Sin datos', 'No hay ventas registradas para el período seleccionado.');
-                        return;
-                    }
-
-                    await reportHandlers.ventas.exportToExcel(data, filterInfo.tipo);
-                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
-
-                } catch (error) {
-                    await reportUtils.handleError(error, 'generación de reporte de ventas');
-                }
-            }
-        },
-
-        productos: {
-            exportToExcel: async (data) => {
-                try {
-                    const ExcelJS = window.ExcelJS;
-                    const workbook = new ExcelJS.Workbook();
-                    const worksheet = workbook.addWorksheet('Productos');
-
-                    const processedData = [
-                        ...data.topProducts,
-                        ...data.worstProducts,
-                        ...data.notSoldProducts
-                    ];
-
-                    worksheet.columns = [
-                        { header: 'Código', key: 'Cod_Producto', width: 15 },
-                        { header: 'Nombre', key: 'Nombre', width: 30 },
-                        { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
-                        { header: 'Tipo', key: 'Tipo', width: 20 }
-                    ];
-
-                    worksheet.getRow(1).eachCell(cell => {
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F81BD' } };
-                        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                    });
-
-                    processedData.forEach(item => {
-                        worksheet.addRow({
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre: item.Nombre,
-                            CantidadVendida: item.CantidadVendida || 0,
-                            Tipo: item.Tipo
-                        });
-                    });
-
-                    worksheet.eachRow(row => {
-                        row.eachCell(cell => {
-                            cell.border = {
-                                top: { style: 'thin' },
-                                left: { style: 'thin' },
-                                bottom: { style: 'thin' },
-                                right: { style: 'thin' }
-                            };
-                        });
-                    });
-
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const now = new Date();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `reporte_productos_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                } catch (error) {
-                    throw new Error(`Error al exportar Excel: ${error.message}`);
                 }
             },
 
-            generateReport: async () => {
-                try {
-                    const response = await reportUtils.fetchData(reportConfig.productos.endpoint);
+            productos: {
+                exportToExcel: async (data) => {
+                    try {
+                        const ExcelJS = window.ExcelJS;
+                        const workbook = new ExcelJS.Workbook();
+                        const worksheet = workbook.addWorksheet('Productos');
 
-                    if (!response.success || !response.data) {
-                        throw new Error('Respuesta del servidor inválida');
-                    }
+                        const processedData = [
+                            ...data.topProducts,
+                            ...data.worstProducts,
+                            ...data.notSoldProducts
+                        ];
 
-                    if (response.data.topProducts.length === 0 &&
-                        response.data.worstProducts.length === 0 &&
-                        response.data.notSoldProducts.length === 0) {
-                        await reportUtils.showAlert('info', 'Sin datos', 'No hay productos en el reporte.');
-                        return;
-                    }
+                        worksheet.columns = [
+                            { header: 'Código', key: 'Cod_Producto', width: 15 },
+                            { header: 'Nombre', key: 'Nombre', width: 30 },
+                            { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
+                            { header: 'Tipo', key: 'Tipo', width: 20 }
+                        ];
 
-                    await reportHandlers.productos.exportToExcel(response.data);
-                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
-
-                } catch (error) {
-                    await reportUtils.handleError(error, 'generación de reporte de productos');
-                }
-            }
-        },
-
-        productosDetallado: {
-            exportToExcel: async (data) => {
-                try {
-                    // Ordenar los datos por fecha de entrada (más reciente primero)
-                    const datosOrdenados = [...data].sort((a, b) => {
-                        const fechaA = new Date(a.Fecha_Entrada);
-                        const fechaB = new Date(b.Fecha_Entrada);
-                        return fechaB - fechaA; // Orden descendente
-                    });
-
-                    const ExcelJS = window.ExcelJS;
-                    const workbook = new ExcelJS.Workbook();
-                    const worksheet = workbook.addWorksheet('Productos Detallados');
-
-                    // Configurar columnas (se mantiene igual)
-                    worksheet.columns = [
-                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
-                        { header: 'Nombre', key: 'Nombre', width: 25 },
-                        { header: 'Marca', key: 'Marca', width: 20 },
-                        { header: 'Proveedor', key: 'NombreProveedor', width: 25 },
-                        { header: 'Sector', key: 'Sector', width: 20 },
-                        { header: 'Fecha Entrada', key: 'Fecha_Entrada', width: 15 },
-                        { header: 'Cantidad', key: 'Cantidad', width: 12 },
-                        { header: 'Precio', key: 'Precio', width: 15, style: { numFmt: '#,##0.00' } },
-                        { header: 'Fecha Vencimiento', key: 'FechaVencimiento', width: 18 }
-                    ];
-
-                    // Estilo para encabezados
-                    const headerRow = worksheet.getRow(1);
-                    headerRow.eachCell(cell => {
-                        cell.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FF4F81BD' }
-                        };
-                        cell.font = {
-                            bold: true,
-                            color: { argb: 'FFFFFFFF' },
-                            size: 12
-                        };
-                        cell.border = {
-                            top: { style: 'thin' },
-                            left: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            right: { style: 'thin' }
-                        };
-                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                    });
-
-                    // Función para formatear fechas
-                    const formatDate = (dateString) => {
-                        if (!dateString) return 'N/A';
-
-                        const date = new Date(dateString);
-                        if (isNaN(date.getTime())) return 'N/A';
-
-                        const day = date.getDate().toString().padStart(2, '0');
-                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                        const year = date.getFullYear();
-
-                        return `${day}/${month}/${year}`;
-                    };
-
-                    // Agregar datos
-                    datosOrdenados.forEach(item => {
-                        const rowData = {
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre: item.Nombre,
-                            Marca: item.Marca,
-                            NombreProveedor: item.NombreProveedor,
-                            Sector: item.Sector,
-                            Fecha_Entrada: formatDate(item.Fecha_Entrada),
-                            Cantidad: item.Cantidad,
-                            Precio: item.Precio,
-                            FechaVencimiento: formatDate(item.FechaVencimiento)
-                        };
-
-                        const row = worksheet.addRow(rowData);
-
-                        // Formatear celda de precio
-                        const precioCell = row.getCell('Precio');
-                        precioCell.numFmt = '#,##0.00';
-
-                        // Bordes para todas las celdas
-                        row.eachCell(cell => {
-                            cell.border = {
-                                top: { style: 'thin' },
-                                left: { style: 'thin' },
-                                bottom: { style: 'thin' },
-                                right: { style: 'thin' }
-                            };
+                        worksheet.getRow(1).eachCell(cell => {
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F81BD' } };
+                            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                            cell.alignment = { vertical: 'middle', horizontal: 'center' };
                         });
-                    });
 
-                    // Autoajustar columnas
-                    worksheet.columns.forEach(column => {
-                        let maxLength = 0;
-                        column.eachCell({ includeEmpty: true }, cell => {
-                            let columnLength = cell.value ? cell.value.toString().length : 0;
-                            if (columnLength > maxLength) {
-                                maxLength = columnLength;
-                            }
+                        processedData.forEach(item => {
+                            worksheet.addRow({
+                                Cod_Producto: item.Cod_Producto,
+                                Nombre: item.Nombre,
+                                CantidadVendida: item.CantidadVendida || 0,
+                                Tipo: item.Tipo
+                            });
                         });
-                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
-                    });
 
-                    // Generar buffer y descargar
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], {
-                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                    });
-                    const url = URL.createObjectURL(blob);
+                        worksheet.eachRow(row => {
+                            row.eachCell(cell => {
+                                cell.border = {
+                                    top: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    right: { style: 'thin' }
+                                };
+                            });
+                        });
 
-                    // Crear enlace y simular click
-                    const a = document.createElement('a');
-                    const now = new Date();
-                    a.href = url;
-                    a.download = `reporte_productos_detallados_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
-                    document.body.appendChild(a);
-                    a.click();
-
-                    // Limpiar
-                    setTimeout(() => {
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const now = new Date();
+                        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `reporte_productos_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
+                        document.body.appendChild(a);
+                        a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
-                    }, 100);
 
-                } catch (error) {
-                    console.error('Error detallado al exportar:', error);
-                    throw new Error(`Error al exportar Excel: ${error.message}`);
+                    } catch (error) {
+                        throw new Error(`Error al exportar Excel: ${error.message}`);
+                    }
+                },
+
+                generateReport: async () => {
+                    try {
+                        const response = await reportUtils.fetchData(reportConfig.productos.endpoint);
+
+                        if (!response.success || !response.data) {
+                            throw new Error('Respuesta del servidor inválida');
+                        }
+
+                        if (response.data.topProducts.length === 0 &&
+                            response.data.worstProducts.length === 0 &&
+                            response.data.notSoldProducts.length === 0) {
+                            await reportUtils.showAlert('info', 'Sin datos', 'No hay productos en el reporte.');
+                            return;
+                        }
+
+                        await reportHandlers.productos.exportToExcel(response.data);
+                        await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
+
+                    } catch (error) {
+                        await reportUtils.handleError(error, 'generación de reporte de productos');
+                    }
                 }
             },
 
-            generateReport: async () => {
-                try {
-                    const response = await reportUtils.fetchData('/reportes/productos-detallado');
-
-                    if (!response.success || !response.data) {
-                        throw new Error('Respuesta del servidor inválida');
-                    }
-
-                    if (response.data.length === 0) {
-                        await reportUtils.showAlert('info', 'Sin datos', 'No hay productos en el reporte.');
-                        return;
-                    }
-
-                    await reportHandlers.productosDetallado.exportToExcel(response.data);
-                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
-
-                } catch (error) {
-                    await reportUtils.handleError(error, 'generación de reporte de productos detallado');
-                }
-            }
-        },
-        ganancias: {
-            exportToExcel: async (data) => {
-                try {
-                    const ExcelJS = window.ExcelJS;
-                    const workbook = new ExcelJS.Workbook();
-                    const worksheet = workbook.addWorksheet('Reporte Ganancias');
-
-                    // Configurar columnas
-                    worksheet.columns = [
-                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
-                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
-                        { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
-                        { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 15 },
-                        { header: 'Costo Unitario', key: 'Costo_Unitario', width: 15, style: { numFmt: 'C$#,##0.00' } },
-                        { header: 'Precio Venta Unitario', key: 'Precio_Venta_Unitario', width: 20, style: { numFmt: 'C$#,##0.00' } },
-                        { header: 'Margen Unitario', key: 'Margen_Unitario', width: 15, style: { numFmt: 'C$#,##0.00' } },
-                        { header: 'Margen Total', key: 'Margen_Total', width: 15, style: { numFmt: 'C$#,##0.00' } },
-                        { header: '% Utilidad', key: 'Porcentaje_Utilidad', width: 15, style: { numFmt: '0.00%' } },
-                        { header: 'Fecha Compra', key: 'Fecha_Compra', width: 15, style: { numFmt: 'dd/mm/yyyy' } },
-                        { header: 'Fecha Venta', key: 'Fecha_Venta', width: 15, style: { numFmt: 'dd/mm/yyyy' } }
-                    ];
-
-                    // Estilo para encabezados
-                    const headerRow = worksheet.getRow(1);
-                    headerRow.eachCell(cell => {
-                        cell.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FFD28E1D' } // Naranja similar al header
-                        };
-                        cell.font = {
-                            bold: true,
-                            color: { argb: 'FFFFFFFF' },
-                            size: 12
-                        };
-                        cell.border = {
-                            top: { style: 'thin' },
-                            left: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            right: { style: 'thin' }
-                        };
-                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                    });
-
-                    // Agregar datos
-                    data.forEach(item => {
-                        // Asegurar que los valores numéricos sean correctos
-                        const costoUnitario = parseFloat(item.Costo_Unitario) || 0;
-                        const precioVenta = parseFloat(item.Precio_Venta_Unitario) || 0;
-                        const margenUnitario = precioVenta - costoUnitario;
-                        const margenTotal = margenUnitario * (parseFloat(item.Cantidad_Venta) || 0);
-                        const porcentajeUtilidad = costoUnitario !== 0 ? (margenUnitario / costoUnitario) : 0;
-
-                        const row = worksheet.addRow({
-                            Cod_Venta: item.Cod_Venta,
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre_Producto: item.Nombre_Producto,
-                            Cantidad_Venta: parseFloat(item.Cantidad_Venta) || 0,
-                            Costo_Unitario: costoUnitario,
-                            Precio_Venta_Unitario: precioVenta,
-                            Margen_Unitario: margenUnitario,
-                            Margen_Total: margenTotal,
-                            Porcentaje_Utilidad: porcentajeUtilidad,
-                            Fecha_Compra: item.Fecha_Compra,
-                            Fecha_Venta: item.Fecha_Venta
+            productosDetallado: {
+                exportToExcel: async (data) => {
+                    try {
+                        // Ordenar los datos por fecha de entrada (más reciente primero)
+                        const datosOrdenados = [...data].sort((a, b) => {
+                            const fechaA = new Date(a.Fecha_Entrada);
+                            const fechaB = new Date(b.Fecha_Entrada);
+                            return fechaB - fechaA; // Orden descendente
                         });
 
-                        // Formatear celdas numéricas
-                        ['Costo_Unitario', 'Precio_Venta_Unitario', 'Margen_Unitario', 'Margen_Total'].forEach(key => {
-                            const cell = row.getCell(key);
-                            cell.numFmt = 'C$#,##0.00';
-                        });
+                        const ExcelJS = window.ExcelJS;
+                        const workbook = new ExcelJS.Workbook();
+                        const worksheet = workbook.addWorksheet('Productos Detallados');
 
-                        // Formatear porcentaje
-                        row.getCell('Porcentaje_Utilidad').numFmt = '0.00%';
+                        // Configurar columnas (se mantiene igual)
+                        worksheet.columns = [
+                            { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                            { header: 'Nombre', key: 'Nombre', width: 25 },
+                            { header: 'Marca', key: 'Marca', width: 20 },
+                            { header: 'Proveedor', key: 'NombreProveedor', width: 25 },
+                            { header: 'Sector', key: 'Sector', width: 20 },
+                            { header: 'Fecha Entrada', key: 'Fecha_Entrada', width: 15 },
+                            { header: 'Cantidad', key: 'Cantidad', width: 12 },
+                            { header: 'Precio', key: 'Precio', width: 15, style: { numFmt: '#,##0.00' } },
+                            { header: 'Fecha Vencimiento', key: 'FechaVencimiento', width: 18 }
+                        ];
 
-                        // Formatear fechas
-                        ['Fecha_Compra', 'Fecha_Venta'].forEach(key => {
-                            const cell = row.getCell(key);
-                            if (cell.value) {
-                                cell.numFmt = 'dd/mm/yyyy';
-                            }
-                        });
-
-                        // Bordes para todas las celdas
-                        row.eachCell(cell => {
+                        // Estilo para encabezados
+                        const headerRow = worksheet.getRow(1);
+                        headerRow.eachCell(cell => {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FF4F81BD' }
+                            };
+                            cell.font = {
+                                bold: true,
+                                color: { argb: 'FFFFFFFF' },
+                                size: 12
+                            };
                             cell.border = {
                                 top: { style: 'thin' },
                                 left: { style: 'thin' },
                                 bottom: { style: 'thin' },
                                 right: { style: 'thin' }
                             };
+                            cell.alignment = { vertical: 'middle', horizontal: 'center' };
                         });
-                    });
 
-                    // Calcular totales CORREGIDO:
-                    const totalVentas = data.reduce((sum, item) => sum + (parseFloat(item.Precio_Venta_Unitario || 0) * (parseFloat(item.Cantidad_Venta) || 0)), 0);
-                    const totalCostos = data.reduce((sum, item) => sum + (parseFloat(item.Costo_Unitario || 0) * (parseFloat(item.Cantidad_Venta) || 0)), 0);
-                    const totalMargen = totalVentas - totalCostos;
-                    const porcentajeTotal = totalCostos !== 0 ? (totalMargen / totalCostos) : 0;
+                        // Función para formatear fechas
+                        const formatDate = (dateString) => {
+                            if (!dateString) return 'N/A';
 
-                    const totalRow = worksheet.addRow({
-                        Cod_Venta: 'TOTALES',
-                        Cod_Producto: '',
-                        Nombre_Producto: '',
-                        Cantidad_Venta: data.reduce((sum, item) => sum + (parseFloat(item.Cantidad_Venta) || 0), 0),
-                        Costo_Unitario: totalCostos,
-                        Precio_Venta_Unitario: totalVentas,
-                        Margen_Unitario: '',
-                        Margen_Total: totalMargen,
-                        Porcentaje_Utilidad: porcentajeTotal,
-                        Fecha_Compra: '',
-                        Fecha_Venta: ''
-                    });
+                            const date = new Date(dateString);
+                            if (isNaN(date.getTime())) return 'N/A';
 
-                    // Estilo para fila de totales
-                    totalRow.eachCell((cell, colNumber) => {
-                        cell.font = { bold: true };
-                        cell.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FFF8E1A1' } // Fondo amarillo claro
+                            const day = date.getDate().toString().padStart(2, '0');
+                            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                            const year = date.getFullYear();
+
+                            return `${day}/${month}/${year}`;
                         };
-                        if (colNumber >= 5 && colNumber <= 9) { // Columnas numéricas
-                            cell.numFmt = colNumber === 9 ? '0.00%' : 'C$#,##0.00';
-                        }
-                    });
 
-                    // Autoajustar columnas
-                    worksheet.columns.forEach(column => {
-                        let maxLength = 0;
-                        column.eachCell({ includeEmpty: true }, cell => {
-                            let columnLength = cell.value ? cell.value.toString().length : 0;
-                            if (columnLength > maxLength) {
-                                maxLength = columnLength;
-                            }
+                        // Agregar datos
+                        datosOrdenados.forEach(item => {
+                            const rowData = {
+                                Cod_Producto: item.Cod_Producto,
+                                Nombre: item.Nombre,
+                                Marca: item.Marca,
+                                NombreProveedor: item.NombreProveedor,
+                                Sector: item.Sector,
+                                Fecha_Entrada: formatDate(item.Fecha_Entrada),
+                                Cantidad: item.Cantidad,
+                                Precio: item.Precio,
+                                FechaVencimiento: formatDate(item.FechaVencimiento)
+                            };
+
+                            const row = worksheet.addRow(rowData);
+
+                            // Formatear celda de precio
+                            const precioCell = row.getCell('Precio');
+                            precioCell.numFmt = '#,##0.00';
+
+                            // Bordes para todas las celdas
+                            row.eachCell(cell => {
+                                cell.border = {
+                                    top: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    right: { style: 'thin' }
+                                };
+                            });
                         });
-                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
-                    });
 
-                    // Descargar archivo
-                    const buffer = await workbook.xlsx.writeBuffer();
-                    const now = new Date();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `reporte_ganancias_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
-                    a.click();
-                    URL.revokeObjectURL(url);
+                        // Autoajustar columnas
+                        worksheet.columns.forEach(column => {
+                            let maxLength = 0;
+                            column.eachCell({ includeEmpty: true }, cell => {
+                                let columnLength = cell.value ? cell.value.toString().length : 0;
+                                if (columnLength > maxLength) {
+                                    maxLength = columnLength;
+                                }
+                            });
+                            column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                        });
 
-                } catch (error) {
-                    console.error('Error al exportar reporte de ganancias:', error);
-                    throw new Error(`Error al exportar Excel: ${error.message}`);
+                        // Generar buffer y descargar
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const blob = new Blob([buffer], {
+                            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                        });
+                        const url = URL.createObjectURL(blob);
+
+                        // Crear enlace y simular click
+                        const a = document.createElement('a');
+                        const now = new Date();
+                        a.href = url;
+                        a.download = `reporte_productos_detallados_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
+                        document.body.appendChild(a);
+                        a.click();
+
+                        // Limpiar
+                        setTimeout(() => {
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }, 100);
+
+                    } catch (error) {
+                        console.error('Error detallado al exportar:', error);
+                        throw new Error(`Error al exportar Excel: ${error.message}`);
+                    }
+                },
+
+                generateReport: async () => {
+                    try {
+                        const response = await reportUtils.fetchData('/reportes/productos-detallado');
+
+                        if (!response.success || !response.data) {
+                            throw new Error('Respuesta del servidor inválida');
+                        }
+
+                        if (response.data.length === 0) {
+                            await reportUtils.showAlert('info', 'Sin datos', 'No hay productos en el reporte.');
+                            return;
+                        }
+
+                        await reportHandlers.productosDetallado.exportToExcel(response.data);
+                        await reportUtils.showAlert('success', '¡Reporte exportado!', 'El archivo Excel ha sido descargado exitosamente.');
+
+                    } catch (error) {
+                        await reportUtils.handleError(error, 'generación de reporte de productos detallado');
+                    }
                 }
             },
 
-            generateReport: async () => {
-                try {
-                    const response = await reportUtils.fetchData(reportConfig.ganancias.endpoint);
+            ganancias: {
+                exportToExcel: async (data) => {
+                    try {
+                        const ExcelJS = window.ExcelJS;
+                        const workbook = new ExcelJS.Workbook();
+                        const worksheet = workbook.addWorksheet('Reporte Ganancias');
 
-                    if (!response.success || !response.data) {
-                        throw new Error('Respuesta del servidor inválida');
+                        // Configurar columnas
+                        worksheet.columns = [
+                            { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
+                            { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                            { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
+                            { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 15 },
+                            { header: 'Costo Unitario', key: 'Costo_Unitario', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                            { header: 'Precio Venta Unitario', key: 'Precio_Venta_Unitario', width: 20, style: { numFmt: 'C$#,##0.00' } },
+                            { header: 'Margen Unitario', key: 'Margen_Unitario', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                            { header: 'Margen Total', key: 'Margen_Total', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                            { header: '% Utilidad', key: 'Porcentaje_Utilidad', width: 15, style: { numFmt: '0.00%' } },
+                            { header: 'Fecha Compra', key: 'Fecha_Compra', width: 15, style: { numFmt: 'dd/mm/yyyy' } },
+                            { header: 'Fecha Venta', key: 'Fecha_Venta', width: 15, style: { numFmt: 'dd/mm/yyyy' } }
+                        ];
+
+                        // Estilo para encabezados
+                        const headerRow = worksheet.getRow(1);
+                        headerRow.eachCell(cell => {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFD28E1D' } // Naranja similar al header
+                            };
+                            cell.font = {
+                                bold: true,
+                                color: { argb: 'FFFFFFFF' },
+                                size: 12
+                            };
+                            cell.border = {
+                                top: { style: 'thin' },
+                                left: { style: 'thin' },
+                                bottom: { style: 'thin' },
+                                right: { style: 'thin' }
+                            };
+                            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        });
+
+                        // Agregar datos
+                        data.forEach(item => {
+                            // Asegurar que los valores numéricos sean correctos
+                            const costoUnitario = parseFloat(item.Costo_Unitario) || 0;
+                            const precioVenta = parseFloat(item.Precio_Venta_Unitario) || 0;
+                            const margenUnitario = precioVenta - costoUnitario;
+                            const margenTotal = margenUnitario * (parseFloat(item.Cantidad_Venta) || 0);
+                            const porcentajeUtilidad = costoUnitario !== 0 ? (margenUnitario / costoUnitario) : 0;
+
+                            const row = worksheet.addRow({
+                                Cod_Venta: item.Cod_Venta,
+                                Cod_Producto: item.Cod_Producto,
+                                Nombre_Producto: item.Nombre_Producto,
+                                Cantidad_Venta: parseFloat(item.Cantidad_Venta) || 0,
+                                Costo_Unitario: costoUnitario,
+                                Precio_Venta_Unitario: precioVenta,
+                                Margen_Unitario: margenUnitario,
+                                Margen_Total: margenTotal,
+                                Porcentaje_Utilidad: porcentajeUtilidad,
+                                Fecha_Compra: item.Fecha_Compra,
+                                Fecha_Venta: item.Fecha_Venta
+                            });
+
+                            // Formatear celdas numéricas
+                            ['Costo_Unitario', 'Precio_Venta_Unitario', 'Margen_Unitario', 'Margen_Total'].forEach(key => {
+                                const cell = row.getCell(key);
+                                cell.numFmt = 'C$#,##0.00';
+                            });
+
+                            // Formatear porcentaje
+                            row.getCell('Porcentaje_Utilidad').numFmt = '0.00%';
+
+                            // Formatear fechas
+                            ['Fecha_Compra', 'Fecha_Venta'].forEach(key => {
+                                const cell = row.getCell(key);
+                                if (cell.value) {
+                                    cell.numFmt = 'dd/mm/yyyy';
+                                }
+                            });
+
+                            // Bordes para todas las celdas
+                            row.eachCell(cell => {
+                                cell.border = {
+                                    top: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    right: { style: 'thin' }
+                                };
+                            });
+                        });
+
+                        // Calcular totales CORREGIDO:
+                        const totalVentas = data.reduce((sum, item) => sum + (parseFloat(item.Precio_Venta_Unitario || 0) * (parseFloat(item.Cantidad_Venta) || 0)), 0);
+                        const totalCostos = data.reduce((sum, item) => sum + (parseFloat(item.Costo_Unitario || 0) * (parseFloat(item.Cantidad_Venta) || 0)), 0);
+                        const totalMargen = totalVentas - totalCostos;
+                        const porcentajeTotal = totalCostos !== 0 ? (totalMargen / totalCostos) : 0;
+
+                        const totalRow = worksheet.addRow({
+                            Cod_Venta: 'TOTALES',
+                            Cod_Producto: '',
+                            Nombre_Producto: '',
+                            Cantidad_Venta: data.reduce((sum, item) => sum + (parseFloat(item.Cantidad_Venta) || 0), 0),
+                            Costo_Unitario: totalCostos,
+                            Precio_Venta_Unitario: totalVentas,
+                            Margen_Unitario: '',
+                            Margen_Total: totalMargen,
+                            Porcentaje_Utilidad: porcentajeTotal,
+                            Fecha_Compra: '',
+                            Fecha_Venta: ''
+                        });
+
+                        // Estilo para fila de totales
+                        totalRow.eachCell((cell, colNumber) => {
+                            cell.font = { bold: true };
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF8E1A1' } // Fondo amarillo claro
+                            };
+                            if (colNumber >= 5 && colNumber <= 9) { // Columnas numéricas
+                                cell.numFmt = colNumber === 9 ? '0.00%' : 'C$#,##0.00';
+                            }
+                        });
+
+                        // Autoajustar columnas
+                        worksheet.columns.forEach(column => {
+                            let maxLength = 0;
+                            column.eachCell({ includeEmpty: true }, cell => {
+                                let columnLength = cell.value ? cell.value.toString().length : 0;
+                                if (columnLength > maxLength) {
+                                    maxLength = columnLength;
+                                }
+                            });
+                            column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                        });
+
+                        // Descargar archivo
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const now = new Date();
+                        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `reporte_ganancias_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+
+                    } catch (error) {
+                        console.error('Error al exportar reporte de ganancias:', error);
+                        throw new Error(`Error al exportar Excel: ${error.message}`);
                     }
+                },
 
-                    if (response.data.length === 0) {
-                        await reportUtils.showAlert('info', 'Sin datos', 'No hay datos de ganancias para mostrar.');
-                        return;
+                generateReport: async () => {
+                    try {
+                        const response = await reportUtils.fetchData(reportConfig.ganancias.endpoint);
+
+                        if (!response.success || !response.data) {
+                            throw new Error('Respuesta del servidor inválida');
+                        }
+
+                        if (response.data.length === 0) {
+                            await reportUtils.showAlert('info', 'Sin datos', 'No hay datos de ganancias para mostrar.');
+                            return;
+                        }
+
+                        await reportHandlers.ganancias.exportToExcel(response.data);
+                        await reportUtils.showAlert('success', '¡Reporte exportado!', 'El reporte de ganancias ha sido descargado exitosamente.');
+
+                    } catch (error) {
+                        await reportUtils.handleError(error, 'generación de reporte de ganancias');
                     }
+                }
+            },
 
-                    await reportHandlers.ganancias.exportToExcel(response.data);
-                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El reporte de ganancias ha sido descargado exitosamente.');
+            empleados: {
+                loadEmpleados: async () => {
+                    try {
+                        const response = await reportUtils.fetchData(reportConfig.empleados.endpoint);
 
-                } catch (error) {
-                    await reportUtils.handleError(error, 'generación de reporte de ganancias');
+                        if (!response.success || !Array.isArray(response.data)) {
+                            throw new Error('Formato de respuesta inválido para empleados');
+                        }
+
+                        const select = document.getElementById('selectEmpleado');
+                        select.innerHTML = '<option value="" selected disabled>-- Seleccione un empleado --</option>';
+
+                        response.data.forEach(empleado => {
+                            const option = document.createElement('option');
+                            option.value = empleado.Cod_Empleado;
+                            option.textContent = `${empleado.Nombre} ${empleado.Apellido}`;
+                            select.appendChild(option);
+                        });
+
+                    } catch (error) {
+                        await reportUtils.handleError(error, 'carga de empleados');
+                    }
+                },
+
+                exportVentasEmpleado: async () => {
+                    try {
+                        const select = document.getElementById('selectEmpleado');
+                        const empleadoId = select.value;
+                        const empleadoNombre = select.options[select.selectedIndex].text;
+
+                        if (!empleadoId) {
+                            await reportUtils.showAlert('warning', 'Selección requerida', 'Por favor seleccione un empleado');
+                            return;
+                        }
+
+                        // Usamos filtro 'mensual' y fecha actual por defecto
+                        const fechaActual = new Date().toISOString().split('T')[0];
+
+                        const data = await reportUtils.fetchData(
+                            reportConfig.empleados.endpointVentas,
+                            'POST',
+                            {
+                                filtro: 'mensual',
+                                fecha: fechaActual,
+                                empleado_id: empleadoId
+                            }
+                        );
+
+                        if (!Array.isArray(data)) {
+                            throw new Error('Formato de respuesta inválido');
+                        }
+
+                        if (data.length === 0) {
+                            await reportUtils.showAlert('info', 'Sin datos', `No hay ventas registradas para el empleado ${empleadoNombre}`);
+                            return;
+                        }
+
+                        // Función para formatear fecha a dd/mm/yyyy
+                        const formatDate = (dateString) => {
+                            if (!dateString) return '';
+                            const date = new Date(dateString);
+                            if (isNaN(date.getTime())) return dateString;
+
+                            const day = date.getDate().toString().padStart(2, '0');
+                            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                            const year = date.getFullYear();
+
+                            return `${day}/${month}/${year}`;
+                        };
+
+                        // Exportar a Excel
+                        const ExcelJS = window.ExcelJS;
+                        const workbook = new ExcelJS.Workbook();
+                        const worksheet = workbook.addWorksheet(`Ventas ${empleadoNombre}`);
+
+                        // Configurar columnas
+                        worksheet.columns = [
+                            { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
+                            { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                            { header: 'Producto', key: 'Nombre_Producto', width: 30 },
+                            { header: 'Cantidad', key: 'Cantidad_Venta', width: 15 },
+                            { header: 'Monto Total', key: 'Monto_Total', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                            { header: 'Fecha Venta', key: 'Fecha_Venta_Formateada', width: 15 }
+                        ];
+
+                        // Estilo encabezados
+                        worksheet.getRow(1).eachCell(cell => {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FF6F42C1' } // Morado
+                            };
+                            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                        });
+
+                        // Procesar datos y formatear fechas
+                        const processedData = data.map(item => ({
+                            ...item,
+                            Fecha_Venta_Formateada: formatDate(item.Fecha_Venta),
+                            Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2))
+                        }));
+
+                        // Agregar datos
+                        processedData.forEach(item => {
+                            worksheet.addRow({
+                                Cod_Venta: item.Cod_Venta,
+                                Cod_Producto: item.Cod_Producto,
+                                Nombre_Producto: item.Nombre_Producto,
+                                Cantidad_Venta: item.Cantidad_Venta,
+                                Monto_Total: item.Monto_Total,
+                                Fecha_Venta_Formateada: item.Fecha_Venta_Formateada
+                            });
+                        });
+
+                        // Agregar totales
+                        const totalVentas = data.reduce((sum, item) => sum + parseFloat(item.Monto_Total), 0);
+                        const totalRow = worksheet.addRow({
+                            Cod_Venta: 'TOTAL',
+                            Cod_Producto: '',
+                            Nombre_Producto: '',
+                            Cantidad_Venta: data.reduce((sum, item) => sum + parseInt(item.Cantidad_Venta), 0),
+                            Monto_Total: totalVentas,
+                            Fecha_Venta_Formateada: ''
+                        });
+
+                        // Estilo fila total
+                        totalRow.eachCell(cell => {
+                            cell.font = { bold: true };
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFE2D4F8' } // Morado claro
+                            };
+                        });
+
+                        // Generar y descargar archivo
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `ventas_empleado_${empleadoNombre.replace(/\s+/g, '_')}.xlsx`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+
+                        await reportUtils.showAlert('success', 'Exportación exitosa', `Reporte de ventas para ${empleadoNombre} generado correctamente`);
+
+                    } catch (error) {
+                        await reportUtils.handleError(error, 'exportación de ventas por empleado');
+                    }
                 }
             }
-        }
-    };
+        };
 
-    // Inicialización
-    document.addEventListener('DOMContentLoaded', () => {
-        // Asignar eventos
-        document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
-        document.getElementById('exportarProductos').addEventListener('click', reportHandlers.productos.generateReport);
-        document.getElementById('exportarProductosDetallado').addEventListener('click', reportHandlers.productosDetallado.generateReport);
-        document.getElementById('exportarGanancias').addEventListener('click', reportHandlers.ganancias.generateReport);
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            // Asignar eventos
+            document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
+            document.getElementById('exportarProductos').addEventListener('click', reportHandlers.productos.generateReport);
+            document.getElementById('exportarProductosDetallado').addEventListener('click', reportHandlers.productosDetallado.generateReport);
+            document.getElementById('exportarGanancias').addEventListener('click', reportHandlers.ganancias.generateReport);
+            document.getElementById('exportarVentasEmpleado').addEventListener('click', reportHandlers.empleados.exportVentasEmpleado);
 
-        // Mostrar/ocultar campos de fecha según el filtro seleccionado
-        document.querySelectorAll('input[name="filtroVentas"]').forEach(radio => {
-            radio.addEventListener('change', function () {
-                document.getElementById('fechaDiario').classList.add('d-none');
-                document.getElementById('fechaSemanal').classList.add('d-none');
-                document.getElementById('fechaMensual').classList.add('d-none');
+            // Mostrar/ocultar campos de fecha según el filtro seleccionado
+            document.querySelectorAll('input[name="filtroVentas"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    document.getElementById('fechaDiario').classList.add('d-none');
+                    document.getElementById('fechaSemanal').classList.add('d-none');
+                    document.getElementById('fechaMensual').classList.add('d-none');
 
-                if (this.id === 'diario') {
-                    document.getElementById('fechaDiario').classList.remove('d-none');
-                } else if (this.id === 'semanal') {
-                    document.getElementById('fechaSemanal').classList.remove('d-none');
-                } else if (this.id === 'mensual') {
-                    document.getElementById('fechaMensual').classList.remove('d-none');
+                    if (this.id === 'diario') {
+                        document.getElementById('fechaDiario').classList.remove('d-none');
+                    } else if (this.id === 'semanal') {
+                        document.getElementById('fechaSemanal').classList.remove('d-none');
+                    } else if (this.id === 'mensual') {
+                        document.getElementById('fechaMensual').classList.remove('d-none');
+                    }
+                });
+            });
+
+            // Inicializar con el filtro diario visible
+            document.getElementById('fechaDiario').classList.remove('d-none');
+
+            // Cargar lista de empleados
+            reportHandlers.empleados.loadEmpleados();
+        });
+    </script>
+
+    <script>
+        // Solución definitiva para el dropdown del navbar
+        document.addEventListener('DOMContentLoaded', function () {
+            // Manejar clicks en el dropdown manualmente
+            document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
+                toggle.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var menu = this.nextElementSibling;
+                    menu.classList.toggle('show');
+                });
+            });
+
+            // Cerrar dropdown al hacer click fuera
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(function (menu) {
+                        menu.classList.remove('show');
+                    });
                 }
             });
-        });
 
-        // Inicializar con el filtro diario visible
-        document.getElementById('fechaDiario').classList.remove('d-none');
-    });
-</script>
-
-<script>
-    // Solución definitiva para el dropdown del navbar
-    document.addEventListener('DOMContentLoaded', function () {
-        // Manejar clicks en el dropdown manualmente
-        document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
-            toggle.addEventListener('click', function (e) {
-                e.preventDefault();
-                var menu = this.nextElementSibling;
-                menu.classList.toggle('show');
-            });
-        });
-
-        // Cerrar dropdown al hacer click fuera
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-menu.show').forEach(function (menu) {
-                    menu.classList.remove('show');
+            // Reinicializar dropdowns después de DataTables
+            if ($.fn.DataTable.isDataTable('#empleadosTable')) {
+                $('#empleadosTable').on('init.dt', function () {
+                    new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
                 });
             }
         });
-
-        // Reinicializar dropdowns después de DataTables
-        if ($.fn.DataTable.isDataTable('#empleadosTable')) {
-            $('#empleadosTable').on('init.dt', function () {
-                new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
-            });
-        }
-    });
-</script>
+    </script>

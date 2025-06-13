@@ -48,6 +48,96 @@ body {
         font-size: 0.875rem; /* Tamaño de fuente uniforme */
     }
 
+/* Nuevos estilos para el botón de empleado */
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.btn-outline-purple {
+    color: #6f42c1;
+    border-color: #6f42c1;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-purple:hover {
+    background-color: #6f42c1;
+    color: white;
+    border-color: #6f42c1;
+}
+
+.btn-outline-purple:active, 
+.btn-outline-purple:focus {
+    background-color: #5a32a3 !important;
+    border-color: #5a32a3 !important;
+    box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25) !important;
+}
+
+/* Añade estos estilos */
+.card-body.d-flex {
+    min-height: 120px; /* Altura mínima para mantener consistencia */
+}
+
+.card-body .mt-auto {
+    margin-top: auto !important; /* Empuja el botón hacia abajo */
+}
+
+.btn-outline-secondary {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-outline-secondary:active, 
+.btn-outline-secondary:focus {
+    background-color: #5a6268 !important;
+    border-color: #545b62 !important;
+    box-shadow: 0 0 0 0.25rem rgba(130, 138, 145, 0.5) !important;
+}
+
+/* Estilos para la tarjeta de productos adquiridos */
+.card-body.flex-column {
+    min-height: 140px; /* Altura mínima aumentada */
+}
+
+.card-text {
+    font-size: 1rem !important; /* Tamaño de fuente aumentado */
+    padding: 0.5rem;
+    color: #495057; /* Color de texto más oscuro */
+    line-height: 1.5;
+}
+
+/* Asegurar que el texto ocupe espacio disponible */
+.flex-grow-1 {
+    flex-grow: 1;
+}
+
+/* Ajustes responsivos */
+@media (min-width: 768px) {
+    .card-text {
+        font-size: 1.1rem !important;
+        padding: 1rem;
+    }
+}
+
+/* Ajustes para el select de empleados */
+#selectEmpleado {
+    border: 1px solid #6f42c1;
+    transition: all 0.3s ease;
+}
+
+#selectEmpleado:focus {
+    border-color: #5a32a3;
+    box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
+}
+
+/* Centrado mejorado del contenedor */
+.justify-content-center {
+    justify-content: center !important;
+}
+
 /* Contenido principal pegado a la navbar */
 .main-content {
     margin-top: 56px !important; /* Igual a la altura de la navbar */
