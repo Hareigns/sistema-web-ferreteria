@@ -5,70 +5,130 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-lg p-4">
-                <div class="card-body">
-                    <!-- Formulario para generar reportes -->
-                    <div class="card-header bg-info text-white">
-                        <h2 class="h5 mb-0">Generar Reportes</h2>
+        <div class="col-lg-10"> <!-- Aumenté el ancho a col-lg-10 -->
+            <div class="card shadow-lg">
+                <!-- Encabezado del reporte -->
+                <div class="card-header bg-info text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h4 mb-0"><i class="fas fa-chart-line me-2"></i>Generar Reportes</h2>
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-user me-1"></i>Empleado: <span id="nombreEmpleado">Cargando...</span>
+                        </span>
                     </div>
                 </div>
 
-                <!-- Sección de Reportes -->
-                <div class="row">
-                    <!-- Reporte de Ventas -->
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header bg-primary text-white">
-                                <h2 class="h5 mb-0">Reporte de Ventas</h2>
-                            </div>
-                            <div class="card-body pb-2">
-                                <div class="list-group list-group-flush">
-                                    <div class="list-group-item">
-                                        <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario"
-                                                checked>
-                                            <label class="form-check-label" for="diario">Diario</label>
-                                        </div>
-                                        <div class="mt-2" id="fechaDiario">
-                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el
-                                                día:</label>
-                                            <input type="date" class="form-control form-control-sm"
-                                                id="fechaDiarioInput">
+                <!-- Cuerpo del reporte -->
+                <div class="card-body p-4">
+                    <!-- Sección de Reporte de Ventas -->
+                    <div class="row g-4">
+                        <!-- Columna principal del reporte -->
+                        <div class="col-md-8">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header bg-primary text-white py-3">
+                                    <h3 class="h5 mb-0"><i class="fas fa-shopping-cart me-2"></i>Reporte de Ventas</h3>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Filtros de fecha -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-12">
+                                            <div class="list-group">
+                                                <!-- Filtro Diario -->
+                                                <div class="list-group-item">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="form-check me-3">
+                                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario" checked>
+                                                            <label class="form-check-label fw-bold" for="diario">Diario</label>
+                                                        </div>
+                                                        <div class="flex-grow-1" id="fechaDiario">
+                                                            <input type="date" class="form-control" id="fechaDiarioInput">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Filtro Semanal -->
+                                                <div class="list-group-item">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="form-check me-3">
+                                                            <input class="form-check-input" type="radio" name="filtroVentas" id="semanal">
+                                                            <label class="form-check-label fw-bold" for="semanal">Semanal</label>
+                                                        </div>
+                                                        <div class="flex-grow-1 d-none" id="fechaSemanal">
+                                                            <input type="week" class="form-control" id="fechaSemanalInput">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Filtro Mensual -->
+                                                <div class="list-group-item">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="form-check me-3">
+                                                            <input class="form-check-input" type="radio" name="filtroVentas" id="mensual">
+                                                            <label class="form-check-label fw-bold" for="mensual">Mensual</label>
+                                                        </div>
+                                                        <div class="flex-grow-1 d-none" id="fechaMensual">
+                                                            <input type="month" class="form-control" id="fechaMensualInput">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="list-group-item">
-                                        <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas"
-                                                id="semanal">
-                                            <label class="form-check-label" for="semanal">Semanal</label>
+                                    
+                                    <!-- Resumen estadístico -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title text-muted">Total Ventas</h5>
+                                                    <p class="display-6 text-primary fw-bold" id="totalVentas">0</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="mt-2 d-none" id="fechaSemanal">
-                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la
-                                                semana:</label>
-                                            <input type="week" class="form-control form-control-sm"
-                                                id="fechaSemanalInput">
-                                        </div>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas"
-                                                id="mensual">
-                                            <label class="form-check-label" for="mensual">Mensual</label>
-                                        </div>
-                                        <div class="mt-2 d-none" id="fechaMensual">
-                                            <label for="fechaMensualInput" class="form-label small">Seleccione el
-                                                mes:</label>
-                                            <input type="month" class="form-control form-control-sm"
-                                                id="fechaMensualInput">
+                                        <div class="col-md-6">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title text-muted">Monto Total</h5>
+                                                    <p class="display-6 text-success fw-bold" id="montoTotal">$0.00</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- Pie de card con botón de exportación -->
+                                <div class="card-footer bg-transparent border-top border-primary py-3">
+                                    <button id="exportarVentas" class="btn btn-primary w-100 py-2">
+                                        <i class="fas fa-file-excel me-2"></i>Exportar Reporte Completo
+                                    </button>
+                                </div>
                             </div>
-                            <div class="card-footer bg-transparent py-2">
-                                <button id="exportarVentas" class="btn btn-sm btn-outline-primary w-100">
-                                    <i class="fas fa-download me-1"></i>Exportar selección
-                                </button>
+                        </div>
+                        
+                        <!-- Columna secundaria con información adicional -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-secondary">
+                                <div class="card-header bg-secondary text-white py-3">
+                                    <h3 class="h5 mb-0"><i class="fas fa-info-circle me-2"></i>Instrucciones</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h5 class="alert-heading">Cómo generar tu reporte:</h5>
+                                        <ol class="mb-0">
+                                            <li>Selecciona el tipo de reporte</li>
+                                            <li>Elige la fecha correspondiente</li>
+                                            <li>Haz clic en "Exportar Reporte"</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <div class="alert alert-warning mt-3">
+                                        <h5 class="alert-heading">Tipos de reporte:</h5>
+                                        <ul class="mb-0">
+                                            <li><strong>Diario:</strong> Ventas de un día específico</li>
+                                            <li><strong>Semanal:</strong> Ventas de toda la semana</li>
+                                            <li><strong>Mensual:</strong> Ventas del mes completo</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -76,425 +136,456 @@
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Scripts (manteniendo los mismos que proporcionaste) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        // Configuración centralizada
-        const reportConfig = {
-            ventas: {
-                endpoint: '/reporteemple/ventas',
-                filters: ['diario', 'semanal', 'mensual']
-            },
-            productos: {
-                endpoint: '/reporteemple/productos'
-            }
-        };
+<script>
+    // Configuración centralizada
+    const reportConfig = {
+        ventas: {
+            endpoint: '/reporteemple/ventas',
+            filters: ['diario', 'semanal', 'mensual']
+        },
+        productos: {
+            endpoint: '/reporteemple/productos'
+        }
+    };
 
-        // Utilidades comunes
-        const reportUtils = {
-            showAlert: async (icon, title, text, confirmText = 'Aceptar') => {
-                return Swal.fire({ icon, title, text, confirmButtonText: confirmText });
-            },
+    // Utilidades comunes
+    const reportUtils = {
+        showAlert: async (icon, title, text, confirmText = 'Aceptar') => {
+            return Swal.fire({ icon, title, text, confirmButtonText: confirmText });
+        },
 
-            handleError: async (error, context = '') => {
-                console.error(`Error en ${context}:`, error);
-                await reportUtils.showAlert(
-                    'error',
-                    'Error',
-                    error.message || 'Ocurrió un error inesperado',
-                    'Cerrar'
-                );
-            },
+        handleError: async (error, context = '') => {
+            console.error(`Error en ${context}:`, error);
+            await reportUtils.showAlert(
+                'error',
+                'Error',
+                error.message || 'Ocurrió un error inesperado',
+                'Cerrar'
+            );
+        },
 
-            fetchData: async (url, method = 'GET', body = null) => {
-                const options = {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include'
-                };
-
-                if (body) options.body = JSON.stringify(body);
-
-                try {
-                    const res = await fetch(url, options);
-
-                    const contentType = res.headers.get('content-type');
-                    if (!contentType || !contentType.includes('application/json')) {
-                        const text = await res.text();
-                        throw new Error(`Respuesta no JSON recibida: ${text.substring(0, 100)}...`);
-                    }
-
-                    const data = await res.json();
-
-                    if (!res.ok) {
-                        throw new Error(data.message || 'Error en la solicitud');
-                    }
-
-                    return data;
-                } catch (error) {
-                    console.error('Error en fetchData:', error);
-                    throw error;
-                }
-            }
-        };
-
-        // Funcionalidad de reportes
-        const reportHandlers = {
-            ventas: {
-                getSelectedFilter: () => {
-                    const selectedRadio = document.querySelector('input[name="filtroVentas"]:checked');
-                    if (!selectedRadio) return null;
-
-                    let fechaValue;
-                    const tipo = selectedRadio.id;
-
-                    if (tipo === 'diario') {
-                        fechaValue = document.getElementById('fechaDiarioInput').value;
-                    } else if (tipo === 'semanal') {
-                        const weekInput = document.getElementById('fechaSemanalInput').value;
-                        // Convertir formato YYYY-Www a fecha de inicio de semana
-                        if (weekInput) {
-                            const [year, week] = weekInput.split('-W');
-                            const firstDayOfWeek = new Date(year, 0, 1 + (week - 1) * 7);
-                            fechaValue = firstDayOfWeek.toISOString().split('T')[0];
-                        }
-                    } else if (tipo === 'mensual') {
-                        const monthInput = document.getElementById('fechaMensualInput').value;
-                        // Convertir formato YYYY-MM a primer día del mes
-                        if (monthInput) {
-                            fechaValue = monthInput + '-01';
-                        }
-                    }
-
-                    console.log(`Filtro seleccionado: ${tipo}, Fecha enviada: ${fechaValue}`); // Para depuración
-
-                    return {
-                        tipo: tipo,
-                        fecha: fechaValue
-                    };
+        fetchData: async (url, method = 'GET', body = null) => {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                credentials: 'include'
+            };
 
-                exportToExcel: async (data, fileName) => {
-                    try {
-                        const ExcelJS = window.ExcelJS;
-                        const workbook = new ExcelJS.Workbook();
-                        const worksheet = workbook.addWorksheet('Reporte Ventas');
+            if (body) options.body = JSON.stringify(body);
 
-                        // Función para redondear a 2 decimales solo los campos numéricos necesarios
-                        const formatCurrency = (value) => {
-                            if (typeof value !== 'number') return value;
-                            return Math.round(value * 100) / 100; // Redondeo a 2 decimales
-                        };
-
-                        // Función para formatear la fecha
-                        const formatExcelDate = (dateString) => {
-                            if (!dateString) return null;
-                            if (dateString instanceof Date) return dateString;
-                            const date = new Date(dateString);
-                            return !isNaN(date.getTime()) ? date : null;
-                        };
-
-                        // Configuración de columnas (solo aplicamos formato numérico a los campos necesarios)
-                        worksheet.columns = [
-                            { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
-                            { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
-                            { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
-                            {
-                                header: 'Cantidad Vendida',
-                                key: 'Cantidad_Venta',
-                                width: 18,
-                                style: { numFmt: '0.00' } // Formato con 2 decimales
-                            },
-                            {
-                                header: 'Monto Total',
-                                key: 'Monto_Total',
-                                width: 15,
-                                style: { numFmt: '#,##0.00' } // Formato monetario con 2 decimales
-                            },
-                            {
-                                header: 'Fecha Venta',
-                                key: 'Fecha_Venta',
-                                width: 15,
-                                style: { numFmt: 'dd/mm/yyyy' }
-                            }
-                        ];
-
-                        // Estilo del encabezado (se mantiene igual)
-                        const headerRow = worksheet.getRow(1);
-                        headerRow.eachCell(cell => {
-                            cell.fill = {
-                                type: 'pattern',
-                                pattern: 'solid',
-                                fgColor: { argb: 'FF4F81BD' }
-                            };
-                            cell.font = {
-                                bold: true,
-                                color: { argb: 'FFFFFFFF' },
-                                size: 12
-                            };
-                            cell.border = {
-                                top: { style: 'thin' },
-                                left: { style: 'thin' },
-                                bottom: { style: 'thin' },
-                                right: { style: 'thin' }
-                            };
-                            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                        });
-
-                        // Agregar datos (solo aplicamos formato a los campos necesarios)
-                        data.forEach(item => {
-                            const rowData = {
-                                Cod_Venta: item.Cod_Venta,
-                                Cod_Producto: item.Cod_Producto,
-                                Nombre_Producto: item.Nombre_Producto,
-                                Cantidad_Venta: formatCurrency(item.Cantidad_Venta), // Solo este campo redondeado
-                                Monto_Total: formatCurrency(item.Monto_Total),      // Solo este campo redondeado
-                                Fecha_Venta: formatExcelDate(item.Fecha_Venta)      // Sin cambios
-                            };
-
-                            const row = worksheet.addRow(rowData);
-
-                            // Asegurar formato de fecha
-                            if (row.getCell('Fecha_Venta').value) {
-                                row.getCell('Fecha_Venta').numFmt = 'dd/mm/yyyy';
-                            }
-
-                            // Estilos para todas las celdas
-                            row.eachCell(cell => {
-                                cell.border = {
-                                    top: { style: 'thin' },
-                                    left: { style: 'thin' },
-                                    bottom: { style: 'thin' },
-                                    right: { style: 'thin' }
-                                };
-                            });
-                        });
-
-                        // Calcular totales (solo redondeamos los campos necesarios)
-                        const totalVentas = formatCurrency(data.reduce((sum, item) => sum + item.Monto_Total, 0));
-                        const totalCantidad = formatCurrency(data.reduce((sum, item) => sum + item.Cantidad_Venta, 0));
-
-                        const totalRow = worksheet.addRow([
-                            '',
-                            '',
-                            'Totales',
-                            totalCantidad,
-                            totalVentas,
-                            ''
-                        ]);
-
-                        // Estilo para fila de totales
-                        totalRow.eachCell((cell, colNumber) => {
-                            cell.font = { bold: true };
-                            cell.fill = {
-                                type: 'pattern',
-                                pattern: 'solid',
-                                fgColor: { argb: 'FF4F81BD' }
-                            };
-                            cell.border = {
-                                top: { style: 'thin' },
-                                left: { style: 'thin' },
-                                bottom: { style: 'thin' },
-                                right: { style: 'thin' }
-                            };
-
-                            // Aplicar formato numérico solo a las columnas 4 (Cantidad) y 5 (Monto)
-                            if (colNumber === 4) {
-                                cell.numFmt = '0.00';
-                            } else if (colNumber === 5) {
-                                cell.numFmt = '#,##0.00';
-                            }
-                        });
-
-                        // Ajustar ancho de columnas (se mantiene igual)
-                        worksheet.columns.forEach(column => {
-                            let maxLength = 0;
-                            column.eachCell({ includeEmpty: true }, cell => {
-                                let columnLength = cell.value ? cell.value.toString().length : 0;
-                                if (columnLength > maxLength) {
-                                    maxLength = columnLength;
-                                }
-                            });
-                            column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
-                        });
-
-                        // Generar y descargar archivo (se mantiene igual)
-                        const buffer = await workbook.xlsx.writeBuffer();
-                        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = fileName;
-                        a.click();
-                        URL.revokeObjectURL(url);
-
-                    } catch (error) {
-                        console.error('Error detallado al exportar:', error);
-                        throw new Error(`Error al exportar Excel: ${error.message}`);
-                    }
-                },
-                generateReport: async () => {
-                    try {
-                        const filterInfo = reportHandlers.ventas.getSelectedFilter();
-                        const empleadoInfo = await obtenerEmpleadoInfo();
-
-                        console.log("Información del empleado:", empleadoInfo); // ← Para depuración
-
-                        if (!filterInfo || !filterInfo.fecha) {
-                            await reportUtils.showAlert('warning', 'Datos requeridos', 'Por favor selecciona un filtro y una fecha');
-                            return;
-                        }
-
-                        if (!empleadoInfo.id) {
-                            await reportUtils.showAlert('warning', 'Autenticación requerida', 'No se pudo identificar al empleado');
-                            return;
-                        }
-
-                        const data = await reportUtils.fetchData(
-                            reportConfig.ventas.endpoint,
-                            'POST',
-                            {
-                                filtro: filterInfo.tipo,
-                                fecha: filterInfo.fecha,
-                                empleadoId: empleadoInfo.id
-                            }
-                        );
-
-                        if (!Array.isArray(data)) {
-                            throw new Error('Formato de respuesta inválido');
-                        }
-
-                        if (data.length === 0) {
-                            await reportUtils.showAlert('info', 'Sin datos', 'No hay ventas registradas para el período seleccionado.');
-                            return;
-                        }
-
-                        // Generar nombre de archivo seguro
-                        const nombreSeguro = (str) => {
-                            return str.toString()
-                                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-                                .replace(/\s+/g, '_') // Reemplazar espacios por _
-                                .replace(/[^a-zA-Z0-9_]/g, '') // Eliminar caracteres especiales
-                                .substring(0, 20); // Limitar longitud
-                        };
-
-                        const nombreArchivo = `reporte_ventas_${filterInfo.tipo}_${nombreSeguro(empleadoInfo.apellido)}_${nombreSeguro(empleadoInfo.nombre)}.xlsx`;
-
-                        console.log("Nombre de archivo generado:", nombreArchivo); // ← Para depuración
-
-                        await reportHandlers.ventas.exportToExcel(data, nombreArchivo);
-
-                    } catch (error) {
-                        await reportUtils.handleError(error, 'generación de reporte de ventas');
-                    }
-                }
-            },
-
-            productos: {
-                generateReport: async () => {
-                    // Implementación básica para productos
-                    await reportUtils.showAlert('info', 'Función en desarrollo', 'El reporte de productos estará disponible pronto');
-                }
-            }
-        };
-
-        // Nueva función para obtener el ID del empleado
-        async function obtenerEmpleadoInfo() {
             try {
-                const response = await fetch('/api/usuario/actual', {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                const res = await fetch(url, options);
 
-                const data = await response.json();
-                console.log("Datos recibidos del empleado:", data); // ← Añade esto para depuración
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Error al obtener datos del empleado');
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await res.text();
+                    throw new Error(`Respuesta no JSON recibida: ${text.substring(0, 100)}...`);
                 }
 
-                // Versión más flexible para manejar diferentes estructuras de respuesta
-                const nombre = data.Nombre || data.nombre || data.Nombre_Empleado || data.nombre_empleado || 'Nombre';
-                const apellido = data.Apellido || data.apellido || data.Apellido_Empleado || data.apellido_empleado || 'Apellido';
+                const data = await res.json();
 
-                return {
-                    id: data.Cod_Empleado || data.id || data.empleadoId || null,
-                    nombre: nombre.split(' ')[0], // Tomar solo el primer nombre
-                    apellido: apellido.split(' ')[0] // Tomar solo el primer apellido
-                };
+                if (!res.ok) {
+                    throw new Error(data.message || 'Error en la solicitud');
+                }
 
+                return data;
             } catch (error) {
-                console.error('Error al obtener información del empleado:', error);
-                return {
-                    id: null,
-                    nombre: 'Nombre',
-                    apellido: 'Apellido'
-                };
+                console.error('Error en fetchData:', error);
+                throw error;
             }
         }
+    };
 
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', () => {
-            // Asignar eventos
-            document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
+    // Funcionalidad de reportes
+    const reportHandlers = {
+        ventas: {
+            getSelectedFilter: () => {
+                const selectedRadio = document.querySelector('input[name="filtroVentas"]:checked');
+                if (!selectedRadio) return null;
 
-            // Mostrar/ocultar campos de fecha según el filtro seleccionado
-            document.querySelectorAll('input[name="filtroVentas"]').forEach(radio => {
-                radio.addEventListener('change', function () {
-                    document.getElementById('fechaDiario').classList.add('d-none');
-                    document.getElementById('fechaSemanal').classList.add('d-none');
-                    document.getElementById('fechaMensual').classList.add('d-none');
+                let fechaValue;
+                const tipo = selectedRadio.id;
 
-                    if (this.id === 'diario') {
-                        document.getElementById('fechaDiario').classList.remove('d-none');
-                    } else if (this.id === 'semanal') {
-                        document.getElementById('fechaSemanal').classList.remove('d-none');
-                    } else if (this.id === 'mensual') {
-                        document.getElementById('fechaMensual').classList.remove('d-none');
+                if (tipo === 'diario') {
+                    fechaValue = document.getElementById('fechaDiarioInput').value;
+                } else if (tipo === 'semanal') {
+                    const weekInput = document.getElementById('fechaSemanalInput').value;
+                    // Convertir formato YYYY-Www a fecha de inicio de semana
+                    if (weekInput) {
+                        const [year, week] = weekInput.split('-W');
+                        const firstDayOfWeek = new Date(year, 0, 1 + (week - 1) * 7);
+                        fechaValue = firstDayOfWeek.toISOString().split('T')[0];
                     }
-                });
-            });
+                } else if (tipo === 'mensual') {
+                    const monthInput = document.getElementById('fechaMensualInput').value;
+                    // Convertir formato YYYY-MM a primer día del mes
+                    if (monthInput) {
+                        fechaValue = monthInput + '-01';
+                    }
+                }
 
-            // Inicializar con el filtro diario visible
-            document.getElementById('fechaDiario').classList.remove('d-none');
-        });
-    </script>
+                console.log(`Filtro seleccionado: ${tipo}, Fecha enviada: ${fechaValue}`); // Para depuración
 
-    <script>
-        // Solución definitiva para el dropdown del navbar
-        document.addEventListener('DOMContentLoaded', function () {
-            // Manejar clicks en el dropdown manualmente
-            document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
-                toggle.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    var menu = this.nextElementSibling;
-                    menu.classList.toggle('show');
-                });
-            });
+                return {
+                    tipo: tipo,
+                    fecha: fechaValue
+                };
+            },
 
-            // Cerrar dropdown al hacer click fuera
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.show').forEach(function (menu) {
-                        menu.classList.remove('show');
+            exportToExcel: async (data, fileName) => {
+                try {
+                    const ExcelJS = window.ExcelJS;
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('Reporte Ventas');
+
+                    // Función para redondear a 2 decimales solo los campos numéricos necesarios
+                    const formatCurrency = (value) => {
+                        if (typeof value !== 'number') return value;
+                        return Math.round(value * 100) / 100; // Redondeo a 2 decimales
+                    };
+
+                    // Función para formatear la fecha
+                    const formatExcelDate = (dateString) => {
+                        if (!dateString) return null;
+                        if (dateString instanceof Date) return dateString;
+                        const date = new Date(dateString);
+                        return !isNaN(date.getTime()) ? date : null;
+                    };
+
+                    // Configuración de columnas (solo aplicamos formato numérico a los campos necesarios)
+                    worksheet.columns = [
+                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
+                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                        { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
+                        {
+                            header: 'Cantidad Vendida',
+                            key: 'Cantidad_Venta',
+                            width: 18,
+                            style: { numFmt: '0.00' } // Formato con 2 decimales
+                        },
+                        {
+                            header: 'Monto Total',
+                            key: 'Monto_Total',
+                            width: 15,
+                            style: { numFmt: '#,##0.00' } // Formato monetario con 2 decimales
+                        },
+                        {
+                            header: 'Fecha Venta',
+                            key: 'Fecha_Venta',
+                            width: 15,
+                            style: { numFmt: 'dd/mm/yyyy' }
+                        }
+                    ];
+
+                    // Estilo del encabezado (se mantiene igual)
+                    const headerRow = worksheet.getRow(1);
+                    headerRow.eachCell(cell => {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF4F81BD' }
+                        };
+                        cell.font = {
+                            bold: true,
+                            color: { argb: 'FFFFFFFF' },
+                            size: 12
+                        };
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
                     });
+
+                    // Agregar datos (solo aplicamos formato a los campos necesarios)
+                    data.forEach(item => {
+                        const rowData = {
+                            Cod_Venta: item.Cod_Venta,
+                            Cod_Producto: item.Cod_Producto,
+                            Nombre_Producto: item.Nombre_Producto,
+                            Cantidad_Venta: formatCurrency(item.Cantidad_Venta), // Solo este campo redondeado
+                            Monto_Total: formatCurrency(item.Monto_Total),      // Solo este campo redondeado
+                            Fecha_Venta: formatExcelDate(item.Fecha_Venta)      // Sin cambios
+                        };
+
+                        const row = worksheet.addRow(rowData);
+
+                        // Asegurar formato de fecha
+                        if (row.getCell('Fecha_Venta').value) {
+                            row.getCell('Fecha_Venta').numFmt = 'dd/mm/yyyy';
+                        }
+
+                        // Estilos para todas las celdas
+                        row.eachCell(cell => {
+                            cell.border = {
+                                top: { style: 'thin' },
+                                left: { style: 'thin' },
+                                bottom: { style: 'thin' },
+                                right: { style: 'thin' }
+                            };
+                        });
+                    });
+
+                    // Calcular totales (solo redondeamos los campos necesarios)
+                    const totalVentas = formatCurrency(data.reduce((sum, item) => sum + item.Monto_Total, 0));
+                    const totalCantidad = formatCurrency(data.reduce((sum, item) => sum + item.Cantidad_Venta, 0));
+
+                    const totalRow = worksheet.addRow([
+                        '',
+                        '',
+                        'Totales',
+                        totalCantidad,
+                        totalVentas,
+                        ''
+                    ]);
+
+                    // Estilo para fila de totales
+                    totalRow.eachCell((cell, colNumber) => {
+                        cell.font = { bold: true };
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF4F81BD' }
+                        };
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+
+                        // Aplicar formato numérico solo a las columnas 4 (Cantidad) y 5 (Monto)
+                        if (colNumber === 4) {
+                            cell.numFmt = '0.00';
+                        } else if (colNumber === 5) {
+                            cell.numFmt = '#,##0.00';
+                        }
+                    });
+
+                    // Ajustar ancho de columnas (se mantiene igual)
+                    worksheet.columns.forEach(column => {
+                        let maxLength = 0;
+                        column.eachCell({ includeEmpty: true }, cell => {
+                            let columnLength = cell.value ? cell.value.toString().length : 0;
+                            if (columnLength > maxLength) {
+                                maxLength = columnLength;
+                            }
+                        });
+                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                    });
+
+                    // Generar y descargar archivo (se mantiene igual)
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    console.error('Error detallado al exportar:', error);
+                    throw new Error(`Error al exportar Excel: ${error.message}`);
+                }
+            },
+            generateReport: async () => {
+                try {
+                    const filterInfo = reportHandlers.ventas.getSelectedFilter();
+                    const empleadoInfo = await obtenerEmpleadoInfo();
+
+                    console.log("Información del empleado:", empleadoInfo); // ← Para depuración
+
+                    if (!filterInfo || !filterInfo.fecha) {
+                        await reportUtils.showAlert('warning', 'Datos requeridos', 'Por favor selecciona un filtro y una fecha');
+                        return;
+                    }
+
+                    if (!empleadoInfo.id) {
+                        await reportUtils.showAlert('warning', 'Autenticación requerida', 'No se pudo identificar al empleado');
+                        return;
+                    }
+
+                    // Mostrar carga
+                    const loadingAlert = Swal.fire({
+                        title: 'Generando reporte',
+                        html: 'Por favor espera mientras procesamos tu solicitud...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const data = await reportUtils.fetchData(
+                        reportConfig.ventas.endpoint,
+                        'POST',
+                        {
+                            filtro: filterInfo.tipo,
+                            fecha: filterInfo.fecha,
+                            empleadoId: empleadoInfo.id
+                        }
+                    );
+
+                    await loadingAlert.close();
+
+                    if (!Array.isArray(data)) {
+                        throw new Error('Formato de respuesta inválido');
+                    }
+
+                    if (data.length === 0) {
+                        await reportUtils.showAlert('info', 'Sin datos', 'No hay ventas registradas para el período seleccionado.');
+                        return;
+                    }
+
+                    // Actualizar resumen estadístico
+                    const totalVentas = data.length;
+                    const montoTotal = data.reduce((sum, item) => sum + item.Monto_Total, 0);
+                    
+                    document.getElementById('totalVentas').textContent = totalVentas;
+                    document.getElementById('montoTotal').textContent = `$${montoTotal.toFixed(2)}`;
+
+                    // Generar nombre de archivo seguro
+                    const nombreSeguro = (str) => {
+                        return str.toString()
+                            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+                            .replace(/\s+/g, '_') // Reemplazar espacios por _
+                            .replace(/[^a-zA-Z0-9_]/g, '') // Eliminar caracteres especiales
+                            .substring(0, 20); // Limitar longitud
+                    };
+
+                    const nombreArchivo = `reporte_ventas_${filterInfo.tipo}_${nombreSeguro(empleadoInfo.apellido)}_${nombreSeguro(empleadoInfo.nombre)}.xlsx`;
+
+                    console.log("Nombre de archivo generado:", nombreArchivo); // ← Para depuración
+
+                    await reportHandlers.ventas.exportToExcel(data, nombreArchivo);
+
+                } catch (error) {
+                    await reportUtils.handleError(error, 'generación de reporte de ventas');
+                }
+            }
+        },
+
+        productos: {
+            generateReport: async () => {
+                // Implementación básica para productos
+                await reportUtils.showAlert('info', 'Función en desarrollo', 'El reporte de productos estará disponible pronto');
+            }
+        }
+    };
+
+    // Nueva función para obtener el ID del empleado
+    async function obtenerEmpleadoInfo() {
+        try {
+            const response = await fetch('/api/usuario/actual', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json'
                 }
             });
 
-            // Reinicializar dropdowns después de DataTables
-            if (window.$ && $.fn.DataTable && $.fn.DataTable.isDataTable('#empleadosTable')) {
-                $('#empleadosTable').on('init.dt', function () {
-                    new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
+            const data = await response.json();
+            console.log("Datos recibidos del empleado:", data); // ← Añade esto para depuración
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al obtener datos del empleado');
+            }
+
+            // Versión más flexible para manejar diferentes estructuras de respuesta
+            const nombre = data.Nombre || data.nombre || data.Nombre_Empleado || data.nombre_empleado || 'Nombre';
+            const apellido = data.Apellido || data.apellido || data.Apellido_Empleado || data.apellido_empleado || 'Apellido';
+
+            // Actualizar el nombre en el header
+            document.getElementById('nombreEmpleado').textContent = `${nombre} ${apellido}`;
+
+            return {
+                id: data.Cod_Empleado || data.id || data.empleadoId || null,
+                nombre: nombre.split(' ')[0], // Tomar solo el primer nombre
+                apellido: apellido.split(' ')[0] // Tomar solo el primer apellido
+            };
+
+        } catch (error) {
+            console.error('Error al obtener información del empleado:', error);
+            return {
+                id: null,
+                nombre: 'Nombre',
+                apellido: 'Apellido'
+            };
+        }
+    }
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+        // Obtener y mostrar información del empleado al cargar
+        obtenerEmpleadoInfo();
+        
+        // Asignar eventos
+        document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
+
+        // Mostrar/ocultar campos de fecha según el filtro seleccionado
+        document.querySelectorAll('input[name="filtroVentas"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                document.getElementById('fechaDiario').classList.add('d-none');
+                document.getElementById('fechaSemanal').classList.add('d-none');
+                document.getElementById('fechaMensual').classList.add('d-none');
+
+                if (this.id === 'diario') {
+                    document.getElementById('fechaDiario').classList.remove('d-none');
+                } else if (this.id === 'semanal') {
+                    document.getElementById('fechaSemanal').classList.remove('d-none');
+                } else if (this.id === 'mensual') {
+                    document.getElementById('fechaMensual').classList.remove('d-none');
+                }
+            });
+        });
+
+        // Inicializar con el filtro diario visible
+        document.getElementById('fechaDiario').classList.remove('d-none');
+        
+        // Establecer fecha actual por defecto
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('fechaDiarioInput').value = today;
+    });
+</script>
+
+<script>
+    // Solución definitiva para el dropdown del navbar
+    document.addEventListener('DOMContentLoaded', function () {
+        // Manejar clicks en el dropdown manualmente
+        document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                var menu = this.nextElementSibling;
+                menu.classList.toggle('show');
+            });
+        });
+
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(function (menu) {
+                    menu.classList.remove('show');
                 });
             }
         });
-    </script>
+
+        // Reinicializar dropdowns después de DataTables
+        if (window.$ && $.fn.DataTable && $.fn.DataTable.isDataTable('#empleadosTable')) {
+            $('#empleadosTable').on('init.dt', function () {
+                new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
+            });
+        }
+    });
+</script>
