@@ -15,11 +15,11 @@
                 </div>
 
                 <!-- Sección de Reportes -->
-                <div class="row">
-                    <!-- Columna izquierda para Reporte de Ventas y Ganancias -->
-                    <div class="col-md-6">
+                <div class="row g-4">
+                    <!-- Columna izquierda -->
+                    <div class="col-md-6 d-flex flex-column">
                         <!-- Reporte de Ventas -->
-                        <div class="card mb-4 h-auto">
+                        <div class="card flex-grow-1 mb-4">
                             <div class="card-header bg-primary text-white">
                                 <h2 class="h5 mb-0">Reporte de Ventas</h2>
                             </div>
@@ -27,32 +27,41 @@
                                 <div class="list-group list-group-flush">
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario" checked>
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario"
+                                                checked>
                                             <label class="form-check-label" for="diario">Diario</label>
                                         </div>
                                         <div class="mt-2" id="fechaDiario">
-                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el día:</label>
-                                            <input type="date" class="form-control form-control-sm" id="fechaDiarioInput">
+                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el
+                                                día:</label>
+                                            <input type="date" class="form-control form-control-sm"
+                                                id="fechaDiarioInput">
                                         </div>
                                     </div>
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="semanal">
+                                            <input class="form-check-input" type="radio" name="filtroVentas"
+                                                id="semanal">
                                             <label class="form-check-label" for="semanal">Semanal</label>
                                         </div>
                                         <div class="mt-2 d-none" id="fechaSemanal">
-                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la semana:</label>
-                                            <input type="week" class="form-control form-control-sm" id="fechaSemanalInput">
+                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la
+                                                semana:</label>
+                                            <input type="week" class="form-control form-control-sm"
+                                                id="fechaSemanalInput">
                                         </div>
                                     </div>
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="mensual">
+                                            <input class="form-check-input" type="radio" name="filtroVentas"
+                                                id="mensual">
                                             <label class="form-check-label" for="mensual">Mensual</label>
                                         </div>
                                         <div class="mt-2 d-none" id="fechaMensual">
-                                            <label for="fechaMensualInput" class="form-label small">Seleccione el mes:</label>
-                                            <input type="month" class="form-control form-control-sm" id="fechaMensualInput">
+                                            <label for="fechaMensualInput" class="form-label small">Seleccione el
+                                                mes:</label>
+                                            <input type="month" class="form-control form-control-sm"
+                                                id="fechaMensualInput">
                                         </div>
                                     </div>
                                 </div>
@@ -64,15 +73,16 @@
                             </div>
                         </div>
 
-                        <!-- Reporte de Ganancias debajo de Ventas -->
-                        <div class="card h-auto">
+                        <!-- Reporte de Ganancias -->
+                        <div class="card flex-grow-1">
                             <div class="card-header bg-warning text-white">
                                 <h2 class="h5 mb-0">Reporte de Ganancias</h2>
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
                                     <h5 class="text-center mb-3">Análisis de Rentabilidad</h5>
-                                    <p class="card-text text-center small mb-3">Detalle de márgenes de utilidad por producto vendido</p>
+                                    <p class="card-text text-center small mb-3">Detalle de márgenes de utilidad por
+                                        producto vendido</p>
                                 </div>
                                 <div class="text-center">
                                     <button id="exportarGanancias" class="btn btn-sm btn-outline-warning">
@@ -83,50 +93,51 @@
                         </div>
                     </div>
 
-                    <!-- Columna derecha para otros reportes -->
-                    <div class="col-md-6">
-                        <!-- Reporte Combinado de Productos -->
-                        <div class="card h-100">
+                    <!-- Columna derecha -->
+                    <div class="col-md-6 d-flex flex-column">
+                        <!-- Reporte de Productos Vendidos -->
+                        <div class="card flex-grow-1 mb-4">
                             <div class="card-header bg-success text-white">
-                                <h2 class="h5 mb-0">Reporte de Productos</h2>
+                                <h2 class="h5 mb-0">Reporte de Productos Vendidos</h2>
                             </div>
                             <div class="card-body">
-                                <!-- Sección de Productos Vendidos -->
-                                <div class="mb-4 pb-3 border-bottom">
-                                    <h5 class="text-center mb-3">Productos Vendidos</h5>
-                                    <div class="list-group list-group-flush mb-3">
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <span class="badge bg-success me-3">+</span>
-                                            <span>Producto + vendido</span>
-                                            <span class="badge bg-primary ms-auto">Top 5</span>
-                                        </div>
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <span class="badge bg-danger me-3">-</span>
-                                            <span>Producto - vendido</span>
-                                            <span class="badge bg-primary ms-auto">Último 5</span>
-                                        </div>
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <span class="badge bg-warning me-3">○</span>
-                                            <span>Producto no vendido</span>
-                                            <span class="badge bg-primary ms-auto">Sin ventas</span>
-                                        </div>
+                                <div class="list-group list-group-flush mb-3">
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-success me-3">+</span>
+                                        <span>Producto + vendido</span>
+                                        <span class="badge bg-primary ms-auto">Top 5</span>
                                     </div>
-                                    <div class="text-center">
-                                        <button id="exportarProductos" class="btn btn-sm btn-outline-success">
-                                            <i class="bi bi-file-earmark-excel me-1"></i> Exportar Vendidos
-                                        </button>
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-danger me-3">-</span>
+                                        <span>Producto - vendido</span>
+                                        <span class="badge bg-primary ms-auto">Último 5</span>
+                                    </div>
+                                    <div class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-warning me-3">○</span>
+                                        <span>Producto no vendido</span>
+                                        <span class="badge bg-primary ms-auto">Sin ventas</span>
                                     </div>
                                 </div>
+                                <div class="text-center">
+                                    <button id="exportarProductos" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-file-earmark-excel me-1"></i> Exportar Vendidos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                                <!-- Sección de Productos Adquiridos -->
-                                <div class="pt-3">
-                                    <h5 class="text-center mb-3">Productos Adquiridos</h5>
-                                    <p class="card-text text-center small mb-3">Listado completo de productos con proveedores y fechas</p>
-                                    <div class="text-center">
-                                        <button id="exportarProductosDetallado" class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-file-export me-1"></i> Exportar Adquiridos
-                                        </button>
-                                    </div>
+                        <!-- Reporte de Productos Adquiridos -->
+                        <div class="card flex-grow-1">
+                            <div class="card-header bg-secondary text-white">
+                                <h2 class="h5 mb-0">Reporte de Productos Adquiridos</h2>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text text-center small mb-3">Listado completo de productos con
+                                    proveedores y fechas</p>
+                                <div class="text-center">
+                                    <button id="exportarProductosDetallado" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-file-export me-1"></i> Exportar Adquiridos
+                                    </button>
                                 </div>
                             </div>
                         </div>

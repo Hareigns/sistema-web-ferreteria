@@ -24,6 +24,30 @@ body {
     align-items: center;
 }
 
+ /* Estilos personalizados para mejor alineación */
+    .reportes-container {
+        padding: 0 1rem; /* Padding lateral consistente */
+    }
+    
+    .card {
+        height: 100%; /* Asegura que todas las cards tengan la misma altura */
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-body {
+        flex-grow: 1; /* Hace que el cuerpo ocupe el espacio disponible */
+    }
+    
+    .card-header h2 {
+        font-size: 1.1rem; /* Tamaño uniforme para títulos */
+    }
+    
+    .btn {
+        padding: 0.375rem 0.75rem; /* Tamaño consistente para botones */
+        font-size: 0.875rem; /* Tamaño de fuente uniforme */
+    }
+
 /* Contenido principal pegado a la navbar */
 .main-content {
     margin-top: 56px !important; /* Igual a la altura de la navbar */
