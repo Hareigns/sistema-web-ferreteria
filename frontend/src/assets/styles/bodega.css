@@ -1,155 +1,129 @@
-body {
-    background: url('/images/fondoinicio.webp') no-repeat center center/cover;
-    background-size: cover;
-    min-height: 100vh;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-
-/* ESTILOS PARA LA BARRA DE RESUMEN - VERSIÓN CONSERVANDO TUS ESTILOS */
-.summary-row {
-    background-color: rgba(248, 249, 250, 0.95); /* Fondo semitransparente */
-    border-top: 2px solid #dee2e6;
-    padding: 12px 5px;
-    position: sticky;
-    bottom: 0;
-    z-index: 10;
-}
-
-.summary-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    align-items: center;
-    gap: 10px;
-}
-
-.summary-item {
-    padding: 8px 15px;
-    border-radius: 6px;
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    min-width: 160px;
-    text-align: center;
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
-}
-
-.summary-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.summary-label {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: #495057;
-    display: block;
-    margin-bottom: 3px;
-}
-
-.summary-value {
-    font-weight: 700;
-    font-size: 1.1rem;
-    display: block;
-}
-
-/* ESTILOS ESPECÍFICOS PARA CADA ÍTEM */
-.summary-item:nth-child(1) { /* Total Productos */
-    border-left-color: #6c757d;
-}
-
-.summary-item:nth-child(2) { /* Bajo Stock */
-    color: #ffc107;
-    border-left-color: #ffc107;
-}
-
-.summary-item:nth-child(3) { /* Próximos a vencer */
-    color: #fd7e14;
-    border-left-color: #fd7e14;
-}
-
-.summary-item:nth-child(4) { /* Vencidos */
-    color: #dc3545;
-    border-left-color: #dc3545;
-}
-
-/* ANIMACIONES PARA VALORES IMPORTANTES */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.has-alert {
-    animation: pulse 1.5s infinite;
-}
-
-.has-warning {
-    animation: pulse 1.5s infinite;
-}
-
-/* RESPONSIVE DESIGN */
-@media (max-width: 992px) {
-    .summary-item {
-        min-width: 140px;
-        padding: 8px 10px;
+    body {
+        background: url('/images/fondoinicio.webp') no-repeat center center/cover;
+        background-size: cover;
+        min-height: 100vh;
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
     }
-    
-    .summary-label {
-        font-size: 0.75rem;
-    }
-    
-    .summary-value {
-        font-size: 1rem;
-    }
-}
 
-@media (max-width: 768px) {
-    .summary-container {
-        gap: 8px;
-    }
-    
-    .summary-item {
-        min-width: calc(50% - 20px);
-        margin-bottom: 5px;
-    }
-}
-
-@media (max-width: 576px) {
-    .summary-item {
-        min-width: 100%;
-    }
-    
+    /* Estilos para la barra de resumen */
     .summary-row {
-        padding: 10px 0;
+        background-color: rgba(248, 249, 250, 0.95);
+        border-top: 2px solid #dee2e6;
+        padding: 12px 5px;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
     }
-}
 
-/* INTEGRACIÓN CON SCROLL EXISTENTE */
-.table-wrapper {
-    max-height: calc(70vh - 60px); /* Ajuste para el espacio del resumen */
-    overflow-y: auto; /* Mantiene tu scroll personalizado */
-}
+    .summary-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        align-items: center;
+        gap: 10px;
+    }
 
-/* Agrega esto a tu bodega.css */
-.has-tooltip {
-    cursor: help;
-    border-bottom: 1px dotted #666;
-}
+    .summary-item {
+        padding: 8px 15px;
+        border-radius: 6px;
+        background-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        min-width: 160px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
 
-.tooltip-inner {
-    max-width: 300px;
-    text-align: left;
-}
+    .summary-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
 
-/* Estilo para la descripción */
-.small.text-muted {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin-top: 2px;
-}
+    .summary-label {
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: #495057;
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    .summary-value {
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: block;
+    }
+
+    /* Estilos específicos para cada ítem */
+    .summary-item:nth-child(1) { border-left-color: #6c757d; }
+    .summary-item:nth-child(2) { color: #ffc107; border-left-color: #ffc107; }
+    .summary-item:nth-child(3) { color: #fd7e14; border-left-color: #fd7e14; }
+    .summary-item:nth-child(4) { color: #dc3545; border-left-color: #dc3545; }
+
+    .summary-item a {
+        color: inherit;
+        text-decoration: none;
+        display: block;
+        transition: all 0.2s;
+    }
+
+    .summary-item a:hover {
+        transform: scale(1.05);
+        text-decoration: underline;
+    }
+
+    /* Animaciones */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .has-alert { animation: pulse 1.5s infinite; }
+    .has-warning { animation: pulse 1.5s infinite; }
+
+    /* Diseño responsivo */
+    @media (max-width: 992px) {
+        .summary-item {
+            min-width: 140px;
+            padding: 8px 10px;
+        }
+        .summary-label { font-size: 0.75rem; }
+        .summary-value { font-size: 1rem; }
+    }
+
+    @media (max-width: 768px) {
+        .summary-container { gap: 8px; }
+        .summary-item { min-width: calc(50% - 20px); margin-bottom: 5px; }
+    }
+
+    @media (max-width: 576px) {
+        .summary-item { min-width: 100%; }
+        .summary-row { padding: 10px 0; }
+    }
+
+    /* Scroll de tabla */
+    .table-wrapper {
+        max-height: calc(70vh - 60px);
+        overflow-y: auto;
+    }
+
+    /* Tooltips */
+    .has-tooltip {
+        cursor: help;
+        border-bottom: 1px dotted #666;
+    }
+
+    .tooltip-inner {
+        max-width: 300px;
+        text-align: left;
+    }
+
+    .small.text-muted {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
