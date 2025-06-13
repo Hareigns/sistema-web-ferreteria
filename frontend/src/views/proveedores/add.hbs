@@ -252,10 +252,10 @@
   async function verificarTelefonoExistente(telefono, codProveedor = null) {
     try {
       // Validación básica del teléfono primero
-      if (!telefono || !/^\d{8,9}$/.test(telefono)) {
+      if (!telefono || !/^\d{8}$/.test(telefono)) {
         await Swal.fire({
           title: 'Teléfono inválido',
-          text: 'El teléfono debe tener 8 o 9 dígitos',
+          text: 'El teléfono debe tener 8 dígitos',
           icon: 'error'
         });
         return true; // Consideramos que existe para bloquear el envío
