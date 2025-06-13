@@ -16,72 +16,80 @@
 
                 <!-- Sección de Reportes -->
                 <div class="row">
-                    <!-- Reporte de Ventas -->
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
+                    <!-- Columna izquierda para Reporte de Ventas y Ganancias -->
+                    <div class="col-md-6">
+                        <!-- Reporte de Ventas -->
+                        <div class="card mb-4 h-auto">
                             <div class="card-header bg-primary text-white">
                                 <h2 class="h5 mb-0">Reporte de Ventas</h2>
                             </div>
-                            <div class="card-body pb-2"> <!-- Agregado pb-2 para reducir padding inferior -->
+                            <div class="card-body pb-2">
                                 <div class="list-group list-group-flush">
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario"
-                                                checked>
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario" checked>
                                             <label class="form-check-label" for="diario">Diario</label>
                                         </div>
                                         <div class="mt-2" id="fechaDiario">
-                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el
-                                                día:</label>
-                                            <input type="date" class="form-control form-control-sm"
-                                                id="fechaDiarioInput">
+                                            <label for="fechaDiarioInput" class="form-label small">Seleccione el día:</label>
+                                            <input type="date" class="form-control form-control-sm" id="fechaDiarioInput">
                                         </div>
                                     </div>
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas"
-                                                id="semanal">
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="semanal">
                                             <label class="form-check-label" for="semanal">Semanal</label>
                                         </div>
                                         <div class="mt-2 d-none" id="fechaSemanal">
-                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la
-                                                semana:</label>
-                                            <input type="week" class="form-control form-control-sm"
-                                                id="fechaSemanalInput">
+                                            <label for="fechaSemanalInput" class="form-label small">Seleccione la semana:</label>
+                                            <input type="week" class="form-control form-control-sm" id="fechaSemanalInput">
                                         </div>
                                     </div>
                                     <div class="list-group-item">
                                         <div class="form-check me-3">
-                                            <input class="form-check-input" type="radio" name="filtroVentas"
-                                                id="mensual">
+                                            <input class="form-check-input" type="radio" name="filtroVentas" id="mensual">
                                             <label class="form-check-label" for="mensual">Mensual</label>
                                         </div>
                                         <div class="mt-2 d-none" id="fechaMensual">
-                                            <label for="fechaMensualInput" class="form-label small">Seleccione el
-                                                mes:</label>
-                                            <input type="month" class="form-control form-control-sm"
-                                                id="fechaMensualInput">
+                                            <label for="fechaMensualInput" class="form-label small">Seleccione el mes:</label>
+                                            <input type="month" class="form-control form-control-sm" id="fechaMensualInput">
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent py-2">
-                                <!-- Agregado py-2 para reducir espacio vertical -->
                                 <button id="exportarVentas" class="btn btn-sm btn-outline-primary w-100">
-                                    <!-- Agregado w-100 -->
                                     <i class="fas fa-download me-1"></i>Exportar selección
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Reporte de Ganancias debajo de Ventas -->
+                        <div class="card h-auto">
+                            <div class="card-header bg-warning text-white">
+                                <h2 class="h5 mb-0">Reporte de Ganancias</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <h5 class="text-center mb-3">Análisis de Rentabilidad</h5>
+                                    <p class="card-text text-center small mb-3">Detalle de márgenes de utilidad por producto vendido</p>
+                                </div>
+                                <div class="text-center">
+                                    <button id="exportarGanancias" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-chart-line me-1"></i> Exportar Reporte
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Reporte Combinado de Productos -->
-                    <div class="col-md-6 mb-4">
+                    <!-- Columna derecha para otros reportes -->
+                    <div class="col-md-6">
+                        <!-- Reporte Combinado de Productos -->
                         <div class="card h-100">
                             <div class="card-header bg-success text-white">
                                 <h2 class="h5 mb-0">Reporte de Productos</h2>
                             </div>
-
                             <div class="card-body">
                                 <!-- Sección de Productos Vendidos -->
                                 <div class="mb-4 pb-3 border-bottom">
@@ -113,11 +121,9 @@
                                 <!-- Sección de Productos Adquiridos -->
                                 <div class="pt-3">
                                     <h5 class="text-center mb-3">Productos Adquiridos</h5>
-                                    <p class="card-text text-center small mb-3">Listado completo de productos con
-                                        proveedores y fechas</p>
+                                    <p class="card-text text-center small mb-3">Listado completo de productos con proveedores y fechas</p>
                                     <div class="text-center">
-                                        <button id="exportarProductosDetallado"
-                                            class="btn btn-sm btn-outline-secondary">
+                                        <button id="exportarProductosDetallado" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-file-export me-1"></i> Exportar Adquiridos
                                         </button>
                                     </div>
@@ -134,6 +140,8 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Añadí jQuery para solucionar el segundo error -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
     // Configuración centralizada
@@ -144,6 +152,9 @@
         },
         productos: {
             endpoint: '/reportes/productos'
+        },
+        ganancias: {
+            endpoint: '/reportes/ganancias'
         }
     };
 
@@ -613,6 +624,184 @@
                     await reportUtils.handleError(error, 'generación de reporte de productos detallado');
                 }
             }
+        },
+        ganancias: {
+            exportToExcel: async (data) => {
+                try {
+                    const ExcelJS = window.ExcelJS;
+                    const workbook = new ExcelJS.Workbook();
+                    const worksheet = workbook.addWorksheet('Reporte Ganancias');
+
+                    // Configurar columnas
+                    worksheet.columns = [
+                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
+                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
+                        { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
+                        { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 15 },
+                        { header: 'Costo Unitario', key: 'Costo_Unitario', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                        { header: 'Precio Venta Unitario', key: 'Precio_Venta_Unitario', width: 20, style: { numFmt: 'C$#,##0.00' } },
+                        { header: 'Margen Unitario', key: 'Margen_Unitario', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                        { header: 'Margen Total', key: 'Margen_Total', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                        { header: '% Utilidad', key: 'Porcentaje_Utilidad', width: 15, style: { numFmt: '0.00%' } },
+                        { header: 'Fecha Compra', key: 'Fecha_Compra', width: 15, style: { numFmt: 'dd/mm/yyyy' } },
+                        { header: 'Fecha Venta', key: 'Fecha_Venta', width: 15, style: { numFmt: 'dd/mm/yyyy' } }
+                    ];
+
+                    // Estilo para encabezados
+                    const headerRow = worksheet.getRow(1);
+                    headerRow.eachCell(cell => {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFD28E1D' } // Naranja similar al header
+                        };
+                        cell.font = {
+                            bold: true,
+                            color: { argb: 'FFFFFFFF' },
+                            size: 12
+                        };
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    });
+
+                    // Agregar datos
+                    data.forEach(item => {
+                        // Asegurar que los valores numéricos sean correctos
+                        const costoUnitario = parseFloat(item.Costo_Unitario) || 0;
+                        const precioVenta = parseFloat(item.Precio_Venta_Unitario) || 0;
+                        const margenUnitario = precioVenta - costoUnitario;
+                        const margenTotal = margenUnitario * (parseFloat(item.Cantidad_Venta) || 0);
+                        const porcentajeUtilidad = costoUnitario !== 0 ? (margenUnitario / costoUnitario) : 0;
+
+                        const row = worksheet.addRow({
+                            Cod_Venta: item.Cod_Venta,
+                            Cod_Producto: item.Cod_Producto,
+                            Nombre_Producto: item.Nombre_Producto,
+                            Cantidad_Venta: parseFloat(item.Cantidad_Venta) || 0,
+                            Costo_Unitario: costoUnitario,
+                            Precio_Venta_Unitario: precioVenta,
+                            Margen_Unitario: margenUnitario,
+                            Margen_Total: margenTotal,
+                            Porcentaje_Utilidad: porcentajeUtilidad,
+                            Fecha_Compra: item.Fecha_Compra,
+                            Fecha_Venta: item.Fecha_Venta
+                        });
+
+                        // Formatear celdas numéricas
+                        ['Costo_Unitario', 'Precio_Venta_Unitario', 'Margen_Unitario', 'Margen_Total'].forEach(key => {
+                            const cell = row.getCell(key);
+                            cell.numFmt = 'C$#,##0.00';
+                        });
+
+                        // Formatear porcentaje
+                        row.getCell('Porcentaje_Utilidad').numFmt = '0.00%';
+
+                        // Formatear fechas
+                        ['Fecha_Compra', 'Fecha_Venta'].forEach(key => {
+                            const cell = row.getCell(key);
+                            if (cell.value) {
+                                cell.numFmt = 'dd/mm/yyyy';
+                            }
+                        });
+
+                        // Bordes para todas las celdas
+                        row.eachCell(cell => {
+                            cell.border = {
+                                top: { style: 'thin' },
+                                left: { style: 'thin' },
+                                bottom: { style: 'thin' },
+                                right: { style: 'thin' }
+                            };
+                        });
+                    });
+
+                    // Calcular totales CORREGIDO:
+                    const totalVentas = data.reduce((sum, item) => sum + (parseFloat(item.Precio_Venta_Unitario || 0) * (parseFloat(item.Cantidad_Venta) || 0)), 0);
+                    const totalCostos = data.reduce((sum, item) => sum + (parseFloat(item.Costo_Unitario || 0) * (parseFloat(item.Cantidad_Venta) || 0)), 0);
+                    const totalMargen = totalVentas - totalCostos;
+                    const porcentajeTotal = totalCostos !== 0 ? (totalMargen / totalCostos) : 0;
+
+                    const totalRow = worksheet.addRow({
+                        Cod_Venta: 'TOTALES',
+                        Cod_Producto: '',
+                        Nombre_Producto: '',
+                        Cantidad_Venta: data.reduce((sum, item) => sum + (parseFloat(item.Cantidad_Venta) || 0), 0),
+                        Costo_Unitario: totalCostos,
+                        Precio_Venta_Unitario: totalVentas,
+                        Margen_Unitario: '',
+                        Margen_Total: totalMargen,
+                        Porcentaje_Utilidad: porcentajeTotal,
+                        Fecha_Compra: '',
+                        Fecha_Venta: ''
+                    });
+
+                    // Estilo para fila de totales
+                    totalRow.eachCell((cell, colNumber) => {
+                        cell.font = { bold: true };
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFF8E1A1' } // Fondo amarillo claro
+                        };
+                        if (colNumber >= 5 && colNumber <= 9) { // Columnas numéricas
+                            cell.numFmt = colNumber === 9 ? '0.00%' : 'C$#,##0.00';
+                        }
+                    });
+
+                    // Autoajustar columnas
+                    worksheet.columns.forEach(column => {
+                        let maxLength = 0;
+                        column.eachCell({ includeEmpty: true }, cell => {
+                            let columnLength = cell.value ? cell.value.toString().length : 0;
+                            if (columnLength > maxLength) {
+                                maxLength = columnLength;
+                            }
+                        });
+                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                    });
+
+                    // Descargar archivo
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const now = new Date();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reporte_ganancias_${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    console.error('Error al exportar reporte de ganancias:', error);
+                    throw new Error(`Error al exportar Excel: ${error.message}`);
+                }
+            },
+
+            generateReport: async () => {
+                try {
+                    const response = await reportUtils.fetchData(reportConfig.ganancias.endpoint);
+
+                    if (!response.success || !response.data) {
+                        throw new Error('Respuesta del servidor inválida');
+                    }
+
+                    if (response.data.length === 0) {
+                        await reportUtils.showAlert('info', 'Sin datos', 'No hay datos de ganancias para mostrar.');
+                        return;
+                    }
+
+                    await reportHandlers.ganancias.exportToExcel(response.data);
+                    await reportUtils.showAlert('success', '¡Reporte exportado!', 'El reporte de ganancias ha sido descargado exitosamente.');
+
+                } catch (error) {
+                    await reportUtils.handleError(error, 'generación de reporte de ganancias');
+                }
+            }
         }
     };
 
@@ -622,6 +811,7 @@
         document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
         document.getElementById('exportarProductos').addEventListener('click', reportHandlers.productos.generateReport);
         document.getElementById('exportarProductosDetallado').addEventListener('click', reportHandlers.productosDetallado.generateReport);
+        document.getElementById('exportarGanancias').addEventListener('click', reportHandlers.ganancias.generateReport);
 
         // Mostrar/ocultar campos de fecha según el filtro seleccionado
         document.querySelectorAll('input[name="filtroVentas"]').forEach(radio => {

@@ -163,6 +163,53 @@ router.get('/productos-detallado', asyncHandler(async (req, res) => {
     }
 }));
 
+router.get('/ganancias', asyncHandler(async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        
+        // Consulta SQL corregida para obtener datos de ganancias
+        const [results] = await connection.query(`
+            SELECT 
+                pv.Cod_Venta,
+                p.Cod_Producto,
+                p.Nombre AS Nombre_Producto,
+                pv.Cantidad_Venta,
+                pp.Precio AS Costo_Unitario,
+                ROUND(pp.Precio * 1.25, 2) AS Precio_Venta_Unitario, -- Añadido 25% al costo
+                ROUND((pp.Precio * 1.25) - pp.Precio, 2) AS Margen_Unitario, -- Siempre positivo
+                ROUND(((pp.Precio * 1.25) - pp.Precio) * pv.Cantidad_Venta, 2) AS Margen_Total, -- Siempre positivo
+                ROUND((0.25 / pp.Precio * 100), 2) AS Porcentaje_Utilidad, -- Fijo 25%
+                DATE_FORMAT(pp.Fecha_Entrada, '%d/%m/%Y') AS Fecha_Compra, -- Formato DD/MM/YYYY
+                DATE_FORMAT(pv.Fecha_salida, '%d/%m/%Y') AS Fecha_Venta -- Formato DD/MM/YYYY
+            FROM ProductVenta pv
+            JOIN Producto p ON pv.Cod_Producto = p.Cod_Producto
+            JOIN ProveProduct pp ON pv.Cod_Producto = pp.Cod_Producto
+            WHERE p.Estado = 'Activo'
+            ORDER BY pv.Cod_Venta, p.Nombre
+        `);
+        
+        res.json({
+            success: true,
+            data: results,
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                count: results.length
+            }
+        });
+    } catch (error) {
+        console.error('Error en /reportes/ganancias:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener el reporte de ganancias',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+}));
+
+
 // Middleware para manejo de errores no capturados
 router.use((err, req, res, next) => {
     console.error('Error no manejado:', err);
