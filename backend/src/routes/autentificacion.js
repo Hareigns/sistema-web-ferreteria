@@ -144,4 +144,29 @@ router.use((err, req, res, next) => {
   return res.redirect('/login');
 });
 
+
+router.get('/api/usuario/actual', isLoggedIn, (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'No autenticado' 
+            });
+        }
+        
+        res.json({
+            success: true,
+            Cod_Empleado: req.user.Cod_Empleado,
+            Nombre: req.user.Nombre,
+            Apellido: req.user.Apellido
+        });
+    } catch (error) {
+        console.error('Error al obtener usuario actual:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener información del usuario' 
+        });
+    }
+});
+
 export default router; 

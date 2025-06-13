@@ -42,16 +42,23 @@
           Empleados
         </a>
         {{/if}}
-        
+
         <a class="nav-link" href="/bodega/list">
           <img src="/images/iconstock.webp" alt="Bodega">
           Bodega
         </a>
 
+        {{#if esAdmin}}
         <a class="nav-link" href="/reportes/add">
           <img src="/images/iconreports.webp" alt="Reportes">
           Reportes
         </a>
+        {{else}}
+        <a class="nav-link" href="/reporteemple/add">
+          <img src="/images/iconreports.webp" alt="Reportes">
+          Reportes
+        </a>
+        {{/if}}
 
         <div class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown"
