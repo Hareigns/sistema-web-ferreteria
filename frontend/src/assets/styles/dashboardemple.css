@@ -1,0 +1,154 @@
+
+body {
+  background: url('/images/fondoinicio.webp') no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 80px;
+}
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 750px;
+            width: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #34495e;
+            line-height: 1.5;
+        }
+
+        .icon {
+            font-size: 30px;
+            margin-bottom: 8px;
+            color: #e67e22;
+        }
+
+        .navbar {
+            background: #2c3e50;
+            padding: 15px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            border-radius: 0;
+        }
+
+        /* Estilos del botón Manual de Usuario */
+        .manual-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #e67e22;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .manual-btn:hover {
+            background: #d35400;
+            transform: scale(1.05);
+        }
+
+        .card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-header {
+    font-weight: bold;
+}
+
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+    background-color: #f8f9fa;
+    border-bottom: 3px solid #0d6efd;
+}
+
+.tab-content {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* Cambiar color de todos los encabezados a blanco */
+h1, h2, h3, h4, h5, h6,
+.card-header h3, 
+.card-title, 
+.card-header h3.mb-0,
+.card-header .mb-0 {
+    color: white !important;
+}
+
+/* Añade esto al final de tu CSS */
+.card.bg-success .card-text,
+.card.bg-info .card-text,
+.card.bg-warning .card-text,
+.card.bg-danger .card-text {
+    color: #000000 !important;
+}
+
+/* Específicamente para los textos de las tarjetas de resumen */
+#ventas-totales,
+#total-ventas,
+#empleados-activos,
+#empleado-destacado {
+    color: #000000 !important;
+}
