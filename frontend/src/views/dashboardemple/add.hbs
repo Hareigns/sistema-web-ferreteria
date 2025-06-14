@@ -223,3 +223,50 @@
         }
     }
 </script>
+
+<!-- Botón Manual de Usuario -->
+<a href="#" id="manualUsuarioBtn" class="manual-btn">
+  📖 Descargar Manual
+</a>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    configurarManualUsuario();
+  });
+
+  async function configurarManualUsuario() {
+    const manualBtn = document.getElementById('manualUsuarioBtn');
+
+    manualBtn.onclick = async function (e) {
+      e.preventDefault();
+
+      try {
+        const response = await fetch('/obtener-manual', {
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Error al descargar');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'manual.pdf';
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (filenameMatch) filename = filenameMatch[1];
+        }
+
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al descargar el manual');
+      }
+    };
+  }
+</script>
