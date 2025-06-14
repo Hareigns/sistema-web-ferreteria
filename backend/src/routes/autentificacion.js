@@ -78,7 +78,7 @@ router.post('/login', isNotLoggedIn, async (req, res, next) => {
       req.body.password = new_password;
     }
 
-    // Autenticación con Passport
+    // Autenticación con Passport - Versión modificada
     passport.authenticate('local.login', (err, user, info) => {
       if (err) {
         console.error('Error en autenticación:', err);
@@ -90,12 +90,19 @@ router.post('/login', isNotLoggedIn, async (req, res, next) => {
           cssFile: 'login.css'
         });
       }
+      
       req.logIn(user, (err) => {
         if (err) {
           console.error('Error en login:', err);
           return next(err);
         }
-        return res.redirect('/dashboard');
+        
+        // Redirección basada en el rol del usuario
+        if (user.esAdmin) {
+          return res.redirect('/dashboard');
+        } else {
+          return res.redirect('/dashboardemple');
+        }
       });
     })(req, res, next);
 

@@ -33,6 +33,9 @@ passport.use('local.login', new LocalStrategy(
         if (!isMatch) {
           return done(null, false, { message: 'Contraseña incorrecta' });
         }
+
+        // Añadir propiedad esAdmin al objeto empleado
+        empleado.esAdmin = [1, 2].includes(empleado.Cod_Empleado);
   
         return done(null, empleado);
       } catch (error) {
@@ -49,16 +52,16 @@ passport.use('local.login', new LocalStrategy(
   
 
   passport.deserializeUser(async (Cod_Empleado, done) => {
-    try {
-      const [result] = await pool.query(
-        'SELECT *, (Cod_Empleado IN (1, 2)) AS esAdmin FROM Empleado WHERE Cod_Empleado = ?', 
-        [Cod_Empleado]
-      );
-      done(null, result[0]);
-    } catch (error) {
-      done(error);
-    }
-  });
+  try {
+    const [result] = await pool.query(
+      'SELECT *, (Cod_Empleado IN (1, 2)) AS esAdmin FROM Empleado WHERE Cod_Empleado = ?', 
+      [Cod_Empleado]
+    );
+    done(null, result[0]);
+  } catch (error) {
+    done(error);
+  }
+});
 
   
 
