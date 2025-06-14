@@ -88,7 +88,7 @@
                                             <div class="card bg-light">
                                                 <div class="card-body text-center">
                                                     <h5 class="card-title text-muted">Monto Total</h5>
-                                                    <p class="display-6 text-success fw-bold" id="montoTotal">$0.00</p>
+                                                    <p class="display-6 text-success fw-bold" id="montoTotal">C$0.00</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -277,7 +277,7 @@
                             header: 'Monto Total',
                             key: 'Monto_Total',
                             width: 15,
-                            style: { numFmt: '#,##0.00' } // Formato monetario con 2 decimales
+                            style: { numFmt: 'C$#,##0.00' } // Formato monetario con 2 decimales
                         },
                         {
                             header: 'Fecha Venta',
@@ -370,7 +370,7 @@
                         if (colNumber === 4) {
                             cell.numFmt = '0.00';
                         } else if (colNumber === 5) {
-                            cell.numFmt = '#,##0.00';
+                            cell.numFmt = 'C$#,##0.00';
                         }
                     });
 
@@ -454,7 +454,7 @@
                     const montoTotal = data.reduce((sum, item) => sum + item.Monto_Total, 0);
                     
                     document.getElementById('totalVentas').textContent = totalVentas;
-                    document.getElementById('montoTotal').textContent = `$${montoTotal.toFixed(2)}`;
+                    document.getElementById('montoTotal').textContent = `C$${montoTotal.toFixed(2)}`;
 
                     // Generar nombre de archivo seguro
                     const nombreSeguro = (str) => {
