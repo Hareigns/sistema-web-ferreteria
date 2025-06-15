@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Ruta para la página principal del dashboard de empleado
 router.get('/', isLoggedIn, (req, res) => {
-    res.render('dashboardemple/add'); // ¿Estás seguro que quieres renderizar 'dashboardemple/add'?
+    res.render('dashboardemple/add');
 });
 
 // Ruta para las estadísticas del empleado específico

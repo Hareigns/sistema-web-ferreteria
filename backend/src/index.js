@@ -28,6 +28,7 @@ import { router as reporteempleRoutes } from "./routes/reporteemple.js";
 import { router as reportesRoutes } from "./routes/reportes.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import dashboardempleRoutes from "./routes/dashboardemple.js";
+import { router as outletRoutes } from "./routes/outlet.js";
 
 
 // Inicialización
@@ -138,6 +139,7 @@ app.use('/api/empleados', empleadosRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/reporteemple', reporteempleRoutes);
 app.use('/dashboardemple', dashboardempleRoutes);
+app.use('/outlet', outletRoutes);
 
 // Archivos estáticos
 const assetsPath = join(__dirname, '../../frontend/src/assets');
