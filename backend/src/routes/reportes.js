@@ -278,6 +278,62 @@ router.post('/ventas-empleado', asyncHandler(async (req, res) => {
     }
 }));
 
+// Ruta para el reporte de bajas de productos
+router.post('/bajas', asyncHandler(async (req, res) => {
+    const { filtro, fecha } = req.body;
+    
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        
+        let query = `
+            SELECT 
+                b.Id_Baja,
+                b.Cod_Producto,
+                p.Nombre AS Nombre_Producto,
+                pr.Nombre AS Nombre_Proveedor,
+                b.Fecha_Baja,
+                b.Fecha_Salida_Baja,
+                b.Cantidad,
+                b.Motivo
+            FROM BajasProductos b
+            JOIN Producto p ON b.Cod_Producto = p.Cod_Producto
+            JOIN Proveedor pr ON b.Cod_Proveedor = pr.Cod_Proveedor
+        `;
+        
+        // Aplicar filtros
+        if (filtro === 'mes' && fecha) {
+            const [year, month] = fecha.split('-');
+            query += ` WHERE YEAR(b.Fecha_Baja) = ${year} AND MONTH(b.Fecha_Baja) = ${month}`;
+        } else if (filtro === 'anio' && fecha) {
+            query += ` WHERE YEAR(b.Fecha_Baja) = ${fecha}`;
+        }
+        
+        query += ' ORDER BY b.Fecha_Baja DESC';
+        
+        const [results] = await connection.query(query);
+        
+        res.json({
+            success: true,
+            data: results,
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                count: results.length
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error en /reportes/bajas:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener el reporte de bajas',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    } finally {
+        if (connection) connection.release();
+    }
+}));
+
 
 // Middleware para manejo de errores no capturados
 router.use((err, req, res, next) => {
