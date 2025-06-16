@@ -2,7 +2,7 @@ body {
             background: url('/images/fondoinicio.webp') no-repeat center center fixed;
             background-size: cover;
             min-height: 100vh;
-            padding-top: 80px;
+            padding-top: 130px;
         }
         
         .navbar {

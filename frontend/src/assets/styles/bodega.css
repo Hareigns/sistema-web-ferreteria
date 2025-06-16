@@ -127,3 +127,14 @@
         color: #6c757d;
         margin-top: 2px;
     }
+
+    .main-content-container {
+    margin-top: 60px;
+    margin-bottom: 30px;
+}
+
+/* O si prefieres usar padding */
+.main-content-container {
+    padding-top: 60px;
+    padding-bottom: 30px;
+}

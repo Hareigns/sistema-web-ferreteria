@@ -107,6 +107,14 @@ app.use((req, res, next) => {
     next();
 });
 
+
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success')[0]; // Tomamos el primer mensaje
+    res.locals.error = req.flash('error')[0];
+    next();
+});
+
+
 // Variables globales
 app.use((req, res, next) => {
     res.locals.success = req.flash('success');
@@ -125,6 +133,16 @@ app.use((req, res, next) => {
     next();
   });
 
+
+  // Añade esto con tus otros middlewares
+app.use((req, res, next) => {
+    // Pasar alertData a las vistas
+    if (req.session.alertData) {
+        res.locals.alertData = req.session.alertData;
+        delete req.session.alertData; // Limpiar después de usar
+    }
+    next();
+});
 
 // Configuración de rutas
 app.use(indexRoutes);

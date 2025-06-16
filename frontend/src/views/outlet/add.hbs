@@ -1,10 +1,208 @@
-<link rel="stylesheet" href="/styles/dashboardemple.css">
-<title>Gestión de bajas productos</title>
+<title>Registro de Bajas</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="/styles/outlet.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="container py-5">
+<div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-minus-circle me-2"></i>Registro de Bajas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {{#if error}}
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        {{error}}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {{/if}}
 
+                    <form id="bajaForm" action="/outlet/add" method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Producto</label>
+                                    <select class="form-select" id="product_id" name="product_id" required>
+                                        <option value="">Seleccionar...</option>
+                                        {{#each products}}
+                                        <option value="{{Cod_Producto}}" data-stock="{{Stock}}">
+                                            {{Nombre}} (Stock: {{Stock}})
+                                        </option>
+                                        {{/each}}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Cantidad</label>
+                                    <input type="number" class="form-control" id="quantity" name="quantity" min="1"
+                                        required>
+                                    <div class="form-text">Stock disponible: <span id="stock-display">0</span></div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Motivo</label>
+                                    <select class="form-select" name="reason" required>
+                                        <option value="" disabled selected>Seleccionar...</option>
+                                        <option value="Devolución a proveedor">Devolución a proveedor</option>
+                                        <option value="Producto Dañado">Producto dañado</option>
+                                        <option value="Producto Vencido">Producto vencido</option>
+                                        <option value="Producto oxidado o deteriorado">Producto oxidado o deteriorado</option>
+                                        <option value="Uso interno">Uso interno</option>
+                                        <option value="Pérdida o robo">Pérdida o robo</option>
+                                        <option value="Otro">Otro Motivo</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Observaciones (opcional)</label>
+                                    <textarea class="form-control" name="notes" rows="2" disabled
+                                        placeholder="Seleccione 'Otro Motivo' para habilitar"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-danger w-100">
+                                    <i class="fas fa-save me-2"></i> Registrar Baja
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('bajaForm');
+
+        // Elementos del formulario
+        const notesTextarea = document.querySelector('textarea[name="notes"]');
+        const reasonSelect = document.querySelector('select[name="reason"]');
+        const productSelect = document.getElementById('product_id');
+        const stockDisplay = document.getElementById('stock-display');
+
+        // Configurar estado inicial
+        notesTextarea.disabled = true;
+        notesTextarea.placeholder = 'Seleccione "Otro Motivo" para habilitar';
+
+        // Verificar si ya está seleccionado "Otro" al cargar
+        if (reasonSelect.value === 'Otro') {
+            notesTextarea.disabled = false;
+            notesTextarea.required = true;
+            notesTextarea.placeholder = 'Por favor especifique el motivo de baja';
+        }
+
+        // Manejar cambio en el motivo de baja
+        reasonSelect.addEventListener('change', function () {
+            if (this.value === 'Otro') {
+                notesTextarea.disabled = false;
+                notesTextarea.required = true;
+                notesTextarea.placeholder = 'Por favor especifique el motivo de baja';
+            } else {
+                notesTextarea.disabled = true;
+                notesTextarea.required = false;
+                notesTextarea.placeholder = 'Seleccione "Otro Motivo" para habilitar';
+                notesTextarea.value = '';
+            }
+        });
+
+        // Actualizar stock al seleccionar producto
+        if (productSelect) {
+            productSelect.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const stock = selectedOption.getAttribute('data-stock') || 0;
+                stockDisplay.textContent = stock;
+                document.getElementById('quantity').max = stock;
+            });
+        }
+
+        // Manejar envío del formulario
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+
+            try {
+                const quantityInput = document.getElementById('quantity');
+                const selectedStock = parseInt(stockDisplay.textContent);
+                const quantity = parseInt(quantityInput.value);
+
+                // Validación de motivo "Otro"
+                if (reasonSelect.value === 'Otro' && notesTextarea.value.trim() === '') {
+                    throw new Error('Debe especificar el motivo cuando selecciona "Otro Motivo"');
+                }
+
+                // Validación de cantidad
+                if (quantity <= 0) {
+                    throw new Error('La cantidad debe ser mayor a cero');
+                }
+
+                if (quantity > selectedStock) {
+                    throw new Error(`No hay suficiente stock. Disponible: ${selectedStock}`);
+                }
+
+                // Crear objeto con los datos del formulario
+                const formData = {
+                    product_id: productSelect.value,
+                    reason: reasonSelect.value,
+                    quantity: quantityInput.value,
+                    notes: notesTextarea.value
+                };
+
+                // Enviar datos como JSON
+                const response = await fetch('/outlet/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: result.message,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+
+                    // Resetear el formulario
+                    form.reset();
+                    document.getElementById('stock-display').textContent = '0';
+                    // Volver a deshabilitar el textarea después del reset
+                    notesTextarea.disabled = true;
+                    notesTextarea.placeholder = 'Seleccione "Otro Motivo" para habilitar';
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-2"></i> Registrar Baja';
+            }
+        });
+    });
+</script>
