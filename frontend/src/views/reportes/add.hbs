@@ -1071,12 +1071,13 @@
                         { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
                         { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
                         { header: 'Proveedor', key: 'Nombre_Proveedor', width: 25 },
-                        { header: 'Hora Baja', key: 'Hora_Baja', width: 15 }, // Cambiado de Fecha_Baja a Hora_Baja
+                        { header: 'Hora Baja', key: 'Hora_Baja', width: 15 },
                         { header: 'Fecha Salida', key: 'Fecha_Salida_Baja', width: 15 },
                         { header: 'Cantidad', key: 'Cantidad', width: 10 },
+                        { header: 'Precio Compra', key: 'Precio_Compra', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                        { header: 'Subtotal', key: 'Subtotal', width: 15, style: { numFmt: 'C$#,##0.00' } },
                         { header: 'Motivo', key: 'Motivo', width: 40 }
                     ];
-
 
                     // Estilo para encabezados
                     const headerRow = worksheet.getRow(1);
@@ -1101,26 +1102,6 @@
                     });
 
                     // Función para formatear fechas
-                    const formatDate = (dateString, includeTime = true) => {
-                        if (!dateString) return 'N/A';
-                        const date = new Date(dateString);
-                        if (isNaN(date.getTime())) return dateString;
-
-                        const day = date.getDate().toString().padStart(2, '0');
-                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                        const year = date.getFullYear();
-
-                        if (!includeTime) {
-                            return `${day}/${month}/${year}`;
-                        }
-
-                        const hours = date.getHours().toString().padStart(2, '0');
-                        const minutes = date.getMinutes().toString().padStart(2, '0');
-
-                        return `${day}/${month}/${year} ${hours}:${minutes}`;
-                    };
-
-                    // Función para formatear fechas
                     const formatDateTime = (dateString) => {
                         if (!dateString) return 'N/A';
                         const date = new Date(dateString);
@@ -1140,7 +1121,6 @@
                             hora: `${hours}:${minutes}`
                         };
                     };
-
                     // Agregar datos
                     data.forEach(item => {
                         const fechaBaja = formatDateTime(item.Fecha_Baja);
@@ -1151,12 +1131,19 @@
                             Cod_Producto: item.Cod_Producto,
                             Nombre_Producto: item.Nombre_Producto || 'N/A',
                             Nombre_Proveedor: item.Nombre_Proveedor || 'N/A',
-                            Hora_Baja: fechaBaja.hora,  // Solo hora
-                            Fecha_Salida_Baja: fechaSalida.fecha,  // Solo fecha
+                            Hora_Baja: fechaBaja.hora,
+                            Fecha_Salida_Baja: fechaSalida.fecha,
                             Cantidad: item.Cantidad,
+                            Precio_Compra: parseFloat(item.Precio_Compra) || 0,
+                            Subtotal: parseFloat(item.Subtotal) || 0,
                             Motivo: item.Motivo
                         });
 
+                        // Formatear celdas numéricas
+                        ['Precio_Compra', 'Subtotal'].forEach(key => {
+                            const cell = row.getCell(key);
+                            cell.numFmt = 'C$#,##0.00';
+                        });
 
                         // Bordes para todas las celdas
                         row.eachCell(cell => {
@@ -1169,28 +1156,33 @@
                         });
                     });
 
-                    // Calcular total de bajas
-                    const totalBajas = data.reduce((sum, item) => sum + item.Cantidad, 0);
+                    // Calcular total de pérdidas
+                    const totalPerdidas = data.reduce((sum, item) => sum + (parseFloat(item.Subtotal) || 0), 0);
                     const totalRow = worksheet.addRow({
-                        Id_Baja: 'TOTAL',
+                        Id_Baja: 'TOTAL PERDIDAS',
                         Cod_Producto: '',
                         Nombre_Producto: '',
                         Nombre_Proveedor: '',
-                        Fecha_Baja: '',
+                        Hora_Baja: '',
                         Fecha_Salida_Baja: '',
-                        Cantidad: totalBajas,
+                        Cantidad: data.reduce((sum, item) => sum + (parseInt(item.Cantidad) || 0), 0),
+                        Precio_Compra: '',
+                        Subtotal: totalPerdidas,
                         Motivo: ''
                     });
 
                     // Estilo para fila de totales
                     totalRow.eachCell((cell, colNumber) => {
-                        if (colNumber === 7) { // Columna de cantidad
-                            cell.font = { bold: true };
-                            cell.fill = {
-                                type: 'pattern',
-                                pattern: 'solid',
-                                fgColor: { argb: 'FFFFC0CB' } // Rosa claro
-                            };
+                        cell.font = { bold: true };
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFFFC0CB' } // Rosa claro
+                        };
+
+                        // Formatear celda de subtotal
+                        if (colNumber === 9) {
+                            cell.numFmt = 'C$#,##0.00';
                         }
                     });
 

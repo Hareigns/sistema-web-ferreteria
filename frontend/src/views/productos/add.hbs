@@ -214,10 +214,6 @@
         }
       }
     }
-
-    // Agregar opción para ubicación personalizada
-    const customOption = new Option('-- Otra ubicación --', 'custom');
-    select.add(customOption);
   }
 
   // Función auxiliar para verificar si una ubicación ya existe en el select
@@ -229,72 +225,6 @@
     }
     return false;
   }
-
-  // Modificar el evento change del select de ubicación
-  document.getElementById('ubicacion').addEventListener('change', function () {
-    if (this.value === 'custom') {
-      // Obtener todas las opciones existentes del select
-      const select = document.getElementById('ubicacion');
-      const existingOptions = Array.from(select.options)
-        .map(option => option.value)
-        .filter(value => value !== 'custom' && value !== ''); // Excluir valores especiales
-
-      Swal.fire({
-        title: 'Ingresar ubicación personalizada',
-        input: 'text',
-        inputPlaceholder: 'Ej: Estante 4, Repisa 3, Espacio 1',
-        showCancelButton: true,
-        confirmButtonText: 'Guardar',
-        cancelButtonText: 'Cancelar',
-        inputValidator: (value) => {
-          // Expresión regular para validar el formato exacto
-          const regex = /^Estante\s\d{1,2},\sRepisa\s\d{1,2},\sEspacio\s\d{1,2}$/;
-
-          if (!value) {
-            return 'Debe ingresar una ubicación';
-          }
-
-          if (!regex.test(value)) {
-            return 'Formato incorrecto. Use: Estante 1, Repisa 1, Espacio 1';
-          }
-
-          // Validar que no exista ya en las opciones
-          if (existingOptions.includes(value)) {
-            return 'Esta ubicación ya existe en la lista';
-          }
-
-          // Validar rangos numéricos
-          const numeros = value.match(/\d+/g);
-          if (numeros) {
-            const estante = parseInt(numeros[0]);
-            const repisa = parseInt(numeros[1]);
-            const espacio = parseInt(numeros[2]);
-
-            if (estante < 1 || estante > 11) return 'Estante debe estar entre 1 y 8';
-            if (repisa < 1 || repisa > 6) return 'Repisa debe estar entre 1 y 6';
-            if (espacio < 1 || espacio > 4) return 'Espacio debe estar entre 1 y 4';
-          }
-        }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const value = result.value;
-
-          // Verificar nuevamente por si acaso (doble validación)
-          if (!existingOptions.includes(value)) {
-            const newOption = new Option(value, value);
-            select.add(newOption);
-            select.value = value;
-          } else {
-            Swal.fire('Error', 'Esta ubicación ya existe', 'error');
-            this.value = '';
-          }
-        } else {
-          // Si cancela, volver a la selección por defecto
-          this.value = '';
-        }
-      });
-    }
-  });
 
   // Función para cargar los productos registrados con DataTable (MODIFICADA)
   async function cargarProductos() {

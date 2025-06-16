@@ -295,10 +295,13 @@ router.post('/bajas', asyncHandler(async (req, res) => {
                 b.Fecha_Baja,
                 b.Fecha_Salida_Baja,
                 b.Cantidad,
+                pp.Precio AS Precio_Compra,
+                (b.Cantidad * pp.Precio) AS Subtotal,
                 b.Motivo
             FROM BajasProductos b
             JOIN Producto p ON b.Cod_Producto = p.Cod_Producto
             JOIN Proveedor pr ON b.Cod_Proveedor = pr.Cod_Proveedor
+            JOIN ProveProduct pp ON b.Cod_Producto = pp.Cod_Producto AND b.Cod_Proveedor = pp.Cod_Proveedor
         `;
         
         // Aplicar filtros
