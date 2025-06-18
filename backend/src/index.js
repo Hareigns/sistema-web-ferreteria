@@ -176,10 +176,10 @@ app.get('/obtener-manual', (req, res) => {
 
   // Verifica el código del empleado desde la sesión
   if ([1, 2].includes(req.user.Cod_Empleado)) {
-    archivo = 'Admi.pdf';
+    archivo = 'Manual_De_Usuario_Admi.pdf';
     console.log('Descargando manual de administrador para:', req.user.Cod_Empleado);
   } else {
-    archivo = 'Worked.pdf';
+    archivo = 'Manual_de_Usuario_Worked.pdf';
     console.log('Descargando manual de empleado para:', req.user.Cod_Empleado);
   }
 
