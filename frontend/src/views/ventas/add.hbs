@@ -39,6 +39,8 @@
                             <label for="cantidad" class="form-label">Cantidad:</label>
                             <input type="number" id="cantidad" class="form-control" placeholder="Cantidad" min="1"
                                 required>
+                            <!-- Agregar este div para mostrar el stock disponible -->
+                            <div id="stockDisponible" class="mt-2 small text-muted" style="display: none;"></div>
                         </div>
                         <div class="col-md-2">
                             <label for="precio" class="form-label">Precio:</label>
@@ -290,8 +292,10 @@
         document.getElementById("cantidad").value = "";
         document.getElementById("precio").value = "";
         document.getElementById("metodoPago").value = "";
-        document.getElementById("descripcionProducto").textContent = "";  // Esta línea limpia la descripción
-        document.getElementById("descripcionProducto").style.display = "none";  // Y la oculta
+        document.getElementById("descripcionProducto").textContent = "";
+        document.getElementById("descripcionProducto").style.display = "none";
+        document.getElementById("stockDisponible").textContent = "";
+        document.getElementById("stockDisponible").style.display = "none";
 
         actualizarTotales();
     });
@@ -719,6 +723,21 @@
         } else {
             descripcionElement.textContent = "";
             descripcionElement.style.display = "none";
+        }
+
+        // Mostrar el stock disponible
+        const stock = productoSeleccionado.dataset.stock;
+        const stockElement = document.getElementById("stockDisponible");
+
+        if (stock) {
+            stockElement.textContent = `Inventario disponible: ${stock}`;
+            stockElement.style.display = "block";
+
+            // Establecer el valor máximo del input cantidad
+            document.getElementById("cantidad").max = stock;
+        } else {
+            stockElement.textContent = "";
+            stockElement.style.display = "none";
         }
     });
 
