@@ -2,6 +2,11 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="stylesheet" href="/styles/outlet.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="container mt-4">
@@ -26,23 +31,26 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Producto</label>
-                                    <select class="form-select" id="product_id" name="product_id" required>
-                                        <option value="">Seleccionar...</option>
+                                    <select class="form-select select2-search" id="product_id" name="product_id"
+                                        required>
+                                        <option value="" disabled selected>Seleccionar producto...</option>
                                         {{#each products}}
                                         <option value="{{Cod_Producto}}" data-stock="{{Stock}}">
-                                            {{Nombre}} (Inventario: {{Stock}})
+                                            {{Nombre}} (Marca: {{Marca}})
                                         </option>
                                         {{/each}}
                                     </select>
                                 </div>
                             </div>
 
+                            <!-- Resto del formulario permanece igual -->
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Cantidad</label>
                                     <input type="number" class="form-control" id="quantity" name="quantity" min="1"
                                         required>
-                                    <div class="form-text">Inventario disponible: <span id="stock-display">0</span></div>
+                                    <div class="form-text">Inventario disponible: <span id="stock-display">0</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -54,9 +62,10 @@
                                         <option value="Devolución a proveedor">Devolución a proveedor</option>
                                         <option value="Producto Dañado">Producto dañado</option>
                                         <option value="Producto Vencido">Producto vencido</option>
-                                        <option value="Producto oxidado o deteriorado">Producto oxidado o deteriorado</option>
+                                        <option value="Producto oxidado o deteriorado">Producto oxidado o deteriorado
+                                        </option>
                                         <option value="Uso interno">Uso interno</option>
-                                        <option value="Pérdida o robo">Pérdida o robo</option>
+                                        <option value="Pérdida o robo">Pérdida o robo</option>
                                         <option value="Otro">Otro Motivo</option>
                                     </select>
                                 </div>
@@ -83,15 +92,61 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('bajaForm');
+        $(document).ready(function () {
+            // Inicializar Select2 después de asegurar los estilos
+            $('.select2-search').each(function () {
+                // Guardar estilos computados
+                const computedStyle = getComputedStyle(this);
+                const stylesToPreserve = {
+                    border: computedStyle.border,
+                    borderRadius: computedStyle.borderRadius,
+                    padding: computedStyle.padding,
+                    fontSize: computedStyle.fontSize,
+                    lineHeight: computedStyle.lineHeight,
+                    color: computedStyle.color,
+                    backgroundColor: computedStyle.backgroundColor,
+                    transition: computedStyle.transition
+                };
 
-        // Elementos del formulario
+                // Inicializar Select2
+                $(this).select2({
+                    placeholder: "Seleccionar un producto...",
+                    allowClear: false,
+                    width: '100%',
+                    dropdownParent: $(this).closest('.card-body'),
+                    minimumResultsForSearch: 1,
+                    language: {
+                        noResults: function () {
+                            return "No se encontraron productos";
+                        },
+                        searching: function () {
+                            return "Buscando...";
+                        }
+                    }
+                });
+
+                // Aplicar estilos inmediatamente después de la inicialización
+                const select2Container = $(this).siblings('.select2-container');
+                select2Container.find('.select2-selection--single').css(stylesToPreserve);
+
+                // Forzar el estilo del placeholder
+                select2Container.find('.select2-selection__placeholder').css({
+                    'color': '#6c757d',
+                    'font-weight': '400'
+                });
+            });
+
+            // Estilo para el campo de búsqueda
+            $(document).on('select2:open', function (e) {
+                $('.select2-search__field').addClass('form-control');
+            });
+        });
+
+        const form = document.getElementById('bajaForm');
         const notesTextarea = document.querySelector('textarea[name="notes"]');
         const reasonSelect = document.querySelector('select[name="reason"]');
-        const productSelect = document.getElementById('product_id');
         const stockDisplay = document.getElementById('stock-display');
 
         // Configurar estado inicial
@@ -119,15 +174,13 @@
             }
         });
 
-        // Actualizar stock al seleccionar producto
-        if (productSelect) {
-            productSelect.addEventListener('change', function () {
-                const selectedOption = this.options[this.selectedIndex];
-                const stock = selectedOption.getAttribute('data-stock') || 0;
-                stockDisplay.textContent = stock;
-                document.getElementById('quantity').max = stock;
-            });
-        }
+        // Manejar cambio en el select de productos
+        $('#product_id').on('change', function () {
+            const selectedOption = $(this).find('option:selected');
+            const stock = selectedOption.data('stock') || 0;
+            $('#stock-display').text(stock);
+            $('#quantity').attr('max', stock);
+        });
 
         // Manejar envío del formulario
         form.addEventListener('submit', async function (e) {
@@ -158,7 +211,7 @@
 
                 // Crear objeto con los datos del formulario
                 const formData = {
-                    product_id: productSelect.value,
+                    product_id: $('#product_id').val(),
                     reason: reasonSelect.value,
                     quantity: quantityInput.value,
                     notes: notesTextarea.value
@@ -186,8 +239,8 @@
 
                     // Resetear el formulario
                     form.reset();
+                    $('#product_id').val('').trigger('change');
                     document.getElementById('stock-display').textContent = '0';
-                    // Volver a deshabilitar el textarea después del reset
                     notesTextarea.disabled = true;
                     notesTextarea.placeholder = 'Seleccione "Otro Motivo" para habilitar';
                 } else {

@@ -95,3 +95,118 @@ body {
 .swal2-popup {
     border-radius: 10px !important;
 }
+
+/* Estilo inicial que se mantendrá siempre */
+.select2-search.form-select {
+    height: 38px;
+    border: 2px solid #e9ecef !important;
+    border-radius: 6px !important;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    color: #495057 !important;
+    transition: all 0.3s !important;
+    background-color: #fff !important;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23495057' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+}
+
+/* Ocultar el select original pero mantener sus estilos */
+.select2-search.form-select.select2-hidden-accessible {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Estilo para el contenedor de Select2 */
+.select2-container--default .select2-selection--single {
+    height: 38px;
+    border: inherit !important;
+    border-radius: inherit !important;
+    padding: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    background-color: inherit !important;
+    transition: inherit !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: inherit !important;
+    line-height: inherit !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.select2-search.select2-container .select2-selection--single .select2-selection__placeholder {
+    color: #6c757d !important;
+    font-weight: 400;
+}
+
+/* Flecha personalizada */
+.select2-search.select2-container .select2-selection--single .select2-selection__arrow {
+    height: 100%;
+    width: 20px;
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+}
+
+.select2-search.select2-container .select2-selection--single .select2-selection__arrow b {
+    border-color: #495057 transparent transparent transparent;
+    border-width: 6px 6px 0 6px;
+    border-style: solid;
+    margin-left: -6px;
+    margin-top: -3px;
+}
+
+/* Focus state */
+.select2-search.select2-container--focus .select2-selection--single {
+    border-color: #3da5b3 !important;
+    box-shadow: 0 0 0 0.25rem rgba(25, 155, 187, 0.486) !important;
+}
+
+/* Dropdown */
+.select2-search .select2-dropdown {
+    border: 2px solid #e9ecef !important;
+    border-radius: 6px !important;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1) !important;
+    margin-top: 4px;
+}
+
+.select2-search .select2-results__option {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+}
+
+.select2-search .select2-results__option--highlighted {
+    background-color: #2896a5 !important;
+    color: white !important;
+}
+
+/* Campo de búsqueda */
+.select2-search .select2-search--dropdown {
+    padding: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.select2-search .select2-search--dropdown .select2-search__field {
+    border: 2px solid #e9ecef !important;
+    border-radius: 6px !important;
+    padding: 0.375rem 0.75rem !important;
+    height: 38px;
+    font-size: 1rem;
+    width: calc(100% - 1rem) !important;
+    margin: 0 auto;
+    display: block;
+}
