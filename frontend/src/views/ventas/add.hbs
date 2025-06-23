@@ -1,5 +1,12 @@
 <link rel="stylesheet" href="/styles/ventas.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- JavaScript (ORDEN CRÍTICO) -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="container mt-5 py-5">
@@ -29,7 +36,7 @@
                         </div>
                         <div class="col-md-4">
                             <label for="nombreProducto" class="form-label">Producto:</label>
-                            <select id="nombreProducto" class="form-select">
+                            <select id="nombreProducto" class="form-select select2-product">
                                 <option value="" disabled selected>Seleccione un producto</option>
                             </select>
                             <!-- Agregar este div para mostrar la descripción -->
@@ -129,15 +136,25 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
     let productos = [];
 
     // Modificar el evento agregarProducto para usar el nombre:
     document.getElementById("agregarProducto").addEventListener("click", async function () {
-        let selectProducto = document.getElementById("nombreProducto");
-        let selectedOption = selectProducto.options[selectProducto.selectedIndex];
+        const selectProducto = $('#nombreProducto');
+        const selectedOption = selectProducto.find('option:selected');
+
+        // Verificar si se seleccionó un producto válido
+        if (!selectProducto.val()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Producto no seleccionado',
+                text: 'Por favor, seleccione un producto válido'
+            });
+            return;
+        }
 
         let codigo = selectProducto.value;
         let nombre = selectedOption.dataset.nombre;
@@ -683,67 +700,107 @@
         }
     }
 
-    // Función para cargar productos por sector
-    function cargarProductosPorSector(sectorSeleccionado) {
-        fetch("http://localhost:4000/productos/api/productos")
-            .then(response => response.json())
-            .then(data => {
-                const selectProducto = document.getElementById("nombreProducto");
-                selectProducto.innerHTML = '<option value="" disabled selected>Seleccione un producto</option>';
+    // Función segura para inicializar Select2
+    function safeSelect2Init(selector, options) {
+        // Intento 1: Verificar si Select2 está disponible inmediatamente
+        if (typeof $.fn.select2 === 'function') {
+            return $(selector).select2(options);
+        }
 
-                data.data.forEach(producto => {
-                    if (producto.Sector === sectorSeleccionado) {
-                        const option = document.createElement("option");
-                        option.value = producto.Cod_Producto;
-                        option.textContent = producto.Nombre;
-                        option.dataset.nombre = producto.Nombre;
-                        option.dataset.precio = producto.Precio_Compra;
-                        option.dataset.stock = producto.Cantidad;
-                        option.dataset.vencimiento = producto.FechaVencimiento;
-                        option.dataset.descripcion = producto.Descripcion; // Agregar la descripción
-                        selectProducto.appendChild(option);
-                    }
-                });
-            });
+        // Intento 2: Esperar un breve periodo por si está cargando
+        return new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                if (typeof $.fn.select2 === 'function') {
+                    clearInterval(checkInterval);
+                    resolve($(selector).select2(options));
+                }
+            }, 100);
+
+            // Timeout después de 3 segundos
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                console.error('Select2 no se cargó después de 3 segundos');
+                resolve(false);
+            }, 3000);
+        });
     }
 
-    document.getElementById("nombreProducto").addEventListener("change", function () {
-        const productoSeleccionado = this.selectedOptions[0];
-        const precio = productoSeleccionado.dataset.precio;
-        const precioConIVA = (precio * 1.25).toFixed(2);
-        document.getElementById("precio").value = precioConIVA;
+    // Versión mejorada de cargarProductosPorSector
+    async function cargarProductosPorSector(sectorSeleccionado) {
+        try {
+            const response = await fetch("http://localhost:4000/productos/api/productos");
+            const data = await response.json();
 
-        // Mostrar la descripción del producto
-        const descripcion = productoSeleccionado.dataset.descripcion;
-        const descripcionElement = document.getElementById("descripcionProducto");
+            const selectProducto = $('#nombreProducto');
+            selectProducto.empty().append('<option value="" disabled selected>Seleccione un producto</option>');
 
-        if (descripcion) {
-            descripcionElement.textContent = `Ubicación: ${descripcion}`;
-            descripcionElement.style.display = "block";
-        } else {
-            descripcionElement.textContent = "";
-            descripcionElement.style.display = "none";
+            // Primero llenar el select con las opciones
+            data.data
+                .filter(producto => producto.Sector === sectorSeleccionado)
+                .forEach(producto => {
+                    const option = new Option(
+                        producto.Nombre,
+                        producto.Cod_Producto,
+                        false,
+                        false
+                    );
+                    // Asignar datos como atributos
+                    $(option).data('precio', producto.Precio_Compra);
+                    $(option).data('stock', producto.Cantidad);
+                    $(option).data('descripcion', producto.Descripcion);
+                    $(option).data('vencimiento', producto.FechaVencimiento);
+                    $(option).data('nombre', producto.Nombre);
+
+                    selectProducto.append(option);
+                });
+
+            // Luego inicializar Select2
+            selectProducto.select2({
+                placeholder: "Seleccione un producto",
+                allowClear: false,
+                width: '100%',
+                dropdownParent: selectProducto.closest('.card'),
+                language: "es"  // Esta línea configura el idioma
+            });
+
+        } catch (error) {
+            console.error('Error al cargar productos:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar los productos'
+            });
+        }
+    }
+
+    $("#sector").on("change", async function () {
+        const sectorSeleccionado = $(this).val();
+        if (!sectorSeleccionado) {
+            $('#nombreProducto').empty().append('<option value="" disabled selected>Seleccione un sector primero</option>');
+            $('#nombreProducto').prop('disabled', true).trigger('change');
+            return;
         }
 
-        // Mostrar el stock disponible
-        const stock = productoSeleccionado.dataset.stock;
-        const stockElement = document.getElementById("stockDisponible");
-
-        if (stock) {
-            stockElement.textContent = `Inventario disponible: ${stock}`;
-            stockElement.style.display = "block";
-
-            // Establecer el valor máximo del input cantidad
-            document.getElementById("cantidad").max = stock;
-        } else {
-            stockElement.textContent = "";
-            stockElement.style.display = "none";
-        }
+        $('#nombreProducto').prop('disabled', false);
+        await cargarProductosPorSector(sectorSeleccionado);
     });
 
-    document.getElementById("sector").addEventListener("change", function () {
-        const sectorSeleccionado = this.value;
-        cargarProductosPorSector(sectorSeleccionado);
+
+    // Ajustar el event listener para el cambio de producto
+    $('#nombreProducto').on('change', function () {
+        const selectedOption = $(this).find('option:selected');
+        const precioBase = selectedOption.data('precio') || 0;
+        const precioConIVA = (precioBase * 1.25).toFixed(2);
+
+        $('#precio').val(precioConIVA);
+
+        // Mostrar descripción y stock
+        $('#descripcionProducto').text(selectedOption.data('descripcion') || '').toggle(!!selectedOption.data('descripcion'));
+        $('#stockDisponible').text(`Inventario: ${selectedOption.data('stock') || 0}`).toggle(!!selectedOption.data('stock'));
+
+        // Establecer máximo en cantidad
+        const stock = selectedOption.data('stock') || 0;
+        $('#cantidad').attr('max', stock).val('');
     });
 
     // Función para verificar si un producto está vencido
@@ -770,11 +827,24 @@
         }
     }
 
-    // Inicializar al cargar la página
-    document.addEventListener('DOMContentLoaded', function () {
+
+    // Inicialización única al cargar la página
+    $(document).ready(async function () {
+        // Primero cargar sectores
+        await cargarSectores();
+
+        // Inicializar selects
+        $('#nombreProducto').select2({
+            placeholder: "Seleccione un sector primero",
+            disabled: true,
+            width: '100%',
+            dropdownParent: $('.card'),
+            language: "es"  // Configuración del idioma
+        });
+
+        // Resto de inicializaciones
         cargarHistorialVentas();
         cargarCodigoVenta();
-        cargarSectores();
         actualizarTotales();
     });
 </script>
