@@ -16,11 +16,15 @@
             <div class="row g-3">
               <div class="col-md-6">
                 <label for="nombre" class="form-label">Nombre</label>
-                <input type="text" id="nombre" name="nombre" class="form-control" required>
+                <input type="text" id="nombre" name="nombre" class="form-control" 
+                       pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" 
+                       title="Solo letras (mínimo 3 caracteres)" required>
               </div>
               <div class="col-md-6">
                 <label for="apellido" class="form-label">Apellido</label>
-                <input type="text" id="apellido" name="apellido" class="form-control" required>
+                <input type="text" id="apellido" name="apellido" class="form-control" 
+                       pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" 
+                       title="Solo letras (mínimo 3 caracteres)" required>
               </div>
               <div class="col-md-6">
                 <label for="telefono" class="form-label">Teléfono</label>
@@ -106,6 +110,27 @@
 <script>
   let proveedoresTable;
 
+  // Función para validar nombre y apellido
+  function validarNombreApellido(valor) {
+    // Permite letras, espacios y acentos (mínimo 3 caracteres)
+    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}$/.test(valor);
+  }
+
+  // Validación en tiempo real para nombre y apellido
+  document.getElementById('nombre').addEventListener('input', function(e) {
+    const value = e.target.value;
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
+      e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    }
+  });
+
+  document.getElementById('apellido').addEventListener('input', function(e) {
+    const value = e.target.value;
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
+      e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    }
+  });
+
   // Función para cargar proveedores en el select y la tabla
   async function cargarProveedores() {
     try {
@@ -190,7 +215,7 @@
     });
   }
 
-  // Esta función se mantiene EXACTAMENTE como la tenías originalmente
+  // Función para cargar datos del proveedor seleccionado
   async function cargarDatosProveedor(codProveedor) {
     try {
       const response = await fetch(`/proveedores/api/proveedores/${codProveedor}`);
@@ -323,9 +348,23 @@
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
 
     try {
+      const nombre = document.getElementById('nombre').value.trim();
+      const apellido = document.getElementById('apellido').value.trim();
+      
+      // Validación de nombre y apellido
+      if (!validarNombreApellido(nombre)) {
+        await Swal.fire("Error", "El nombre debe contener solo letras y tener al menos 3 caracteres", "error");
+        return;
+      }
+      
+      if (!validarNombreApellido(apellido)) {
+        await Swal.fire("Error", "El apellido debe contener solo letras y tener al menos 3 caracteres", "error");
+        return;
+      }
+
       const formData = {
-        nombre: document.getElementById('nombre').value.trim(),
-        apellido: document.getElementById('apellido').value.trim(),
+        nombre,
+        apellido,
         telefono: document.getElementById('telefono').value.trim(),
         compania: document.getElementById('compania').value,
         sector: document.getElementById('sector').value,
@@ -378,9 +417,23 @@
       return;
     }
 
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    
+    // Validación de nombre y apellido (aunque estén deshabilitados, por seguridad)
+    if (!validarNombreApellido(nombre)) {
+      await Swal.fire("Error", "El nombre no es válido", "error");
+      return;
+    }
+    
+    if (!validarNombreApellido(apellido)) {
+      await Swal.fire("Error", "El apellido no es válido", "error");
+      return;
+    }
+
     const formData = {
-      nombre: document.getElementById('nombre').value.trim(),
-      apellido: document.getElementById('apellido').value.trim(),
+      nombre,
+      apellido,
       telefono: document.getElementById('telefono').value.trim(),
       compania: document.getElementById('compania').value,
       sector: document.getElementById('sector').value,

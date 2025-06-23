@@ -13,11 +13,22 @@ body {
   padding: 0;
   color: var(--text-dark);
   line-height: 1.6;
+  scroll-padding-top: 140px; /* Altura aproximada de ambas barras */
 }
 
 /* Estilos para el menú desplegable de secciones */
 .dropdown-center {
   display: inline-block;
+}
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1030; /* Asegura que esté por encima de otros elementos */
+  background-color: var(--text-dark);
+  color: white;
+  padding: 8px 0;
+  font-size: 1rem;
 }
 
 .top-bar .dropdown-menu {
@@ -65,12 +76,43 @@ body {
   color: var(--accent-color);
 }
 
+.top-link {
+  color: white;
+  text-decoration: none;
+  margin-right: 25px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.top-link:hover {
+  color: var(--accent-color);
+}
+
+.top-link i {
+  margin-right: 8px;
+}
+
+.dropdown-menu-custom {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  margin-top: 10px;
+  border-left: 4px solid var(--accent-color);
+}
+
 /* Barra de navegación */
 .navbar-custom {
+  position: sticky;
+  top: 40px; /* Ajusta según la altura de tu top-bar */
+  z-index: 1029; /* Un nivel por debajo de la top-bar */
   background-color: var(--primary-color);
   color: white;
   padding: 15px 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .navbar-brand-custom {
@@ -96,7 +138,7 @@ body {
 }
 
 .navbar-custom.sticky-top {
-  height: 100px; /* Ajusta según necesidad */
+  height: 100px;
 }
 
 .brand-text {
@@ -107,14 +149,14 @@ body {
 .brand-name {
   font-size: 1.8rem;
   font-weight: 700;
-  color: white !important; /* Texto en blanco asegurado */
+  color: white !important;
   margin-bottom: 0;
   text-decoration: none !important;
 }
 
 .brand-subtitle {
   font-size: 1.2rem;
-  color: white !important; /* Texto en blanco asegurado */
+  color: white !important;
   margin-bottom: 0;
   text-decoration: none !important;
   opacity: 0.9;
@@ -151,41 +193,6 @@ body {
 .btn-login:hover {
   background-color: white;
   color: var(--primary-color) !important;
-}
-
-/* Resto de tu CSS se mantiene igual */
-.top-bar {
-  background-color: var(--text-dark);
-  color: white;
-  padding: 8px 0;
-  font-size: 1rem;
-}
-
-.top-link {
-  color: white;
-  text-decoration: none;
-  margin-right: 25px;
-  font-weight: 500;
-  transition: color 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-}
-
-.top-link:hover {
-  color: var(--accent-color);
-}
-
-.top-link i {
-  margin-right: 8px;
-}
-
-.dropdown-menu-custom {
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  margin-top: 10px;
-  border-left: 4px solid var(--accent-color);
 }
 
 .carousel {
@@ -352,6 +359,21 @@ footer {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
+.map-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  margin: 2rem 0;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.map-container:hover {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  transform: translateY(-3px);
+}
+
+/* Responsivo */
 @media (max-width: 768px) {
   .navbar-brand-custom img {
     height: 50px;
@@ -368,26 +390,69 @@ footer {
   .carousel-item {
     height: 300px;
   }
-}
 
-.map-container {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  margin: 2rem 0;
-  border: 1px solid #e0e0e0;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.map-container:hover {
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  transform: translateY(-3px);
-}
-
-@media (max-width: 768px) {
   .map-container {
     border-radius: 8px;
     margin: 1.5rem 0;
   }
 }
 
+/* Estilo para el título centrado */
+.section-title {
+  position: relative;
+  padding-bottom: 15px;
+  text-align: center;
+}
+
+.section-title:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background-color: var(--accent-color);
+}
+
+/* Asegurar igual altura */
+.align-items-stretch {
+  align-items: stretch !important;
+}
+
+.contact-info-box {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Ajustes para el mapa */
+.map-container {
+  height: 100%;
+  min-height: 300px; /* Altura mínima para móviles */
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .contact-info-box {
+    height: auto;
+    margin-bottom: 20px;
+  }
+  
+  .map-container {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 576px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start !important;
+    padding: 10px 15px;
+  }
+
+  .top-link {
+    margin-bottom: 5px;
+  }
+}

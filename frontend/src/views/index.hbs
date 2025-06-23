@@ -38,7 +38,8 @@
       <img src="images/logo_ferreteria.webp" alt="Logo Ferretería Las Brisas" class="h-100"
         style="object-fit: contain; padding: 5px 0;">
       <div class="brand-text ms-3">
-        <h1 class="brand-name mb-0" style="line-height: 2.2;">Ferretería Las Brisas De Asososca</h1>
+        <h1 class="brand-name mb-0" style="line-height: 1.2;">Ferretería Las Brisas</h1>
+        <p class="brand-subtitle mb-0" style="line-height: 1.2;">De Asososca</p>
       </div>
     </a>
 
@@ -187,38 +188,39 @@
 <!-- Sección de contacto -->
 <section class="py-5 bg-light" id="contacto">
   <div class="container">
-    <div class="row g-4">
-      <div class="col-lg-6">
-        <h2 class="section-title">Ubicación y Contacto</h2>
-        <p class="lead">Visítanos en nuestra tienda o contáctanos para más información</p>
-
-        <div class="mt-4">
+    <!-- Título centrado con barra naranja -->
+    <h2 class="text-center section-title mb-5">Ubicación y Contacto</h2>
+    
+    <div class="row g-4 align-items-stretch"> <!-- align-items-stretch para igualar alturas -->
+      <!-- Columna izquierda - Información de contacto -->
+      <div class="col-lg-6 d-flex">
+        <div class="contact-info-box bg-white p-4 rounded shadow-sm w-100">
           <div class="d-flex mb-3">
-            <i class="fas fa-map-marker-alt text-primary mt-1 me-3" style="font-size: 1.2rem;"></i>
+            <i class="fas fa-map-marker-alt text-primary mt-1 me-3"></i>
             <div>
               <h5 class="mb-1">Dirección</h5>
-              <p class="mb-0">De donde fue el Rastro Municipal 2c al sur, León</p>
+              <p class="mb-0">De donde fue el Rastro Municipal 2c al sur, León</p>
             </div>
           </div>
-
+          
           <div class="d-flex mb-3">
-            <i class="fas fa-phone-alt text-primary mt-1 me-3" style="font-size: 1.2rem;"></i>
+            <i class="fas fa-phone-alt text-primary mt-1 me-3"></i>
             <div>
               <h5 class="mb-1">Teléfono</h5>
               <p class="mb-0">+505 8680 0409</p>
             </div>
           </div>
-
+          
           <div class="d-flex mb-3">
-            <i class="fas fa-envelope text-primary mt-1 me-3" style="font-size: 1.2rem;"></i>
+            <i class="fas fa-envelope text-primary mt-1 me-3"></i>
             <div>
               <h5 class="mb-1">Correo Electrónico</h5>
               <p class="mb-0">contacto@lasbrisas.com</p>
             </div>
           </div>
-
-          <div class="d-flex mb-3">
-            <i class="fas fa-clock text-primary mt-1 me-3" style="font-size: 1.2rem;"></i>
+          
+          <div class="d-flex">
+            <i class="fas fa-clock text-primary mt-1 me-3"></i>
             <div>
               <h5 class="mb-1">Horario de Atención</h5>
               <p class="mb-0">Lunes a Viernes: 8:00 AM - 5:00 PM<br>Sábado: 8:00 AM - 3:00 PM</p>
@@ -226,28 +228,22 @@
           </div>
         </div>
       </div>
-
-      <div class="col-lg-6">
-        <div class="h-100 d-flex align-items-center justify-content-center">
-          <img src="images/persona.webp" alt="Nuestra ferretería" class="img-fluid rounded shadow"
-            style="max-height: 400px;">
+      
+      <!-- Columna derecha - Mapa -->
+      <div class="col-lg-6 h-100">
+        <div class="map-container h-100">
+          <div class="ratio ratio-16x9 h-100">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.847240742862!2d-86.887418!3d12.425608!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTLCsDI1JzMyLjIiTiA4NsKwNTMnMTQuNyJX!5e0!3m2!1ses!2sni!4v1620000000000!5m2!1ses!2sni&q=Variedades+Bravo+Diaz%2C+Rastro+municipal%2C+León+21000"
+              width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade" title="Ubicación exacta de Variedades Bravo Díaz">
+            </iframe>
+          </div>
         </div>
       </div>
-
     </div>
   </div>
 </section>
-
-<!-- Mapa corregido con ubicación exacta -->
-<div class="container-fluid p-0 mb-5">
-  <div class="ratio ratio-16x9">
-    <iframe
-      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.847240742862!2d-86.887418!3d12.425608!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTLCsDI1JzMyLjIiTiA4NsKwNTMnMTQuNyJX!5e0!3m2!1ses!2sni!4v1620000000000!5m2!1ses!2sni&q=Variedades+Bravo+Diaz%2C+Rastro+municipal%2C+León+21000"
-      width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
-      referrerpolicy="no-referrer-when-downgrade" title="Ubicación exacta de Variedades Bravo Díaz">
-    </iframe>
-  </div>
-</div>
 
 <!-- Footer -->
 <footer id="footer-info">
@@ -275,7 +271,7 @@
       <div class="col-lg-3 col-md-6">
         <h5 class="footer-title">Contacto</h5>
         <div class="footer-contact">
-          <p><i class="fas fa-map-marker-alt"></i> De donde fue el Rastro Municipal 2c al sur, León</p>
+          <p><i class="fas fa-map-marker-alt"></i> De donde fue el Rastro Municipal 2c al sur, León</p>
           <p><i class="fas fa-phone-alt"></i> +505 8680 0409</p>
           <p><i class="fas fa-envelope"></i> contacto@lasbrisas.com</p>
           <p><i class="fas fa-clock"></i> Lunes-Viernes: 8AM-5PM</p>
