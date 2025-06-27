@@ -144,10 +144,10 @@
     // Modificar el evento agregarProducto para usar el nombre:
     document.getElementById("agregarProducto").addEventListener("click", async function () {
         const selectProducto = $('#nombreProducto');
-        const selectedOption = selectProducto.find('option:selected');
+        const selectedOption = selectProducto.select2('data')[0]; // Esta es la forma correcta de obtener el elemento seleccionado en Select2
 
         // Verificar si se seleccionó un producto válido
-        if (!selectProducto.val()) {
+        if (!selectedOption) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Producto no seleccionado',
@@ -156,14 +156,14 @@
             return;
         }
 
-        let codigo = selectProducto.value;
-        let nombre = selectedOption.dataset.nombre;
+        let codigo = selectedOption.id; // Select2 usa 'id' para el valor
+        let nombre = selectedOption.text; // El texto visible del option
         let cantidad = document.getElementById("cantidad").value;
         let precio = document.getElementById("precio").value;
         let metodoPago = document.getElementById("metodoPago").value;
         let sector = document.getElementById("sector").value;
-        let fechaVencimiento = selectedOption.dataset.vencimiento;
-        let stockDisponible = selectedOption.dataset.stock;
+        let fechaVencimiento = selectedOption.element.dataset.vencimiento; // Acceder a data-attributes
+        let stockDisponible = selectedOption.element.dataset.stock;
 
         // Validar campos vacíos
         if (!codigo || !cantidad || !precio || !metodoPago || !sector) {
@@ -745,11 +745,11 @@
                         false
                     );
                     // Asignar datos como atributos
-                    $(option).data('precio', producto.Precio_Compra);
-                    $(option).data('stock', producto.Cantidad);
-                    $(option).data('descripcion', producto.Descripcion);
-                    $(option).data('vencimiento', producto.FechaVencimiento);
-                    $(option).data('nombre', producto.Nombre);
+                    $(option).attr('data-precio', producto.Precio_Compra);
+                    $(option).attr('data-stock', producto.Cantidad);
+                    $(option).attr('data-descripcion', producto.Descripcion);
+                    $(option).attr('data-vencimiento', producto.FechaVencimiento);
+                    $(option).attr('data-nombre', producto.Nombre);
 
                     selectProducto.append(option);
                 });
