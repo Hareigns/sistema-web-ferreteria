@@ -117,7 +117,7 @@ router.get("/api/productos", isLoggedIn, async (req, res) => {
 });
 
 
-// Ruta para obtener un producto específico por su código
+// Ruta para obtener un producto específico por su código (VERSIÓN CORREGIDA)
 router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
   try {
     const { codigo } = req.params;
@@ -133,9 +133,12 @@ router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
         pp.Precio AS Precio_Compra, 
         pp.Cantidad,
         pp.Fecha_Entrada,
-        pp.Cod_Proveedor
+        pp.Cod_Proveedor,
+        pr.Nombre AS ProveedorNombre,
+        pr.Apellido AS ProveedorApellido
       FROM Producto p
       JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
+      JOIN Proveedor pr ON pp.Cod_Proveedor = pr.Cod_Proveedor
       WHERE p.Cod_Producto = ?
     `, [codigo]);
 

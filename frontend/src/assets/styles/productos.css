@@ -1,103 +1,256 @@
-body {
-  background: url('/images/fondoinicio.webp') no-repeat center center fixed;
-  background-size: cover;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding-top: 90px;
-}
-.card {
-  border-radius: 15px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.9);
-}
-.btn-custom {
-    font-size: 1.3rem;
-    padding: 12px 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.navbar {
-  background: #2c3e50;
-  padding: 15px;
-  width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  border-radius: 0;
-}
-
-/* Estilos personalizados para los botones */
-  .btn-agregar {
-    background-color: #4CAF50; /* Verde */
-    color: white;
-    font-weight: bold;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    transition: all 0.3s;
-  }
-  
-  .btn-agregar:hover {
-    background-color: #45a049; /* Verde oscuro */
-    transform: scale(1.05);
-  }
-  
-  .btn-guardar {
-    background-color: #2196F3; /* Azul */
-    color: white;
-    font-weight: bold;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 5px;
-    transition: all 0.3s;
-  }
-  
-  .btn-guardar:hover {
-    background-color: #0b7dda; /* Azul oscuro */
-    transform: scale(1.05);
-  }
-  
-  .btn-limpiar {
-    background-color: #968f8e; /* Rojo */
-    color: white;
-    font-weight: bold;
-    padding: 8px 16px; /* Más pequeño que los otros */
-    border: none;
-    border-radius: 5px;
-    transition: all 0.3s;
-    font-size: 0.9em;
-  }
-  
-  .btn-limpiar:hover {
-    background-color: #7e7b7a; /* Rojo oscuro */
-    transform: scale(1.05);
-  }
-  
-  /* Estilo para los botones de eliminar en la tabla */
-  .btn-eliminar {
-    background-color: #ff5252;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 0.8em;
-  }
-
-  /* En tu archivo productos.css */
-input[readonly], select:disabled {
-  background-color: #f8f9fa;
-  border-color: #dee2e6;
-  color: #6c757d;
-  cursor: not-allowed;
-}
-
-/* Resaltar campos editables */
-#precio_compra:not([readonly]), 
-#cantidad:not([readonly]) {
-  background-color: #fff;
-  border-color: #80c7e0;
-}
+:root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9fa;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: var(--dark-color);
+            padding: 12px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            background: white;
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: var(--primary-color);
+            color: white;
+            border-bottom: none;
+            padding: 20px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d1145a;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn-success:hover {
+            background-color: #3ab7d8;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--dark-color);
+            font-weight: 500;
+            border: none;
+            padding: 12px 20px;
+            transition: all 0.3s;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background-color: transparent;
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .nav-tabs .nav-link:hover:not(.active) {
+            color: var(--accent-color);
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        .btn-agregar {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-agregar:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .btn-guardar {
+            background-color: #2196F3;
+            color: white;
+            font-weight: bold;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-guardar:hover {
+            background-color: #0b7dda;
+            transform: scale(1.05);
+        }
+        
+        .btn-limpiar {
+            background-color: #968f8e;
+            color: white;
+            font-weight: bold;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .btn-limpiar:hover {
+            background-color: #7e7b7a;
+            transform: scale(1.05);
+        }
+        
+        .btn-eliminar {
+            background-color: #ff5252;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        
+        input[readonly], select:disabled {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        #precio_compra:not([readonly]), 
+        #cantidad:not([readonly]) {
+            background-color: #fff;
+            border-color: #80c7e0;
+        }
+        
+        .select2-container .select2-selection--single {
+            height: 42px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 42px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+        }
+        
+        .badge {
+            padding: 0.5em 0.75em;
+            font-size: 0.875em;
+            font-weight: 600;
+            border-radius: 50px;
+        }
+        
+        .section-title {
+            position: relative;
+            margin-bottom: 30px;
+            color: var(--dark-color);
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            width: 50px;
+            height: 3px;
+            background: var(--accent-color);
+        }
+        
+        .floating-label {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .floating-label label {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: white;
+            padding: 0 5px;
+            font-size: 12px;
+            color: var(--accent-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .action-buttons button {
+                width: 100%;
+            }
+        }
