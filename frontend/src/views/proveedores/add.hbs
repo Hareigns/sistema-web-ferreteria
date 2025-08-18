@@ -1,78 +1,129 @@
-<title>Registro</title>
+<title>Registro de Proveedores</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/styles/Proveedores.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<div class="container py-5">
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">
+      <i class="fas fa-truck me-2"></i>Gestor de Proveedores
+    </a>
+  </div>
+</nav>
+
+<div class="container mb-5">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="text-center mb-0"><i class="fas fa-list me-2"></i>Lista de Proveedores</h3>
+    </div>
+    <div class="card-body p-4">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 display" id="proveedoresTable" style="width:100%">
+          <thead>
+            <tr>
+              <th><i class="fas fa-id-card me-1"></i> Código</th>
+              <th><i class="fas fa-user me-1"></i> Nombre</th>
+              <th><i class="fas fa-user-tag me-1"></i> Apellido</th>
+              <th><i class="fas fa-phone-alt me-1"></i> Teléfono</th>
+              <th><i class="fas fa-mobile-alt me-1"></i> Compañía</th>
+              <th><i class="fas fa-industry me-1"></i> Sector</th>
+              <th><i class="fas fa-circle me-1"></i> Estado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4">
   <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="card shadow-lg p-4">
-        <div class="card-body">
-          <h3 class="text-center mb-4">Registro de Proveedores</h3>
-          <form action="/proveedores/add" method="post" id="proveedorForm">
+    <div class="col-lg-10">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center mb-0"><i class="fas fa-user-edit me-2"></i>Registro de Proveedores</h3>
+        </div>
+        <div class="card-body p-4">
+          <form id="proveedorForm">
             <div class="row g-3">
               <div class="col-md-6">
-                <label for="nombre" class="form-label">Nombre</label>
-                <input type="text" id="nombre" name="nombre" class="form-control" 
-                       pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" 
-                       title="Solo letras (mínimo 3 caracteres)" required>
+                <div class="floating-label">
+                  <label for="nombre">Nombre</label>
+                  <input type="text" id="nombre" name="nombre" class="form-control"
+                    pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" title="Solo letras (mínimo 3 caracteres)" required>
+                </div>
               </div>
               <div class="col-md-6">
-                <label for="apellido" class="form-label">Apellido</label>
-                <input type="text" id="apellido" name="apellido" class="form-control" 
-                       pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" 
-                       title="Solo letras (mínimo 3 caracteres)" required>
+                <div class="floating-label">
+                  <label for="apellido">Apellido</label>
+                  <input type="text" id="apellido" name="apellido" class="form-control"
+                    pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" title="Solo letras (mínimo 3 caracteres)" required>
+                </div>
               </div>
               <div class="col-md-6">
-                <label for="telefono" class="form-label">Teléfono</label>
-                <input type="tel" id="telefono" name="telefono" class="form-control" required>
+                <div class="floating-label">
+                  <label for="telefono">Teléfono</label>
+                  <input type="tel" id="telefono" name="telefono" class="form-control" required>
+                </div>
               </div>
               <div class="col-md-6">
-                <label for="compania" class="form-label">Compañía</label>
-                <select id="compania" name="compania" class="form-select" required>
-                  <option value="" selected disabled>Seleccione una compañía</option>
-                  <option value="Tigo">Tigo</option>
-                  <option value="Claro">Claro</option>
-                </select>
+                <div class="floating-label modern-select">
+                  <label for="compania">Compañía</label>
+                  <select id="compania" name="compania" class="form-select" required>
+                    <option value="" selected disabled>Seleccione una compañía</option>
+                    <option value="Tigo">Tigo</option>
+                    <option value="Claro">Claro</option>
+                  </select>
+                </div>
               </div>
               <div class="col-md-6">
-                <label for="sector" class="form-label">Sector</label>
-                <select id="sector" name="sector" class="form-select" required>
-                  <option value="" disabled selected>Seleccione un sector</option>
-                  <option value="Herramientas manuales">Herramientas manuales</option>
-                  <option value="Herramientas eléctricas">Herramientas eléctricas</option>
-                  <option value="Materiales de construcción">Materiales de construcción</option>
-                  <option value="Pinturas o accesorios">Pinturas o accesorios</option>
-                  <option value="Tuberías y plomería">Tuberías y plomería</option>
-                  <option value="Electricidad e iluminación">Electricidad e iluminación</option>
-                  <option value="Seguridad industrial">Seguridad industrial</option>
-                  <option value="Productos de ferretería general">Productos de ferretería general</option>
-                </select>
+                <div class="floating-label modern-select">
+                  <label for="sector">Sector</label>
+                  <select id="sector" name="sector" class="form-select" required>
+                    <option value="" disabled selected>Seleccione un sector</option>
+                    <option value="Herramientas manuales">Herramientas manuales</option>
+                    <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+                    <option value="Materiales de construcción">Materiales de construcción</option>
+                    <option value="Pinturas o accesorios">Pinturas o accesorios</option>
+                    <option value="Tuberías y plomería">Tuberías y plomería</option>
+                    <option value="Electricidad e iluminación">Electricidad e iluminación</option>
+                    <option value="Seguridad industrial">Seguridad industrial</option>
+                    <option value="Productos de ferretería general">Productos de ferretería general</option>
+                  </select>
+                </div>
               </div>
               <div id="estado-container" class="col-md-6">
-                <label for="estado" class="form-label">Estado</label>
-                <select id="estado" name="estado" class="form-select" required>
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </select>
+                <div class="floating-label modern-select">
+                  <label for="estado">Estado</label>
+                  <select id="estado" name="estado" class="form-select" required>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
               </div>
-              <div class="col-12 d-flex justify-content-between mt-3">
-                <button class="btn btn-primary" type="submit" id="ingresarButton">Ingresar</button>
-                <button class="btn btn-secondary" type="button" onclick="limpiarFormulario()">Limpiar</button>
-              </div>
-              <div class="card-body">
-                <h5 class="text-center mb-3">Modificar Proveedor</h5>
-                <select id="codigo_proveedor" class="form-select" id="codigo_proveedor"
-                  onchange="cargarDatosProveedor(this.value)">
+            </div>
+
+            <div class="action-buttons mt-4">
+              <button class="btn btn-primary" type="button" id="ingresarButton">
+                <i class="fas fa-user-plus me-2"></i>Ingresar
+              </button>
+              <button class="btn btn-danger" type="button" onclick="limpiarFormulario()">
+                <i class="fas fa-broom me-2"></i>Limpiar
+              </button>
+            </div>
+
+            <div class="mt-5">
+              <h5 class="section-title"><i class="fas fa-user-cog me-2"></i>Modificar Proveedor</h5>
+              <div class="modern-select mb-3">
+                <select id="codigo_proveedor" class="form-select" required onchange="cargarDatosProveedor(this.value)">
                   <option value="" disabled selected>Seleccione un proveedor</option>
-                  <!-- Las opciones se llenarán con JavaScript -->
                 </select>
-                <button class="btn btn-success" type="button" id="modificarButton" onclick="modificarProveedor()"
-                  disabled>Modificar</button>
               </div>
+              <button class="btn btn-success w-100" type="button" id="modificarButton" onclick="modificarProveedor()"
+                disabled>
+                <i class="fas fa-user-edit me-2"></i>Modificar
+              </button>
             </div>
           </form>
         </div>
@@ -81,50 +132,28 @@
   </div>
 </div>
 
-<div class="card mb-4" style="border: 1px solid #ddd;">
-  <div class="card-body text-center">
-    <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Proveedores</h3>
-    <div class="card p-4 table-responsive">
-      <div class="card-body">
-        <table class="table align-middle mb-0 bg-white display" id="proveedoresTable" style="width:100%">
-          <thead class="bg-light">
-            <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Teléfono</th>
-              <th>Compañía</th>
-              <th>Sector</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Los datos se cargarán dinámicamente -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
   let proveedoresTable;
 
   // Función para validar nombre y apellido
   function validarNombreApellido(valor) {
-    // Permite letras, espacios y acentos (mínimo 3 caracteres)
     return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}$/.test(valor);
   }
 
   // Validación en tiempo real para nombre y apellido
-  document.getElementById('nombre').addEventListener('input', function(e) {
+  document.getElementById('nombre').addEventListener('input', function (e) {
     const value = e.target.value;
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
       e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
     }
   });
 
-  document.getElementById('apellido').addEventListener('input', function(e) {
+  document.getElementById('apellido').addEventListener('input', function (e) {
     const value = e.target.value;
     if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
       e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
@@ -149,6 +178,13 @@
           const option = document.createElement('option');
           option.value = proveedor.Cod_Proveedor;
           option.textContent = `${proveedor.Cod_Proveedor} - ${proveedor.Nombre} ${proveedor.Apellido}`;
+          // Agregar datos adicionales como atributos data
+          option.dataset.nombre = proveedor.Nombre;
+          option.dataset.apellido = proveedor.Apellido;
+          option.dataset.telefono = proveedor.Telefono;
+          option.dataset.compania = proveedor.Compania;
+          option.dataset.sector = proveedor.Sector;
+          option.dataset.estado = proveedor.Estado;
           select.appendChild(option);
         });
 
@@ -191,10 +227,6 @@
           "last": "Último",
           "next": "Siguiente",
           "previous": "Anterior"
-        },
-        "aria": {
-          "sortAscending": ": activar para ordenar columna ascendente",
-          "sortDescending": ": activar para ordenar columna descendente"
         }
       },
       data: data,
@@ -205,9 +237,9 @@
         { data: 'Telefono' },
         { data: 'Compania' },
         { data: 'Sector' },
-        { 
+        {
           data: 'Estado',
-          render: function(data, type, row) {
+          render: function (data, type, row) {
             return `<span class="badge ${data === 'Activo' ? 'bg-success' : 'bg-danger'}">${data}</span>`;
           }
         }
@@ -216,36 +248,40 @@
   }
 
   // Función para cargar datos del proveedor seleccionado
-  async function cargarDatosProveedor(codProveedor) {
+  function cargarDatosProveedor(codProveedor) {
+    const select = document.getElementById('codigo_proveedor');
+    const selectedOption = select.options[select.selectedIndex];
+
+    if (!selectedOption?.value) {
+      limpiarFormulario();
+      return;
+    }
+
     try {
-      const response = await fetch(`/proveedores/api/proveedores/${codProveedor}`);
-      const data = await response.json();
+      // Mostrar campo de estado
+      document.getElementById('estado-container').classList.add('visible');
 
-      if (data.success) {
-        // Mostrar campo de estado
-        document.getElementById('estado-container').classList.add('visible');
+      // Cargar datos del option seleccionado
+      document.getElementById('nombre').value = selectedOption.dataset.nombre || '';
+      document.getElementById('apellido').value = selectedOption.dataset.apellido || '';
+      document.getElementById('telefono').value = selectedOption.dataset.telefono || '';
+      document.getElementById('compania').value = selectedOption.dataset.compania || '';
+      document.getElementById('sector').value = selectedOption.dataset.sector || '';
+      document.getElementById('estado').value = selectedOption.dataset.estado || 'Activo';
 
-        // Cargar datos en el formulario
-        document.getElementById('nombre').value = data.data.Nombre;
-        document.getElementById('apellido').value = data.data.Apellido;
-        document.getElementById('telefono').value = data.data.Telefono;
-        document.getElementById('compania').value = data.data.Compania;
-        document.getElementById('sector').value = data.data.Sector;
-        document.getElementById('estado').value = data.data.Estado;
+      // Habilitar solo Teléfono, Compañía y Estado
+      document.getElementById('nombre').disabled = true;
+      document.getElementById('apellido').disabled = true;
+      document.getElementById('sector').disabled = true;
 
-        // Habilitar solo Teléfono, Compañía y Estado
-        document.getElementById('nombre').disabled = true;
-        document.getElementById('apellido').disabled = true;
-        document.getElementById('sector').disabled = true;
+      document.getElementById('telefono').disabled = false;
+      document.getElementById('compania').disabled = false;
+      document.getElementById('estado').disabled = false;
 
-        document.getElementById('telefono').disabled = false;
-        document.getElementById('compania').disabled = false;
-        document.getElementById('estado').disabled = false;
+      // Activar botón de modificar
+      document.getElementById('modificarButton').disabled = false;
+      document.getElementById('ingresarButton').disabled = true;
 
-        // Activar botón de modificar
-        document.getElementById('modificarButton').disabled = false;
-        document.getElementById('ingresarButton').disabled = true;
-      }
     } catch (error) {
       console.error('Error al cargar proveedor:', error);
       Swal.fire('Error', 'No se pudieron cargar los datos del proveedor', 'error');
@@ -276,14 +312,13 @@
   // Función para verificar teléfono existente
   async function verificarTelefonoExistente(telefono, codProveedor = null) {
     try {
-      // Validación básica del teléfono primero
       if (!telefono || !/^\d{8}$/.test(telefono)) {
         await Swal.fire({
           title: 'Teléfono inválido',
           text: 'El teléfono debe tener 8 dígitos',
           icon: 'error'
         });
-        return true; // Consideramos que existe para bloquear el envío
+        return true;
       }
 
       let url = `/proveedores/api/telefono/existe/${telefono}`;
@@ -291,16 +326,7 @@
         url += `?excluirProveedor=${codProveedor}`;
       }
 
-      // Agregar timeout para evitar que se quede pegado
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos timeout
-
-      const response = await fetch(url, {
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
+      const response = await fetch(url);
       const data = await response.json();
 
       if (!data.success) {
@@ -320,27 +346,17 @@
 
     } catch (error) {
       console.error('Error verificando teléfono:', error);
-
-      // Mostrar error diferente si fue por timeout
-      if (error.name === 'AbortError') {
-        await Swal.fire({
-          title: 'Tiempo de espera agotado',
-          text: 'La verificación de teléfono tardó demasiado',
-          icon: 'error'
-        });
-      } else {
-        await Swal.fire({
-          title: 'Error de verificación',
-          text: error.message || 'No se pudo verificar el teléfono',
-          icon: 'error'
-        });
-      }
-      return true; // Bloquear en caso de error
+      await Swal.fire({
+        title: 'Error de verificación',
+        text: error.message || 'No se pudo verificar el teléfono',
+        icon: 'error'
+      });
+      return true;
     }
   }
 
   // Función para manejar el envío del formulario (POST)
-  document.getElementById('proveedorForm').addEventListener('submit', async function (e) {
+  document.getElementById('ingresarButton').addEventListener('click', async function (e) {
     e.preventDefault();
 
     const submitBtn = document.getElementById('ingresarButton');
@@ -350,13 +366,13 @@
     try {
       const nombre = document.getElementById('nombre').value.trim();
       const apellido = document.getElementById('apellido').value.trim();
-      
+
       // Validación de nombre y apellido
       if (!validarNombreApellido(nombre)) {
         await Swal.fire("Error", "El nombre debe contener solo letras y tener al menos 3 caracteres", "error");
         return;
       }
-      
+
       if (!validarNombreApellido(apellido)) {
         await Swal.fire("Error", "El apellido debe contener solo letras y tener al menos 3 caracteres", "error");
         return;
@@ -368,12 +384,12 @@
         telefono: document.getElementById('telefono').value.trim(),
         compania: document.getElementById('compania').value,
         sector: document.getElementById('sector').value,
-        estado: document.getElementById('estado').value
+        estado: document.getElementById('estado').value || 'Activo'
       };
 
       // Validaciones básicas
       if (!formData.nombre || !formData.apellido || !formData.telefono ||
-        !formData.compania || !formData.sector || !formData.estado) {
+        !formData.compania || !formData.sector) {
         await Swal.fire('Error', 'Todos los campos son requeridos', 'error');
         return;
       }
@@ -405,7 +421,7 @@
       await Swal.fire('Error', 'Ocurrió un error inesperado', 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Ingresar';
+      submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Ingresar';
     }
   });
 
@@ -419,13 +435,13 @@
 
     const nombre = document.getElementById('nombre').value.trim();
     const apellido = document.getElementById('apellido').value.trim();
-    
+
     // Validación de nombre y apellido (aunque estén deshabilitados, por seguridad)
     if (!validarNombreApellido(nombre)) {
       await Swal.fire("Error", "El nombre no es válido", "error");
       return;
     }
-    
+
     if (!validarNombreApellido(apellido)) {
       await Swal.fire("Error", "El apellido no es válido", "error");
       return;
@@ -463,6 +479,10 @@
     if (!confirmacion.isConfirmed) return;
 
     try {
+      const btnModificar = document.getElementById('modificarButton');
+      btnModificar.disabled = true;
+      btnModificar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
       const response = await fetch(`/proveedores/api/proveedores/${codProveedor}`, {
         method: 'PUT',
         headers: {
@@ -483,6 +503,10 @@
     } catch (error) {
       console.error('Error al actualizar:', error);
       Swal.fire('Error', 'Error al comunicarse con el servidor', 'error');
+    } finally {
+      const btnModificar = document.getElementById('modificarButton');
+      btnModificar.disabled = false;
+      btnModificar.innerHTML = '<i class="fas fa-user-edit me-2"></i>Modificar';
     }
   }
 

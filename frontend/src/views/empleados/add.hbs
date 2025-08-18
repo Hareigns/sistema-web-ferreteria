@@ -1,100 +1,35 @@
 <title>Registro de Empleado</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/styles/empleados.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="card shadow-lg p-4">
-        <div class="card-body">
-          <h3 class="text-center mb-4">Registro de Empleados</h3>
-          <form id="empleadoForm">
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="nombre" class="form-label">Nombre</label>
-                <input type="text" id="nombre" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}"
-                  title="Solo letras (mínimo 3 caracteres)" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="apellido" class="form-label">Apellido</label>
-                <input type="text" id="apellido" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}"
-                  title="Solo letras (mínimo 3 caracteres)" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="direccion" class="form-label">Dirección</label>
-                <input type="text" id="direccion" class="form-control" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="cedula" class="form-label">Cédula (13 dígitos + 1 letra)</label>
-                <input type="text" id="cedula" class="form-control" pattern="[0-9]{13}[A-Za-z]{1}"
-                  title="13 dígitos seguidos de 1 letra" required>
-              </div>
-              <div id="estado-container" class="col-md-6 mb-3">
-                <label for="estado" class="form-label">Estado</label>
-                <select id="estado" class="form-select" required>
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="telefono" class="form-label">Teléfono</label>
-                <input type="tel" id="telefono" class="form-control" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="compania_telefonica" class="form-label">Compañía Telefónica</label>
-                <select id="compania_telefonica" class="form-select" required>
-                  <option value="Tigo">Tigo</option>
-                  <option value="Claro">Claro</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3 d-flex align-items-center">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="contrasena_temporal">
-                  <label class="form-check-label" for="contrasena_temporal">
-                    Resetear a contraseña temporal
-                  </label>
-                </div>
-              </div>
-              <div class="d-flex justify-content-between">
-                <button class="btn btn-primary" type="button" id="ingresarButton"
-                  onclick="ingresarEmpleado()">Ingresar</button>
-                <button class="btn btn-danger" type="button" onclick="limpiarCampos()">Limpiar</button>
-              </div>
-
-              <div class="mt-4">
-                <h5 class="text-center mb-3">Modificar Empleados</h5>
-                <select name="codigo_empleado" class="form-select" id="codigo_empleado" required
-                  onchange="habilitarDeshabilitarBotones()">
-                  <option value="" disabled selected>Seleccione un empleado</option>
-                </select>
-                <button class="btn btn-success mt-2 w-100" type="button" id="modificarButton"
-                  onclick="modificarEmpleado()" disabled>Modificar</button>
-              </div>
-          </form>
-        </div>
-      </div>
-    </div>
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">
+      <i class="fas fa-users-cog me-2"></i>Gestor de Empleados
+    </a>
   </div>
-</div>
-<div class="card mb-4" style="border: 1px solid #ddd;">
-  <div class="card-body text-center">
-    <h3 class="mb-0" style="font-weight: bold; color: #333;">Lista de Empleados</h3>
-    <div class="card p-4 table-responsive">
-      <div class="card-body">
-        <table class="table align-middle mb-0 bg-white display" id="empleadosTable" style="width:100%">
-          <thead class="bg-light">
+</nav>
+
+<div class="container mb-5">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="text-center mb-0"><i class="fas fa-users me-2"></i>Lista de Empleados</h3>
+    </div>
+    <div class="card-body p-4">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 display" id="empleadosTable" style="width:100%">
+          <thead>
             <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Cédula</th>
-              <th>Dirección</th>
-              <th>Estado</th>
-              <th>F. Ingreso</th>
-              <th>Teléfono</th>
-              <th>Compañía</th>
+              <th><i class="fas fa-id-card me-1"></i> Código</th>
+              <th><i class="fas fa-user me-1"></i> Nombre</th>
+              <th><i class="fas fa-user-tag me-1"></i> Apellido</th>
+              <th><i class="fas fa-id-badge me-1"></i> Cédula</th>
+              <th><i class="fas fa-map-marker-alt me-1"></i> Dirección</th>
+              <th><i class="fas fa-circle me-1"></i> Estado</th>
+              <th><i class="fas fa-calendar-alt me-1"></i> F. Ingreso</th>
+              <th><i class="fas fa-phone-alt me-1"></i> Teléfono</th>
+              <th><i class="fas fa-mobile-alt me-1"></i> Compañía</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -104,12 +39,185 @@
   </div>
 </div>
 
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center mb-0"><i class="fas fa-user-edit me-2"></i>Registro de Empleados</h3>
+        </div>
+        <div class="card-body p-4">
+          <form id="empleadoForm">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="floating-label">
+                  <label for="nombre">Nombre</label>
+                  <input type="text" id="nombre" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}"
+                    title="Solo letras (mínimo 3 caracteres)" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="floating-label">
+                  <label for="apellido">Apellido</label>
+                  <input type="text" id="apellido" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}"
+                    title="Solo letras (mínimo 3 caracteres)" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="floating-label">
+                  <label for="direccion">Dirección</label>
+                  <input type="text" id="direccion" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="floating-label">
+                  <label for="cedula">Cédula (13 dígitos + 1 letra)</label>
+                  <input type="text" id="cedula" class="form-control" pattern="[0-9]{13}[A-Za-z]{1}"
+                    title="13 dígitos seguidos de 1 letra" required>
+                </div>
+              </div>
+              <div id="estado-container" class="col-md-6">
+                <div class="floating-label modern-select">
+                  <label for="estado">Estado</label>
+                  <select id="estado" class="form-select" required>
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="floating-label">
+                  <label for="telefono">Teléfono</label>
+                  <input type="tel" id="telefono" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="floating-label modern-select">
+                  <label for="compania_telefonica">Compañía Telefónica</label>
+                  <select id="compania_telefonica" class="form-select" required>
+                    <option value="Tigo">Tigo</option>
+                    <option value="Claro">Claro</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check form-switch ps-0">
+                  <input class="form-check-input ms-0" type="checkbox" id="contrasena_temporal">
+                  <label class="form-check-label ms-3" for="contrasena_temporal">
+                    Resetear a contraseña temporal
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn btn-primary" type="button" id="ingresarButton" onclick="ingresarEmpleado()">
+                <i class="fas fa-user-plus me-2"></i>Ingresar
+              </button>
+              <button class="btn btn-danger" type="button" onclick="limpiarCampos()">
+                <i class="fas fa-broom me-2"></i>Limpiar
+              </button>
+            </div>
+
+            <div class="mt-5">
+              <h5 class="section-title"><i class="fas fa-user-cog me-2"></i>Modificar Empleados</h5>
+              <div class="modern-select mb-3">
+                <select name="codigo_empleado" class="form-select" id="codigo_empleado" required
+                  onchange="habilitarDeshabilitarBotones()">
+                  <option value="" disabled selected>Seleccione un empleado</option>
+                </select>
+              </div>
+              <button class="btn btn-success w-100" type="button" id="modificarButton" onclick="modificarEmpleado()"
+                disabled>
+                <i class="fas fa-user-edit me-2"></i>Modificar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts (mantenidos igual que en tu versión original) -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+  // Función para cargar datos del empleado seleccionado (actualizada)
+  async function cargarDatosEmpleado() {
+    const select = document.getElementById("codigo_empleado");
+    const selectedOption = select.options[select.selectedIndex];
+    const editFields = document.getElementById("editFields");
+
+    if (!selectedOption.value) {
+      editFields.style.display = "none";
+      return;
+    }
+
+    try {
+      // Mostrar loader
+      editFields.style.display = "none";
+      document.getElementById("modificarButton").disabled = true;
+
+      // Obtener datos del option seleccionado
+      const empleado = {
+        nombre: selectedOption.dataset.nombre,
+        apellido: selectedOption.dataset.apellido,
+        direccion: selectedOption.dataset.direccion,
+        estado: selectedOption.dataset.estado || "Activo",
+        cedula: selectedOption.dataset.cedula,
+        telefono: selectedOption.dataset.telefono,
+        compania: selectedOption.dataset.compania || "Tigo"
+      };
+
+      // Llenar campos del formulario
+      document.getElementById("edit_nombre").value = empleado.nombre;
+      document.getElementById("edit_apellido").value = empleado.apellido;
+      document.getElementById("edit_cedula").value = empleado.cedula;
+      document.getElementById("edit_direccion").value = empleado.direccion;
+      document.getElementById("edit_telefono").value = empleado.telefono;
+      document.getElementById("edit_compania").value = empleado.compania;
+      document.getElementById("edit_estado").value = empleado.estado;
+
+      // Bloquear campos que no deben editarse
+      ['edit_nombre', 'edit_apellido', 'edit_cedula'].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.disabled = true;
+      });
+
+      // Bloquear/desbloquear estado según el código del empleado
+      const codigoEmpleado = parseInt(selectedOption.value);
+      const estadoSelect = document.getElementById("edit_estado");
+      if (codigoEmpleado === 1 || codigoEmpleado === 2) {
+        estadoSelect.disabled = true;
+        estadoSelect.value = "Activo";
+      } else {
+        estadoSelect.disabled = false;
+      }
+
+      // Mostrar campos de edición
+      editFields.style.display = "block";
+      document.getElementById("modificarButton").disabled = false;
+
+    } catch (error) {
+      console.error("Error al cargar datos del empleado:", error);
+      Swal.fire("Error", "No se pudieron cargar los datos del empleado", "error");
+    }
+  }
+
+  // Función para limpiar campos de edición
+  function limpiarEdicion() {
+    document.getElementById("codigo_empleado").value = "";
+    document.getElementById("editFields").style.display = "none";
+    // Cambiar a la pestaña de nuevo empleado
+    const tab = new bootstrap.Tab(document.getElementById('nuevo-tab'));
+    tab.show();
+  }
+
+
   // Validación en tiempo real para nombre y apellido
   document.getElementById('nombre').addEventListener('input', function (e) {
     const value = e.target.value;
@@ -434,30 +542,18 @@
     }
   }
 
-  // Función para modificar empleado (mejorada)
+  // Función modificarEmpleado actualizada
   async function modificarEmpleado() {
     const codigoEmpleado = document.getElementById("codigo_empleado").value;
-    const resetPassword = document.getElementById("contrasena_temporal").checked;
+    const resetPassword = document.getElementById("edit_reset_pass").checked;
 
-
-    // Obtener valores
-    const nombre = document.getElementById("nombre").value.trim();
-    const apellido = document.getElementById("apellido").value.trim();
-    const direccion = document.getElementById("direccion").value.trim();
-    const estado = document.getElementById("estado").value;
-    const telefono = document.getElementById("telefono").value.trim();
-    const compania = document.getElementById("compania_telefonica").value;
-
-    // Validación de nombre y apellido (aunque estén deshabilitados, por seguridad)
-    if (!validarNombreApellido(nombre)) {
-      await Swal.fire("Error", "El nombre no es válido", "error");
-      return;
-    }
-
-    if (!validarNombreApellido(apellido)) {
-      await Swal.fire("Error", "El apellido no es válido", "error");
-      return;
-    }
+    // Obtener valores de los campos de edición
+    const direccion = document.getElementById("edit_direccion").value.trim();
+    const estado = document.getElementById("edit_estado").value;
+    const telefono = document.getElementById("edit_telefono").value.trim();
+    const compania = document.getElementById("edit_compania").value;
+    const nombre = document.getElementById("edit_nombre").value.trim();
+    const apellido = document.getElementById("edit_apellido").value.trim();
 
     if (!codigoEmpleado) {
       await Swal.fire("Error", "Debe seleccionar un empleado", "error");
@@ -486,11 +582,6 @@
         resetPassword
       };
 
-      // Si se solicita resetear la contraseña, enviar flag
-      if (resetPassword) {
-        payload.resetPassword = true;
-      }
-
       // Enviar datos
       const response = await fetch(`/empleados/api/empleados/${codigoEmpleado}`, {
         method: "PUT",
@@ -515,7 +606,8 @@
 
       // Actualizar UI
       cargarEmpleadosEnTabla();
-      if (estado === 'Inactivo') limpiarCampos();
+      cargarEmpleadosEnSelect();
+      if (estado === 'Inactivo') limpiarEdicion();
 
     } catch (error) {
       console.error("Error:", error);
@@ -532,7 +624,7 @@
     const nombre = document.getElementById("nombre").value.trim();
     const apellido = document.getElementById("apellido").value.trim();
     const direccion = document.getElementById("direccion").value.trim();
-    const estado = document.getElementById("estado").value;
+    const estado = "Activo";
     const telefono = document.getElementById("telefono").value.trim();
     const compania = document.getElementById("compania_telefonica").value;
     const cedula = document.getElementById("cedula").value.trim();
@@ -634,8 +726,6 @@
     });
 
     // Resetear selects y habilitar estado
-    document.getElementById("estado").value = "Activo";
-    document.getElementById("estado").disabled = false; // Asegurar que esté habilitado
     document.getElementById("compania_telefonica").value = "Tigo";
 
     // Resetear select de empleados y checkbox
@@ -655,11 +745,11 @@
     document.getElementById("empleadoForm").reset();
   }
 
-  // Evento change mejorado con manejo de errores y bloqueo de campos
+  // Función para cargar datos del empleado seleccionado (actualizada)
   document.getElementById("codigo_empleado").addEventListener("change", async function () {
     try {
       const selectedOption = this.options[this.selectedIndex];
-      const estadoSelect = document.getElementById("estado");
+      const estadoSelect = document.getElementById("estado"); // Cambiado de edit_estado a estado
 
       if (!selectedOption?.value) {
         limpiarCampos();
@@ -669,13 +759,9 @@
           if (field) field.disabled = false;
         });
         // Habilitar estado cuando no hay empleado seleccionado
-        estadoSelect.disabled = false;
+        if (estadoSelect) estadoSelect.disabled = false;
         return;
       }
-
-      // Mostrar ambos campos (estado y reset password)
-      document.getElementById("estado-container").classList.add("visible");
-      document.querySelector(".form-check").classList.add("visible");
 
       // Verificar datos del empleado seleccionado
       if (!selectedOption.dataset.nombre) {
@@ -685,15 +771,17 @@
       // Bloquear/desbloquear estado según el código del empleado
       const codigoEmpleado = parseInt(selectedOption.value);
       if (codigoEmpleado === 1 || codigoEmpleado === 2) {
-        estadoSelect.disabled = true;
-        estadoSelect.value = "Activo"; // Forzar estado Activo para empleados 1 y 2
-      } else {
+        if (estadoSelect) {
+          estadoSelect.disabled = true;
+          estadoSelect.value = "Activo";
+        }
+      } else if (estadoSelect) {
         estadoSelect.disabled = false;
       }
 
-      // Resto del código existente para llenar los campos...
+      // Llenar campos del formulario
       const fieldsToUpdate = [
-        { id: 'nombre', dataset: 'nombre', required: true },
+        { id: 'nombre', dataset: 'nombre' },
         { id: 'apellido', dataset: 'apellido' },
         { id: 'direccion', dataset: 'direccion' },
         { id: 'cedula', dataset: 'cedula' },
@@ -712,14 +800,11 @@
         const value = selectedOption.dataset[field.dataset] || '';
 
         if (field.type === 'select') {
-          // Para select, verificar que el valor existe en las opciones
           const optionExists = [...element.options].some(opt => opt.value === value);
           element.value = optionExists ? value : element.options[0]?.value || '';
         } else {
           element.value = value;
         }
-
-        // Guardar valor original para detectar cambios
         element.defaultValue = element.value;
       });
 
@@ -729,9 +814,14 @@
         if (field) field.disabled = true;
       });
 
+      // Mostrar campos relevantes
+      const estadoContainer = document.getElementById("estado-container");
+      const formCheck = document.querySelector(".form-check");
+
+      if (estadoContainer) estadoContainer.classList.add("visible");
+      if (formCheck) formCheck.classList.add("visible");
+
       document.getElementById("modificarButton").disabled = false;
-      // Mostrar el checkbox y su label
-      document.querySelector(".form-check").classList.add("visible");
 
     } catch (error) {
       console.error('Error al cargar datos del empleado:', error);
