@@ -1,4 +1,4 @@
-<title>Gestión Completa de Productos</title>
+<title>Gestión de Productos</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -10,7 +10,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark">
   <div class="container">
     <a class="navbar-brand" href="#">
-      <i class="fas fa-boxes me-2"></i>Gestión Completa de Productos
+      <i class="fas fa-boxes me-2"></i>Gestión de Productos
     </a>
   </div>
 </nav>
@@ -458,14 +458,14 @@
     document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
     document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
 
-     // Configurar Select2 para ambos selects (bajas y modificación) en español
+    // Configurar Select2 para ambos selects (bajas y modificación) en español
     $('.select2-search').select2({
-        language: "es",
-        placeholder: "Escriba para buscar productos...",
-        allowClear: true,
-        width: '100%',
-        minimumInputLength: 1, // Mostrar resultados después de 1 carácter
-        dropdownParent: $('#modify') // Asegura que el dropdown aparezca correctamente en el modal
+      language: "es",
+      placeholder: "Escriba para buscar productos...",
+      allowClear: true,
+      width: '100%',
+      minimumInputLength: 1, // Mostrar resultados después de 1 carácter
+      dropdownParent: $('#modify') // Asegura que el dropdown aparezca correctamente en el modal
     });
 
     // Manejar cambio en motivo de baja
@@ -700,7 +700,7 @@
     }
   }
 
-  // Función para cargar productos en el select de bajas
+  // Función para cargar productos en el select de bajas (solo disponibles)
   async function cargarProductosParaBajas() {
     try {
       const response = await fetch('/productos/api/productos-activos');
@@ -709,22 +709,45 @@
 
       if (!select) return;
 
-      if (data.success) {
-        select.innerHTML = '<option value="" disabled selected>Seleccione un producto</option>';
+      select.innerHTML = '<option value="" disabled selected>Seleccione un producto</option>';
 
-        data.data.forEach(producto => {
+      if (data.success && data.data && data.data.length > 0) {
+        // Filtrar solo productos con cantidad > 0
+        const productosDisponibles = data.data.filter(producto => producto.Cantidad > 0);
+
+        if (productosDisponibles.length === 0) {
+          select.innerHTML = '<option value="" disabled selected>No hay productos disponibles</option>';
+          return;
+        }
+
+        // Ordenar alfabéticamente por nombre
+        productosDisponibles.sort((a, b) => a.Nombre.localeCompare(b.Nombre));
+
+        // Agregar opciones al select
+        productosDisponibles.forEach(producto => {
           const option = document.createElement('option');
           option.value = producto.Cod_Producto;
-          option.textContent = `${producto.Nombre} (Marca: ${producto.Marca})`;
+          option.textContent = `${producto.Cod_Producto} - ${producto.Nombre} (Stock: ${producto.Cantidad})`;
           option.dataset.stock = producto.Cantidad;
           select.appendChild(option);
         });
 
-        // Actualizar Select2
-        $(select).trigger('change.select2');
+        // Inicializar Select2
+        $(select).select2({
+          language: "es",
+          placeholder: "Buscar producto...",
+          allowClear: true,
+          width: '100%'
+        });
+      } else {
+        select.innerHTML = '<option value="" disabled selected>No hay productos disponibles</option>';
       }
     } catch (error) {
       console.error('Error al cargar productos para bajas:', error);
+      const select = document.getElementById('product_id');
+      if (select) {
+        select.innerHTML = '<option value="" disabled selected>Error al cargar productos</option>';
+      }
       Swal.fire('Error', 'No se pudieron cargar los productos para bajas', 'error');
     }
   }
@@ -1214,68 +1237,54 @@
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
 
     try {
-      const quantityInput = document.getElementById('quantity');
-      const selectedStock = parseInt($('#stock-display').text());
-      const quantity = parseInt(quantityInput.value);
-      const reason = document.getElementById('reason').value;
-      const notes = document.getElementById('notes').value;
+      const codigoProducto = $('#product_id').val();
+      const quantity = parseInt($('#quantity').val());
+      const reason = $('#reason').val();
+      const notes = $('#notes').val();
 
-      // Validación de motivo "Otro"
-      if (reason === 'Otro' && notes.trim() === '') {
-        throw new Error('Debe especificar el motivo cuando selecciona "Otro Motivo"');
-      }
+      // Validaciones
+      if (!codigoProducto) throw new Error('Debe seleccionar un producto');
+      if (isNaN(quantity) || quantity <= 0) throw new Error('La cantidad debe ser un número mayor a cero');
+      if (reason === 'Otro' && !notes.trim()) throw new Error('Debe especificar el motivo');
 
-      // Validación de cantidad
-      if (quantity <= 0) {
-        throw new Error('La cantidad debe ser mayor a cero');
-      }
-
-      if (quantity > selectedStock) {
-        throw new Error(`No hay suficiente stock. Disponible: ${selectedStock}`);
-      }
-
-      // Crear objeto con los datos del formulario
-      const formData = {
-        product_id: $('#product_id').val(),
-        reason: reason,
-        quantity: quantity,
-        notes: notes
-      };
-
-      // Enviar datos como JSON
-      const response = await fetch('/outlet/add', {
+      const response = await fetch('/productos/api/productos/baja', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          codigo_producto: codigoProducto,
+          motivo: reason,
+          cantidad: quantity,
+          observaciones: notes
+        })
       });
 
       const result = await response.json();
 
-      if (result.success) {
-        await Swal.fire({
-          icon: 'success',
-          title: 'Éxito',
-          text: result.message,
-          timer: 3000,
-          timerProgressBar: true
-        });
-
-        // Resetear el formulario
-        form.reset();
-        $('#product_id').val('').trigger('change');
-        $('#stock-display').text('0');
-        document.getElementById('notes').disabled = true;
-        document.getElementById('notes').placeholder = 'Seleccione "Otro Motivo" para habilitar';
-
-        // Recargar datos
-        cargarProductos();
-        cargarSelectProductos();
-        cargarProductosParaBajas();
-      } else {
+      if (!result.success) {
         throw new Error(result.message);
       }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Baja registrada',
+        text: result.message,
+        timer: 3000,
+        timerProgressBar: true
+      });
+
+      // Resetear el formulario
+      form.reset();
+      $('#product_id').val('').trigger('change');
+      $('#stock-display').text('0');
+      $('#notes').val('').prop('disabled', true);
+
+      // Recargar datos
+      cargarProductos();
+      cargarSelectProductos();
+      cargarProductosParaBajas();
+
     } catch (error) {
       await Swal.fire({
         icon: 'error',
