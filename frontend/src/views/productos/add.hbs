@@ -1,11 +1,9 @@
 <title>Gestión de Productos</title>
+<link rel="stylesheet" href="/styles/productos.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 
 <nav class="navbar navbar-expand-lg navbar-dark">
   <div class="container">
@@ -19,15 +17,21 @@
   <!-- Pestañas -->
   <ul class="nav nav-tabs" id="productTabs" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button"
-        role="tab" aria-controls="register" aria-selected="true">
+      <button class="nav-link active" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button"
+        role="tab" aria-controls="inventory" aria-selected="true">
+        <i class="fas fa-clipboard-list me-2"></i>Inventario
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button"
+        role="tab" aria-controls="register" aria-selected="false">
         <i class="fas fa-plus-circle me-2"></i>Registrar Productos
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="modify-tab" data-bs-toggle="tab" data-bs-target="#modify" type="button" role="tab"
         aria-controls="modify" aria-selected="false">
-        <i class="fas fa-edit me-2"></i>Modificar Productos
+        <i class="fas fa-edit me-2"></i>Actualizar Productos
       </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -36,18 +40,45 @@
         <i class="fas fa-minus-circle me-2"></i>Registrar Bajas
       </button>
     </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button"
-        role="tab" aria-controls="inventory" aria-selected="false">
-        <i class="fas fa-clipboard-list me-2"></i>Inventario
-      </button>
-    </li>
   </ul>
 
   <!-- Contenido de las pestañas -->
   <div class="tab-content" id="productTabsContent">
+
+    <!-- Pestaña de Inventario -->
+    <div class="tab-pane fade show active" id="inventory" role="tabpanel" aria-labelledby="inventory-tab">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center mb-0"><i class="fas fa-clipboard-list me-2"></i>Inventario de Productos</h3>
+        </div>
+        <div class="card-body p-4">
+          <div class="table-responsive">
+            <table class="table align-middle mb-0 bg-white display" id="productosTable" style="width:100%">
+              <thead class="bg-light">
+                <tr>
+                  <th>Imagen</th>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Sector</th>
+                  <th>Marca</th>
+                  <th>Ubicación</th>
+                  <th>Cantidad</th>
+                  <th>Precio</th>
+                  <th>Vencimiento</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- DataTables llenará esto automáticamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Pestaña de Registro -->
-    <div class="tab-pane fade show active" id="register" role="tabpanel" aria-labelledby="register-tab">
+    <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
       <div class="card">
         <div class="card-header">
           <h3 class="text-center mb-0"><i class="fas fa-plus-circle me-2"></i>Registro de Productos</h3>
@@ -144,7 +175,7 @@
               <div class="col-md-6">
                 <div class="row">
                   <div class="col-md-6">
-                    <div class="form-check">
+                    <div class="form-check mt-3">
                       <input class="form-check-input" type="checkbox" id="check_vencimiento">
                       <label class="form-check-label" for="check_vencimiento">Ingresar Fecha de Vencimiento</label>
                     </div>
@@ -159,9 +190,60 @@
               </div>
             </div>
 
+            <!-- Fila 6: Subir imágenes -->
+            <div class="row g-3 mt-2">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-camera me-2"></i>Imagen del Producto</h6>
+                  </div>
+                  <div class="card-body">
+                    <!-- Área de arrastrar y soltar -->
+                    <div class="drop-zone" id="dropZone">
+                      <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                      <h5>Arrastra y suelta tu imagen aquí</h5>
+                      <p class="text-muted">o haz clic para seleccionar</p>
+                      <input type="file" id="imagen_producto" name="imagen_producto" class="d-none" accept="image/*"
+                        capture="camera">
+                      <button type="button" class="btn btn-outline-primary mt-2"
+                        onclick="document.getElementById('imagen_producto').click()">
+                        <i class="fas fa-folder-open me-2"></i>Seleccionar Archivo
+                      </button>
+                      <button type="button" class="btn btn-outline-success mt-2" onclick="takePhoto()">
+                        <i class="fas fa-camera me-2"></i>Tomar Foto
+                      </button>
+                    </div>
+
+                    <!-- Vista previa -->
+                    <div id="preview-container" class="mt-3 text-center" style="display: none;">
+                      <h6>Vista Previa:</h6>
+                      <div class="position-relative d-inline-block">
+                        <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail preview-image">
+                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
+                          onclick="removeImage()" title="Eliminar imagen">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                      <div class="mt-2">
+                        <small class="text-muted" id="file-info"></small>
+                      </div>
+                    </div>
+
+                    <!-- Información -->
+                    <div class="mt-3">
+                      <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Formatos: JPG, PNG, GIF • Tamaño máximo: 2MB • Resolución recomendada: 800x800px
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Botón Agregar -->
             <div class="text-center mt-3">
-              <button id="agregarProducto" type="button" class="btn btn-agregar">
+              <button id="agregarProducto" type="button" class="btn btn-success">
                 <i class="fas fa-plus-circle me-2"></i>Agregar a Lista
               </button>
             </div>
@@ -182,6 +264,7 @@
                     <th>Precio</th>
                     <th>Vencimiento</th>
                     <th>Ubicación</th>
+                    <th>Imagen</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -193,10 +276,10 @@
 
             <!-- Botones Guardar y Limpiar -->
             <div class="d-flex justify-content-between mt-3">
-              <button id="guardarProductos" type="button" class="btn btn-guardar">
+              <button id="guardarProductos" type="button" class="btn btn-primary">
                 <i class="fas fa-save me-2"></i>Guardar Productos
               </button>
-              <button type="reset" class="btn btn-limpiar">
+              <button type="reset" class="btn btn-secondary">
                 <i class="fas fa-broom me-2"></i>Limpiar
               </button>
             </div>
@@ -209,17 +292,17 @@
     <div class="tab-pane fade" id="modify" role="tabpanel" aria-labelledby="modify-tab">
       <div class="card">
         <div class="card-header">
-          <h3 class="text-center mb-0"><i class="fas fa-edit me-2"></i>Modificar Productos</h3>
+          <h3 class="text-center mb-0"><i class="fas fa-edit me-2"></i>Actualizar Productos</h3>
         </div>
         <div class="card-body p-4">
-          <!-- Selector de producto con búsqueda -->
+          <!-- Selector de producto -->
           <div class="row mb-4">
             <div class="col-md-8">
               <div class="floating-label">
                 <label for="select_producto_modificar">Buscar producto a modificar</label>
                 <select id="select_producto_modificar" class="form-select select2-search"
                   onchange="cargarDatosProducto(this.value)">
-                  <option value="" disabled selected>Escriba para buscar productos...</option>
+                  <option value="" disabled selected>Escriba código, nombre o marca del producto...</option>
                 </select>
               </div>
             </div>
@@ -233,90 +316,160 @@
             </div>
 
             <div class="row g-3">
-              <!-- Fila 1: Código y Nombre -->
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_codigo_producto">Código Producto</label>
-                  <input type="text" id="mod_codigo_producto" class="form-control" readonly
-                    style="background-color: #f8f9fa;">
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_nombre">Nombre del Producto</label>
-                  <input type="text" id="mod_nombre" class="form-control" readonly style="background-color: #f8f9fa;">
+              <!-- Columna izquierda: Datos del producto -->
+              <div class="col-md-8">
+                <div class="row g-3">
+                  <!-- Fila 1: Código y Nombre -->
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_codigo_producto">Código Producto</label>
+                      <input type="text" id="mod_codigo_producto" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_nombre">Nombre del Producto</label>
+                      <input type="text" id="mod_nombre" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                    </div>
+                  </div>
+
+                  <!-- Fila 2: Sector y Proveedor -->
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_sector">Sector</label>
+                      <input type="text" id="mod_sector" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_codigo_proveedor">Proveedor</label>
+                      <input type="text" id="mod_codigo_proveedor" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                    </div>
+                  </div>
+
+                  <!-- Fila 3: Precio y Cantidad -->
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_precio_compra">Nuevo Precio Compra <span class="text-primary">*</span></label>
+                      <input type="number" id="mod_precio_compra" class="form-control" step="0.01" min="0.01"
+                        placeholder="Ingrese nuevo precio">
+                      <div id="mod_precio_base_info" class="mt-2 small text-muted"></div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_cantidad">Cantidad a Agregar <span class="text-primary">*</span></label>
+                      <input type="number" id="mod_cantidad" class="form-control" min="1"
+                        placeholder="Ingrese cantidad a agregar">
+                      <div id="mod_inventario_info" class="mt-2 small text-muted"></div>
+                    </div>
+                  </div>
+
+                  <!-- Fila 4: Marca y Ubicación -->
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_marca">Marca</label>
+                      <input type="text" id="mod_marca" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_ubicacion">Ubicación en Almacén <span class="text-primary">*</span></label>
+                      <select id="mod_ubicacion" class="form-select">
+                        <option value="" disabled selected>Seleccione una ubicación</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Fila 5: Fechas -->
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_fecha_entrada">Fecha Entrada</label>
+                      <input type="date" id="mod_fecha_entrada" class="form-control" readonly
+                        style="background-color: #f8f9fa;">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="floating-label">
+                      <label for="mod_fecha_vencimiento">Fecha Vencimiento <span class="text-primary">*</span></label>
+                      <input type="date" id="mod_fecha_vencimiento" class="form-control">
+                      <small class="text-muted">Dejar vacío si no tiene fecha de vencimiento</small>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Fila 2: Sector y Proveedor -->
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_sector">Sector</label>
-                  <input type="text" id="mod_sector" class="form-control" readonly style="background-color: #f8f9fa;">
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_codigo_proveedor">Proveedor</label>
-                  <input type="text" id="mod_codigo_proveedor" class="form-control" readonly
-                    style="background-color: #f8f9fa;">
-                </div>
-              </div>
+              <!-- Columna derecha: Imagen del producto -->
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-camera me-2"></i>Imagen del Producto</h6>
+                  </div>
+                  <div class="card-body text-center">
+                    <!-- Imagen actual -->
+                    <div id="mod_imagen_actual_container">
+                      <img id="mod_imagen_actual" src="" alt="Imagen actual del producto" class="img-thumbnail mb-3"
+                        style="max-width: 200px; max-height: 200px; display: none; cursor: pointer;"
+                        onclick="ampliarImagenActual()">
+                      <div id="mod_sin_imagen" class="text-muted">
+                        <i class="fas fa-image fa-3x mb-2"></i>
+                        <p>Sin imagen</p>
+                      </div>
+                    </div>
 
-              <!-- Fila 3: Precio y Cantidad -->
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_precio_compra">Precio Compra <span class="text-primary">*</span></label>
-                  <input type="number" id="mod_precio_compra" class="form-control" step="0.01" min="0">
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_cantidad">Cantidad <span class="text-primary">*</span></label>
-                  <input type="number" id="mod_cantidad" class="form-control" min="1">
-                  <small class="text-muted">La fecha de entrada se actualizará si modifica la cantidad</small>
-                </div>
-              </div>
+                    <!-- Botón para cambiar imagen -->
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2"
+                      onclick="document.getElementById('mod_nueva_imagen').click()">
+                      <i class="fas fa-sync-alt me-2"></i>Cambiar Imagen
+                    </button>
 
-              <!-- Fila 4: Marca y Ubicación -->
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_marca">Marca</label>
-                  <input type="text" id="mod_marca" class="form-control" readonly style="background-color: #f8f9fa;">
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_ubicacion">Ubicación en Almacén <span class="text-primary">*</span></label>
-                  <select id="mod_ubicacion" class="form-select">
-                    <option value="" disabled selected>Seleccione una ubicación</option>
-                    <!-- Las opciones se generarán con JavaScript -->
-                  </select>
-                </div>
-              </div>
+                    <input type="file" id="mod_nueva_imagen" class="d-none" accept="image/*" capture="camera"
+                      onchange="procesarNuevaImagenModificar(this.files[0])">
 
-              <!-- Fila 5: Fechas -->
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_fecha_entrada">Fecha Entrada</label>
-                  <input type="date" id="mod_fecha_entrada" class="form-control" readonly
-                    style="background-color: #f8f9fa;">
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="mod_fecha_vencimiento">Fecha Vencimiento</label>
-                  <input type="date" id="mod_fecha_vencimiento" class="form-control" readonly
-                    style="background-color: #f8f9fa;">
+                    <!-- Vista previa nueva imagen -->
+                    <div id="mod_preview_nueva_imagen" class="mt-3" style="display: none;">
+                      <h6>Nueva imagen:</h6>
+                      <div class="position-relative d-inline-block">
+                        <img id="mod_preview_image" src="#" alt="Vista previa" class="img-thumbnail"
+                          style="max-width: 150px; max-height: 150px;">
+                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
+                          onclick="cancelarCambioImagen()" title="Cancelar cambio">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Información -->
+                    <div class="mt-3">
+                      <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Formatos: JPG, PNG, GIF, WebP • Máx: 2MB
+                      </small>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Botón de modificación -->
-            <div class="d-grid gap-2 mt-4">
-              <button class="btn btn-success" type="button" id="modificarProductoButton" onclick="modificarProducto()">
-                <i class="fas fa-save me-2"></i>Guardar Cambios
-              </button>
+            <!-- Botones de acción -->
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <button class="btn btn-success w-100" type="button" id="modificarProductoButton"
+                  onclick="validarYModificarProducto()">
+                  <i class="fas fa-save me-2"></i>Guardar Cambios del Producto
+                </button>
+              </div>
+              <div class="col-md-6">
+                <button class="btn btn-primary w-100" type="button" id="actualizarImagenButton"
+                  onclick="actualizarSoloImagen()" style="display: none;">
+                  <i class="fas fa-camera me-2"></i>Actualizar Solo Imagen
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -383,45 +536,17 @@
         </div>
       </div>
     </div>
-
-    <!-- Pestaña de Inventario -->
-    <div class="tab-pane fade" id="inventory" role="tabpanel" aria-labelledby="inventory-tab">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-center mb-0"><i class="fas fa-clipboard-list me-2"></i>Inventario de Productos</h3>
-        </div>
-        <div class="card-body p-4">
-          <div class="table-responsive">
-            <table class="table align-middle mb-0 bg-white display" id="productosTable" style="width:100%">
-              <thead class="bg-light">
-                <tr>
-                  <th>Código</th>
-                  <th>Nombre</th>
-                  <th>Sector</th>
-                  <th>Marca</th>
-                  <th>Ubicación</th>
-                  <th>Cantidad</th>
-                  <th>Precio</th>
-                  <th>Vencimiento</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- DataTables llenará esto automáticamente -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
+<!-- SCRIPTS -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="/js/productos.js"></script>
 
 <script>
   // Variables globales
@@ -430,21 +555,28 @@
   const now = new Date();
   const fechaActual = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
 
-  // Agrega esto antes de tu código principal
-  $.fn.select2.defaults.set('language', {
-    noResults: function () {
-      return "No se encontraron resultados";
-    },
-    searching: function () {
-      return "Buscando...";
-    },
-    errorLoading: function () {
-      return "No se pudieron cargar los resultados";
-    },
-    inputTooShort: function (args) {
-      var remainingChars = args.minimum - args.input.length;
-      return "Por favor ingrese el codigo o nombre del articulo";
+  // Función para obtener el stock actual de un producto (suma de todos los lotes disponibles)
+  async function obtenerStockActual(codigoProducto) {
+    try {
+      const response = await fetch(`/productos/api/stock-producto/${codigoProducto}`);
+      const data = await response.json();
+
+      if (data.success) {
+        return data.stock || 0;
+      } else {
+        console.error('Error al obtener stock:', data.message);
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error al obtener stock:', error);
+      return 0;
     }
+  }
+
+  // Configuración global de Select2 en español
+  $(document).ready(function () {
+    // Establecer español como idioma por defecto
+    $.fn.select2.defaults.set('language', 'es');
   });
 
   // Inicialización al cargar la página
@@ -464,8 +596,14 @@
       placeholder: "Escriba para buscar productos...",
       allowClear: true,
       width: '100%',
-      minimumInputLength: 1, // Mostrar resultados después de 1 carácter
-      dropdownParent: $('#modify') // Asegura que el dropdown aparezca correctamente en el modal
+      minimumInputLength: 1,
+      dropdownParent: $('#modify'),
+      sorter: function (data) {
+        // Ordenar resultados de forma ascendente (1,2,3...)
+        return data.sort(function (a, b) {
+          return a.text.localeCompare(b.text);
+        });
+      }
     });
 
     // Manejar cambio en motivo de baja
@@ -541,6 +679,25 @@
     if (!this.checked) fechaVencimientoInput.value = "";
   }
 
+  // Función auxiliar para formatear fechas (Asegúrate de que existe)
+  function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    try {
+      // Si es una fecha válida, formatearla
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    } catch (e) {
+      console.error('Error formateando fecha:', e);
+      return '';
+    }
+  }
+
   // Función para cargar proveedores por sector
   async function cargarProveedores() {
     const sector = this.value;
@@ -579,6 +736,8 @@
       const response = await fetch("/productos/api/productos");
       const data = await response.json();
 
+      console.log("Datos recibidos para inventario:", data);
+
       if ($.fn.DataTable.isDataTable('#productosTable')) {
         $('#productosTable').DataTable().destroy();
       }
@@ -586,45 +745,121 @@
       $('#productosTable tbody').empty();
 
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        // ORDENAR los datos por código de producto antes de pasarlos a DataTables
+        const datosOrdenados = data.data.sort((a, b) => {
+          // Convertir códigos a números si son numéricos, o ordenar alfabéticamente
+          const codA = a.cod_producto;
+          const codB = b.cod_producto;
+
+          if (!isNaN(codA) && !isNaN(codB)) {
+            return parseInt(codA) - parseInt(codB);
+          } else {
+            return codA.localeCompare(codB);
+          }
+        });
+
         productosTable = $('#productosTable').DataTable({
-          data: data.data,
+          data: datosOrdenados, // Usar datos ordenados
           columns: [
-            { data: 'Cod_Producto' },
-            { data: 'Nombre' },
-            { data: 'Sector' },
-            { data: 'Marca' },
             {
-              data: 'Descripcion',
+              data: 'imagen_url',
               render: function (data) {
-                return data || 'Sin ubicación';
+                if (data) {
+                  return `<img src="${data}" alt="Imagen del producto" 
+                          class="img-thumbnail table-image" 
+                          style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                          onclick="ampliarImagen('${data}')"
+                          onerror="manejarErrorImagen(this)">`;
+                } else {
+                  return `<div class="text-center text-muted">
+                          <i class="fas fa-image fa-2x"></i>
+                          <div class="small">Sin imagen</div>
+                        </div>`;
+                }
+              },
+              orderable: false,
+              width: '80px'
+            },
+            {
+              data: 'cod_producto',
+              width: '100px'
+            },
+            {
+              data: 'nombre',
+              render: function (data, type, row) {
+                return `<strong>${data}</strong>`;
               }
             },
-            { data: 'Cantidad' },
             {
-              data: 'Precio_Compra',
-              render: function (data) {
-                return data ? parseFloat(data).toFixed(2) : '0.00';
-              }
+              data: 'sector',
+              width: '150px'
             },
             {
-              data: 'FechaVencimiento',
+              data: 'marca',
+              width: '120px'
+            },
+            {
+              data: 'descripcion',
               render: function (data) {
-                if (!data) return "N/A";
+                return data || '<span class="text-muted">Sin ubicación</span>';
+              },
+              width: '150px'
+            },
+            {
+              data: 'cantidad',
+              render: function (data) {
+                const cantidad = parseInt(data) || 0;
+                const badgeClass = cantidad > 10 ? 'bg-success' : cantidad > 0 ? 'bg-warning' : 'bg-danger';
+                return `<span class="badge ${badgeClass}">${cantidad}</span>`;
+              },
+              width: '100px'
+            },
+            {
+              data: 'precio_compra',
+              render: function (data) {
+                return data ? `C$${parseFloat(data).toFixed(2)}` : '<span class="text-muted">C$0.00</span>';
+              },
+              width: '100px'
+            },
+            {
+              data: 'fechavencimiento',
+              render: function (data) {
+                if (!data) return "<span class='text-muted'>N/A</span>";
+
                 const fecha = new Date(data);
-                return `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}`;
-              }
+                const hoy = new Date();
+                const diferencia = fecha - hoy;
+                const dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
+
+                let badgeClass = 'bg-secondary';
+                if (dias < 0) {
+                  badgeClass = 'bg-danger';
+                } else if (dias <= 30) {
+                  badgeClass = 'bg-warning';
+                } else if (dias <= 90) {
+                  badgeClass = 'bg-info';
+                }
+
+                return `<span class="badge ${badgeClass}">
+                        ${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}
+                      </span>`;
+              },
+              width: '120px'
             },
             {
-              data: 'Estado',
+              data: 'estado',
               render: function (data) {
                 const estado = data || 'Activo';
-                return `<span class="badge ${estado === 'Activo' ? 'bg-success' : 'bg-danger'}">${estado}</span>`;
-              }
+                const badgeClass = estado === 'Activo' ? 'bg-success' : 'bg-danger';
+                return `<span class="badge ${badgeClass}">${estado}</span>`;
+              },
+              width: '100px'
             }
           ],
           paging: true,
           searching: true,
           ordering: true,
+          order: [[1, 'asc']], // ORDENAR por la segunda columna (código) de forma ascendente
           pageLength: 10,
           lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
           language: {
@@ -645,6 +880,15 @@
               "last": "Último",
               "next": "Siguiente",
               "previous": "Anterior"
+            }
+          },
+          createdRow: function (row, data, dataIndex) {
+            // Resaltar productos con stock bajo
+            const cantidad = parseInt(data.cantidad) || 0;
+            if (cantidad === 0) {
+              $(row).addClass('table-danger');
+            } else if (cantidad <= 5) {
+              $(row).addClass('table-warning');
             }
           }
         });
@@ -668,39 +912,149 @@
     }
   }
 
-  // Modifica la función cargarSelectProductos
+  // Función para ampliar imagen al hacer clic
+  function ampliarImagen(src) {
+    Swal.fire({
+      imageUrl: src,
+      imageAlt: 'Imagen del producto',
+      showCloseButton: true,
+      showConfirmButton: false,
+      width: '600px',
+      padding: '0',
+      background: 'transparent',
+      backdrop: `
+      rgba(0,0,0,0.8)
+      url("/images/zoom-in.png")
+      center left
+      no-repeat
+    `
+    });
+  }
+
+  // Función para ampliar imagen actual en modificación
+  function ampliarImagenActual() {
+    const imgActual = document.getElementById('mod_imagen_actual');
+    if (imgActual.style.display !== 'none') {
+      Swal.fire({
+        imageUrl: imgActual.src,
+        imageAlt: 'Imagen actual del producto',
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: '600px'
+      });
+    }
+  }
+
+  // Función para cargar productos en el selector de modificación (VERSIÓN CORREGIDA CON ORDEN)
   async function cargarSelectProductos() {
     try {
-      const response = await fetch('/productos/api/productos');
+      const response = await fetch('/productos/api/productos-select');
       const data = await response.json();
       const select = document.getElementById('select_producto_modificar');
 
       if (!select) return;
 
-      // Limpiar opciones existentes (excepto la primera)
-      $(select).empty().append('<option value="" disabled selected>Escriba para buscar productos...</option>');
+      // Limpiar opciones existentes
+      select.innerHTML = '<option value="" disabled selected>Escriba para buscar productos...</option>';
 
       if (data.success && data.data && data.data.length > 0) {
-        data.data.forEach(producto => {
-          const option = new Option(
-            `${producto.Cod_Producto} - ${producto.Nombre} (${producto.Marca})`,
-            producto.Cod_Producto
-          );
-          select.add(option);
+        // ORDENAR los productos por código de producto de forma numérica
+        const productosOrdenados = data.data.sort((a, b) => {
+          const codA = a.cod_producto;
+          const codB = b.cod_producto;
+
+          // Intentar convertir a números para ordenamiento numérico
+          const numA = parseInt(codA);
+          const numB = parseInt(codB);
+
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB; // Orden numérico
+          } else {
+            return codA.localeCompare(codB); // Orden alfabético como fallback
+          }
         });
 
-        // Actualizar Select2 después de agregar las opciones
-        $(select).trigger('change.select2');
+        // Usar un objeto para evitar duplicados por código de producto
+        const productosUnicos = {};
+
+        productosOrdenados.forEach(producto => {
+          if (producto.cod_producto && !productosUnicos[producto.cod_producto]) {
+            productosUnicos[producto.cod_producto] = producto;
+
+            const option = document.createElement('option');
+            option.value = producto.cod_producto;
+            option.textContent = `${producto.cod_producto} - ${producto.nombre}${producto.marca ? ' (' + producto.marca + ')' : ''}`;
+            option.dataset.nombre = producto.nombre;
+            option.dataset.marca = producto.marca || '';
+            select.appendChild(option);
+          }
+        });
+
+        // Inicializar Select2 con búsqueda mejorada y ordenación
+        $(select).select2({
+          language: "es",
+          placeholder: "🔍 Escriba código, nombre o marca del producto...",
+          allowClear: true,
+          width: '100%',
+          minimumInputLength: 1,
+          dropdownParent: $('#modify'),
+          sorter: function (data) {
+            // Ordenar resultados numéricamente por código de producto
+            return data.sort(function (a, b) {
+              // Extraer el código del texto (primera parte antes del guión)
+              const codigoA = a.text.split(' - ')[0];
+              const codigoB = b.text.split(' - ')[0];
+
+              // Intentar convertir a números
+              const numA = parseInt(codigoA);
+              const numB = parseInt(codigoB);
+
+              if (!isNaN(numA) && !isNaN(numB)) {
+                return numA - numB; // Orden numérico
+              } else {
+                return codigoA.localeCompare(codigoB); // Orden alfabético como fallback
+              }
+            });
+          },
+          matcher: function (params, data) {
+            // Si no hay término de búsqueda, mostrar todos los resultados ordenados
+            if ($.trim(params.term) === '') {
+              return data;
+            }
+
+            // Normalizar términos de búsqueda
+            const term = params.term.toLowerCase();
+
+            // Buscar en diferentes campos
+            if (data.text.toLowerCase().indexOf(term) > -1) {
+              return data;
+            }
+
+            // Buscar en atributos data
+            if (data.element && (
+              (data.element.dataset.nombre && data.element.dataset.nombre.toLowerCase().indexOf(term) > -1) ||
+              (data.element.dataset.marca && data.element.dataset.marca.toLowerCase().indexOf(term) > -1)
+            )) {
+              return data;
+            }
+
+            // Si no coincide, no mostrar
+            return null;
+          }
+        });
       } else {
-        console.warn('No se recibieron datos de productos');
+        select.innerHTML = '<option value="" disabled selected>No hay productos disponibles</option>';
       }
     } catch (error) {
       console.error('Error al cargar productos:', error);
-      Swal.fire('Error', 'No se pudieron cargar los productos para modificación', 'error');
+      const select = document.getElementById('select_producto_modificar');
+      if (select) {
+        select.innerHTML = '<option value="" disabled selected>Error al cargar productos</option>';
+      }
     }
   }
 
-  // Función para cargar productos en el select de bajas (solo disponibles)
+  // Función para cargar productos en el select de bajas (VERSIÓN CORREGIDA CON ORDEN)
   async function cargarProductosParaBajas() {
     try {
       const response = await fetch('/productos/api/productos-activos');
@@ -713,31 +1067,88 @@
 
       if (data.success && data.data && data.data.length > 0) {
         // Filtrar solo productos con cantidad > 0
-        const productosDisponibles = data.data.filter(producto => producto.Cantidad > 0);
+        const productosDisponibles = data.data.filter(producto => producto.cantidad > 0);
 
         if (productosDisponibles.length === 0) {
           select.innerHTML = '<option value="" disabled selected>No hay productos disponibles</option>';
           return;
         }
 
-        // Ordenar alfabéticamente por nombre
-        productosDisponibles.sort((a, b) => a.Nombre.localeCompare(b.Nombre));
+        // ORDENAR numéricamente por código de producto
+        productosDisponibles.sort((a, b) => {
+          const codA = a.cod_producto;
+          const codB = b.cod_producto;
+
+          const numA = parseInt(codA);
+          const numB = parseInt(codB);
+
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB; // Orden numérico
+          } else {
+            return codA.localeCompare(codB); // Orden alfabético como fallback
+          }
+        });
 
         // Agregar opciones al select
         productosDisponibles.forEach(producto => {
           const option = document.createElement('option');
-          option.value = producto.Cod_Producto;
-          option.textContent = `${producto.Cod_Producto} - ${producto.Nombre} (Stock: ${producto.Cantidad})`;
-          option.dataset.stock = producto.Cantidad;
+          option.value = producto.cod_producto;
+          option.textContent = `${producto.cod_producto} - ${producto.nombre} (Stock: ${producto.cantidad})`;
+          option.dataset.stock = producto.cantidad;
+          option.dataset.nombre = producto.nombre;
+          option.dataset.marca = producto.marca || '';
           select.appendChild(option);
         });
 
-        // Inicializar Select2
+        // Inicializar Select2 con búsqueda mejorada y ordenación numérica
         $(select).select2({
           language: "es",
           placeholder: "Buscar producto...",
           allowClear: true,
-          width: '100%'
+          width: '100%',
+          sorter: function (data) {
+            // Ordenar resultados numéricamente por código de producto
+            return data.sort(function (a, b) {
+              // Extraer el código del texto (primera parte antes del guión)
+              const codigoA = a.text.split(' - ')[0];
+              const codigoB = b.text.split(' - ')[0];
+
+              // Intentar convertir a números
+              const numA = parseInt(codigoA);
+              const numB = parseInt(codigoB);
+
+              if (!isNaN(numA) && !isNaN(numB)) {
+                return numA - numB; // Orden numérico
+              } else {
+                return codigoA.localeCompare(codigoB); // Orden alfabético como fallback
+              }
+            });
+          },
+          matcher: function (params, data) {
+            // Si no hay término de búsqueda, mostrar todos los resultados
+            if ($.trim(params.term) === '') {
+              return data;
+            }
+
+            // Normalizar términos de búsqueda
+            const term = params.term.toLowerCase();
+
+            // Buscar en diferentes campos
+            if (data.text.toLowerCase().indexOf(term) > -1) {
+              return data;
+            }
+
+            // Buscar en atributos data
+            if (data.element && (
+              (data.element.dataset.nombre && data.element.dataset.nombre.toLowerCase().indexOf(term) > -1) ||
+              (data.element.dataset.marca && data.element.dataset.marca.toLowerCase().indexOf(term) > -1)
+            )) {
+              return data;
+            }
+
+            // Si no coincide, no mostrar
+            return null;
+          }
         });
       } else {
         select.innerHTML = '<option value="" disabled selected>No hay productos disponibles</option>';
@@ -752,7 +1163,13 @@
     }
   }
 
-  // Función para cargar datos del producto seleccionado
+  // Variables globales para imagen en modificación
+  let imagenActualModificar = null;
+  let imagenNombreModificar = null;
+  let imagenTipoModificar = null;
+  let productoSeleccionadoModificar = null;
+
+  // Función para cargar datos del producto (actualizada)
   async function cargarDatosProducto(codigoProducto) {
     const formularioMod = document.getElementById('formulario-modificacion');
 
@@ -760,6 +1177,8 @@
       formularioMod.style.display = 'none';
       return;
     }
+
+    productoSeleccionadoModificar = codigoProducto;
 
     try {
       const response = await fetch(`/productos/api/productos/${codigoProducto}`);
@@ -771,74 +1190,78 @@
       if (data.success && data.data) {
         const producto = data.data;
 
-        // Llenar los campos del formulario con los nuevos IDs (prefijo 'mod_')
-        document.getElementById('mod_codigo_producto').value = producto.Cod_Producto || '';
-        document.getElementById('mod_nombre').value = producto.Nombre || '';
-        document.getElementById('mod_marca').value = producto.Marca || '';
-        document.getElementById('mod_sector').value = producto.Sector || '';
+        // Llenar los campos del formulario (código existente...)
+        document.getElementById('mod_codigo_producto').value = producto.cod_producto || '';
+        document.getElementById('mod_nombre').value = producto.nombre || '';
+        document.getElementById('mod_marca').value = producto.marca || '';
+        document.getElementById('mod_sector').value = producto.sector || '';
 
-        // Mostrar proveedor en formato "Código - Nombre Apellido"
-        const proveedorText = producto.Cod_Proveedor
-          ? `${producto.Cod_Proveedor} - ${producto.ProveedorNombre || ''} ${producto.ProveedorApellido || ''}`.trim()
-          : 'Sin proveedor';
+        // Mostrar proveedor
+        let proveedorText = 'Sin proveedor';
+        if (producto.cod_proveedor && producto.cod_proveedor !== null) {
+          if (producto.proveedor_nombre && producto.proveedor_apellido) {
+            proveedorText = `${producto.cod_proveedor} - ${producto.proveedor_nombre} ${producto.proveedor_apellido}`;
+          } else {
+            proveedorText = `${producto.cod_proveedor}`;
+          }
+        }
         document.getElementById('mod_codigo_proveedor').value = proveedorText;
 
-        document.getElementById('mod_precio_compra').value = producto.Precio_Compra || '';
-        document.getElementById('mod_cantidad').value = producto.Cantidad || '';
-        document.getElementById('mod_cantidad').dataset.originalValue = producto.Cantidad || '';
-        document.getElementById('mod_fecha_entrada').value = formatDateForInput(producto.Fecha_Entrada) || fechaActual;
+        // Precio y cantidad
+        const precio = producto.precio_compra || 0;
+        document.getElementById('mod_precio_compra').value = '';
+        document.getElementById('mod_precio_compra').dataset.originalValue = precio;
+
+        document.getElementById('mod_cantidad').value = '';
+        document.getElementById('mod_cantidad').dataset.originalValue = '';
+
+        document.getElementById('mod_fecha_entrada').value = formatDateForInput(producto.fecha_entrada) || fechaActual;
+
+        // MOSTRAR INFORMACIÓN DE INVENTARIO Y PRECIO
+        await mostrarInformacionInventario(codigoProducto, precio);
 
         // Generar opciones de ubicación
         generarOpcionesUbicacion();
 
         // Establecer la ubicación actual del producto
         const ubicacionSelect = document.getElementById('mod_ubicacion');
-        if (producto.Descripcion) {
+        if (producto.descripcion) {
           const ubicacionExistente = Array.from(ubicacionSelect.options).find(
-            opt => opt.value === producto.Descripcion
+            opt => opt.value === producto.descripcion
           );
 
           if (ubicacionExistente) {
-            ubicacionSelect.value = producto.Descripcion;
+            ubicacionSelect.value = producto.descripcion;
+            ubicacionSelect.dataset.originalValue = producto.descripcion;
           } else {
-            const option = new Option(producto.Descripcion, producto.Descripcion);
+            const option = new Option(producto.descripcion, producto.descripcion);
             ubicacionSelect.add(option);
-            ubicacionSelect.value = producto.Descripcion;
+            ubicacionSelect.value = producto.descripcion;
+            ubicacionSelect.dataset.originalValue = producto.descripcion;
           }
         } else {
           ubicacionSelect.value = '';
+          ubicacionSelect.dataset.originalValue = '';
         }
 
-        // Manejar fecha de vencimiento
-        document.getElementById('mod_fecha_vencimiento').value = producto.FechaVencimiento
-          ? formatDateForInput(producto.FechaVencimiento)
-          : '';
+        // Fecha de vencimiento
+        const fechaVencimientoInput = document.getElementById('mod_fecha_vencimiento');
+        if (producto.fechavencimiento) {
+          fechaVencimientoInput.value = formatDateForInput(producto.fechavencimiento);
+          fechaVencimientoInput.dataset.originalValue = formatDateForInput(producto.fechavencimiento);
+        } else {
+          fechaVencimientoInput.value = '';
+          fechaVencimientoInput.dataset.originalValue = '';
+        }
 
-        // Bloquear campos no editables
-        const camposNoEditables = [
-          'mod_codigo_producto', 'mod_nombre', 'mod_marca',
-          'mod_sector', 'mod_codigo_proveedor', 'mod_fecha_entrada',
-          'mod_fecha_vencimiento'
-        ];
+        // Cargar imagen actual del producto
+        cargarImagenActual(producto.imagen_url);
 
-        camposNoEditables.forEach(id => {
-          const campo = document.getElementById(id);
-          if (campo) {
-            campo.readOnly = true;
-            campo.disabled = true;
-            campo.style.backgroundColor = '#f8f9fa';
-          }
-        });
-
-        // Habilitar campos editables
-        document.getElementById('mod_precio_compra').readOnly = false;
-        document.getElementById('mod_cantidad').readOnly = false;
-        document.getElementById('mod_ubicacion').disabled = false;
-
-        // Mostrar el formulario y el botón
+        // Mostrar el formulario
         formularioMod.style.display = 'block';
-        document.getElementById('modificarProductoButton').disabled = false;
-        document.getElementById('modificarProductoButton').style.display = 'block';
+
+      } else {
+        throw new Error('No se encontraron datos del producto');
       }
     } catch (error) {
       console.error('Error al cargar datos del producto:', error);
@@ -847,6 +1270,218 @@
     }
   }
 
+  // Función para cargar la imagen actual del producto
+  function cargarImagenActual(imagenUrl) {
+    const imgActual = document.getElementById('mod_imagen_actual');
+    const sinImagen = document.getElementById('mod_sin_imagen');
+    const btnActualizarImagen = document.getElementById('actualizarImagenButton');
+
+    // Resetear nueva imagen
+    cancelarCambioImagen();
+
+    if (imagenUrl) {
+      imgActual.src = imagenUrl;
+      imgActual.style.display = 'block';
+      sinImagen.style.display = 'none';
+    } else {
+      imgActual.style.display = 'none';
+      sinImagen.style.display = 'block';
+    }
+
+    // Ocultar botón de actualizar imagen inicialmente
+    btnActualizarImagen.style.display = 'none';
+  }
+
+  // Función para procesar nueva imagen en modificación
+  function procesarNuevaImagenModificar(file) {
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Formato no válido',
+        text: 'Solo se permiten imágenes JPG, PNG, GIF o WebP'
+      });
+      return;
+    }
+
+    // Validar tamaño (2MB máximo)
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo muy grande',
+        text: 'La imagen no debe superar los 2MB'
+      });
+      return;
+    }
+
+    // Crear FileReader para mostrar vista previa
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      imagenActualModificar = e.target.result; // Base64
+      imagenNombreModificar = file.name;
+      imagenTipoModificar = file.type;
+
+      // Mostrar vista previa
+      document.getElementById('mod_preview_image').src = e.target.result;
+      document.getElementById('mod_preview_nueva_imagen').style.display = 'block';
+
+      // Mostrar botón de actualizar imagen
+      document.getElementById('actualizarImagenButton').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Función para cancelar cambio de imagen
+  function cancelarCambioImagen() {
+    imagenActualModificar = null;
+    imagenNombreModificar = null;
+    imagenTipoModificar = null;
+
+    document.getElementById('mod_preview_nueva_imagen').style.display = 'none';
+    document.getElementById('actualizarImagenButton').style.display = 'none';
+    document.getElementById('mod_nueva_imagen').value = '';
+  }
+
+  // Función para actualizar solo la imagen
+  async function actualizarSoloImagen() {
+    if (!productoSeleccionadoModificar) {
+      Swal.fire('Error', 'No hay producto seleccionado', 'error');
+      return;
+    }
+
+    if (!imagenActualModificar) {
+      Swal.fire('Error', 'No hay nueva imagen seleccionada', 'error');
+      return;
+    }
+
+    try {
+      const btnActualizar = document.getElementById('actualizarImagenButton');
+      btnActualizar.disabled = true;
+      btnActualizar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Actualizando...';
+
+      const response = await fetch(`/productos/api/productos/${productoSeleccionadoModificar}/imagen`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          imagen_base64: imagenActualModificar,
+          imagen_nombre: imagenNombreModificar,
+          imagen_tipo: imagenTipoModificar
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Imagen actualizada',
+          text: 'La imagen del producto se ha actualizado correctamente',
+          timer: 3000,
+          timerProgressBar: true
+        });
+
+        // Actualizar la imagen actual
+        cargarImagenActual(result.imagen_url);
+
+        // CORRECCIÓN: Recargar y reordenar la tabla de inventario
+        await recargarYReordenarInventario();
+
+      } else {
+        throw new Error(result.message || 'No se pudo actualizar la imagen');
+      }
+    } catch (error) {
+      console.error('Error al actualizar imagen:', error);
+      Swal.fire('Error', error.message || 'Error al conectar con el servidor', 'error');
+    } finally {
+      const btnActualizar = document.getElementById('actualizarImagenButton');
+      if (btnActualizar) {
+        btnActualizar.disabled = false;
+        btnActualizar.innerHTML = '<i class="fas fa-camera me-2"></i>Actualizar Solo Imagen';
+      }
+    }
+  }
+
+  // Función para recargar y reordenar el inventario
+  async function recargarYReordenarInventario() {
+    try {
+      // Si la tabla de DataTables existe, destruirla primero
+      if ($.fn.DataTable.isDataTable('#productosTable')) {
+        productosTable.destroy();
+      }
+
+      // Recargar los datos
+      await cargarProductos();
+
+      console.log('Inventario recargado y reordenado correctamente');
+    } catch (error) {
+      console.error('Error al recargar inventario:', error);
+    }
+  }
+
+  // Función para mostrar información del inventario y precio base
+  async function mostrarInformacionInventario(codigoProducto, precioActual) {
+    try {
+      // Obtener stock actual
+      const stockActual = await obtenerStockActual(codigoProducto);
+
+      // Mostrar información del inventario
+      const inventarioInfo = document.getElementById('mod_inventario_info');
+      inventarioInfo.innerHTML = `<strong>Inventario actual:</strong> ${stockActual} unidades`;
+      inventarioInfo.style.display = 'block';
+
+      // Mostrar información del precio base (SOLO AQUÍ, no en el campo)
+      const precioBaseInfo = document.getElementById('mod_precio_base_info');
+      precioBaseInfo.innerHTML = `<strong>Precio base actual:</strong> C$${parseFloat(precioActual).toFixed(2)}`;
+      precioBaseInfo.style.display = 'block';
+
+    } catch (error) {
+      console.error('Error al mostrar información del inventario:', error);
+
+      // Mostrar información básica incluso si hay error
+      const inventarioInfo = document.getElementById('mod_inventario_info');
+      inventarioInfo.innerHTML = `<strong>Inventario:</strong> No disponible`;
+      inventarioInfo.style.display = 'block';
+
+      const precioBaseInfo = document.getElementById('mod_precio_base_info');
+      precioBaseInfo.innerHTML = `<strong>Precio base:</strong> C$${parseFloat(precioActual).toFixed(2)}`;
+      precioBaseInfo.style.display = 'block';
+    }
+  }
+
+  // Función para validar antes de modificar
+  function validarYModificarProducto() {
+    const precio_nuevo = parseFloat(document.getElementById('mod_precio_compra').value);
+    const cantidad_nueva = parseInt(document.getElementById('mod_cantidad').value);
+
+    // Validaciones estrictas
+    if (isNaN(precio_nuevo) || precio_nuevo <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Precio inválido',
+        text: 'El precio debe ser un número mayor a 0. No se permiten valores de 0.'
+      });
+      document.getElementById('mod_precio_compra').focus();
+      return;
+    }
+
+    if (isNaN(cantidad_nueva) || cantidad_nueva <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Cantidad inválida',
+        text: 'La cantidad debe ser un número mayor a 0. No se permiten valores de 0.'
+      });
+      document.getElementById('mod_cantidad').focus();
+      return;
+    }
+
+    // Si pasa las validaciones, proceder con la modificación
+    modificarProducto();
+  }
 
   // Función auxiliar para formatear fechas
   function formatDateForInput(dateString) {
@@ -855,7 +1490,26 @@
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
 
-  // Función para modificar un producto
+
+  // Función para obtener el stock actual de un producto (suma de todos los lotes disponibles)
+  async function obtenerStockActual(codigoProducto) {
+    try {
+      const response = await fetch(`/productos/api/stock-producto/${codigoProducto}`);
+      const data = await response.json();
+
+      if (data.success) {
+        return data.stock || 0;
+      } else {
+        console.error('Error al obtener stock:', data.message);
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error al obtener stock:', error);
+      return 0;
+    }
+  }
+
+  // Función para modificar un producto (agregar nuevo lote)
   async function modificarProducto() {
     const codigoProducto = document.getElementById('select_producto_modificar').value;
     if (!codigoProducto) {
@@ -863,26 +1517,18 @@
       return;
     }
 
-    const precio_compra = parseFloat(document.getElementById('mod_precio_compra').value);
-    const cantidad = parseInt(document.getElementById('mod_cantidad').value);
+    const precio_nuevo = parseFloat(document.getElementById('mod_precio_compra').value);
+    const cantidad_nueva = parseInt(document.getElementById('mod_cantidad').value);
     const ubicacionValor = document.getElementById('mod_ubicacion').value;
-    let ubicacionTexto = ubicacionValor;
+    const fecha_vencimiento_nueva = document.getElementById('mod_fecha_vencimiento').value || null;
 
-    if (/^E\d+R\d+E\d+$/.test(ubicacionValor)) {
-      const partes = ubicacionValor.match(/E(\d+)R(\d+)E(\d+)/);
-      ubicacionTexto = `Estante ${partes[1]}, Repisa ${partes[2]}, Espacio ${partes[3]}`;
-    }
-
-    const cantidadOriginal = parseInt(document.getElementById('mod_cantidad').dataset.originalValue) || cantidad;
-    const cantidadModificada = cantidad !== cantidadOriginal;
-
-    // Validaciones
-    if (isNaN(precio_compra)) {
-      Swal.fire('Error', 'El precio debe ser un número válido', 'error');
+    // Validaciones adicionales
+    if (isNaN(precio_nuevo) || precio_nuevo <= 0) {
+      Swal.fire('Error', 'El precio debe ser un número mayor a 0', 'error');
       return;
     }
-    if (isNaN(cantidad)) {
-      Swal.fire('Error', 'La cantidad debe ser un número válido', 'error');
+    if (isNaN(cantidad_nueva) || cantidad_nueva <= 0) {
+      Swal.fire('Error', 'La cantidad debe ser un número mayor a 0', 'error');
       return;
     }
     if (!ubicacionValor) {
@@ -890,71 +1536,117 @@
       return;
     }
 
-    Swal.fire({
-      title: '¿Confirmar modificación?',
-      html: `¿Desea actualizar los siguientes campos?<br><br>
-              <strong>Precio:</strong> ${precio_compra.toFixed(2)}<br>
-              <strong>Cantidad:</strong> ${cantidad}<br>
-              <strong>Ubicación:</strong> ${ubicacionTexto}<br><br>
-              ${cantidadModificada ? '<i>La fecha de entrada se actualizará a la fecha actual</i>' : ''}`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, guardar cambios',
-      cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
+    let ubicacionTexto = ubicacionValor;
+    if (/^E\d+R\d+E\d+$/.test(ubicacionValor)) {
+      const partes = ubicacionValor.match(/E(\d+)R(\d+)E(\d+)/);
+      ubicacionTexto = `Estante ${partes[1]}, Repisa ${partes[2]}, Espacio ${partes[3]}`;
+    }
+
+    try {
+      // Obtener stock actual para mostrar en el mensaje de confirmación
+      const stockActual = await obtenerStockActual(codigoProducto);
+
+      const stockActualNum = Number(stockActual);
+      const cantidadNuevaNum = Number(cantidad_nueva);
+      const nuevoTotal = stockActualNum + cantidadNuevaNum;
+
+      const precio_anterior = parseFloat(document.getElementById('mod_precio_compra').dataset.originalValue) || 0;
+
+      const mensajeConfirmacion = `
+      ¿Desea agregar un nuevo lote con los siguientes datos?<br><br>
+      <strong>Producto:</strong> ${codigoProducto}<br>
+      <strong>Precio anterior:</strong> C$${precio_anterior.toFixed(2)}<br>
+      <strong>Precio nuevo:</strong> C$${precio_nuevo.toFixed(2)}<br>
+      <strong>Cantidad a agregar:</strong> ${cantidadNuevaNum}<br>
+      <strong>Stock actual:</strong> ${stockActualNum}<br>
+      <strong>Nuevo total:</strong> ${nuevoTotal}<br>
+      <strong>Ubicación:</strong> ${ubicacionTexto}<br>
+      <strong>Fecha Vencimiento:</strong> ${fecha_vencimiento_nueva || 'N/A'}<br><br>
+      <i>Se creará un nuevo lote con fecha de entrada actual</i>
+    `;
+
+      Swal.fire({
+        title: '¿Confirmar nuevo lote?',
+        html: mensajeConfirmacion,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, agregar lote',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
           const btnModificar = document.getElementById('modificarProductoButton');
           btnModificar.disabled = true;
           btnModificar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
 
-          const response = await fetch(`/productos/api/productos/${codigoProducto}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              precio_compra: precio_compra,
-              cantidad: cantidad,
-              descripcion: ubicacionTexto,
-              actualizar_fecha: cantidadModificada
-            })
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            await Swal.fire({
-              icon: 'success',
-              title: '¡Cambios guardados!',
-              text: 'El producto ha sido actualizado correctamente.',
-              timer: 2000,
-              timerProgressBar: true
+          try {
+            const response = await fetch(`/productos/api/productos/${codigoProducto}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                precio_compra: precio_nuevo,
+                cantidad: cantidadNuevaNum,
+                descripcion: ubicacionTexto,
+                fecha_vencimiento: fecha_vencimiento_nueva
+              })
             });
 
-            // Recargar datos
-            cargarSelectProductos();
-            cargarProductos();
-            cargarProductosParaBajas();
+            const result = await response.json();
 
-            // Ocultar el formulario hasta nueva selección
-            document.getElementById('formulario-modificacion').style.display = 'none';
-            document.getElementById('select_producto_modificar').value = '';
-          } else {
-            throw new Error(result.message || 'No se pudo modificar el producto');
-          }
-        } catch (error) {
-          console.error('Error al modificar producto:', error);
-          Swal.fire('Error', error.message || 'Error al conectar con el servidor', 'error');
-        } finally {
-          const btnModificar = document.getElementById('modificarProductoButton');
-          if (btnModificar) {
-            btnModificar.disabled = false;
-            btnModificar.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Cambios';
+            if (result.success) {
+              await Swal.fire({
+                icon: 'success',
+                title: '¡Lote agregado!',
+                html: `
+                <strong>Producto:</strong> ${codigoProducto}<br>
+                <strong>Cantidad agregada:</strong> ${cantidadNuevaNum}<br>
+                <strong>Stock anterior:</strong> ${result.datos.stock_anterior}<br>
+                <strong>Nuevo total:</strong> ${result.datos.stock_nuevo}<br>
+                <strong>Precio actualizado:</strong> C$${precio_nuevo.toFixed(2)}
+              `,
+                timer: 3000,
+                timerProgressBar: true
+              });
+
+              // CORRECCIÓN: Recargar y reordenar datos
+              await recargarYReordenarInventario();
+              cargarSelectProductos();
+              cargarProductosParaBajas();
+
+              // Limpiar formulario
+              document.getElementById('formulario-modificacion').style.display = 'none';
+              document.getElementById('select_producto_modificar').value = '';
+
+              // Limpiar campos editables
+              document.getElementById('mod_precio_compra').value = '';
+              document.getElementById('mod_cantidad').value = '';
+
+              // Ocultar información de inventario
+              document.getElementById('mod_inventario_info').style.display = 'none';
+              document.getElementById('mod_precio_base_info').style.display = 'none';
+
+            } else {
+              throw new Error(result.message || 'No se pudo agregar el lote');
+            }
+          } catch (error) {
+            console.error('Error al agregar lote:', error);
+            Swal.fire('Error', error.message || 'Error al conectar con el servidor', 'error');
+          } finally {
+            const btnModificar = document.getElementById('modificarProductoButton');
+            if (btnModificar) {
+              btnModificar.disabled = false;
+              btnModificar.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Cambios';
+            }
           }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error al obtener stock:', error);
+      Swal.fire('Error', 'No se pudo obtener el stock actual del producto', 'error');
+    }
   }
 
   // Función para limpiar el formulario de producto
@@ -1075,13 +1767,36 @@
       fecha_entrada: fechaEntrada
     };
 
+    // Agregar imagen si existe
+    if (imagenActual) {
+      producto.imagen_base64 = imagenActual;
+      producto.imagen_nombre = imagenNombre;
+      producto.imagen_tipo = imagenTipo;
+    }
+
     // Agregar a la lista temporal
     productosTemp.push(producto);
 
     // Actualizar tabla temporal
     actualizarTablaTemporal();
 
-    // Limpiar formulario (excepto sector y proveedor)
+    // Limpiar formulario
+    limpiarCamposFormulario();
+
+    // Mostrar confirmación
+    Swal.fire({
+      icon: 'success',
+      title: 'Producto agregado',
+      text: 'El producto ha sido añadido a la lista temporal',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+
+  // Función auxiliar para limpiar campos del formulario (MODIFICADA)
+  function limpiarCamposFormulario() {
+    const form = document.getElementById('form-producto');
     form.codigo_producto.value = '';
     form.nombre.value = '';
     form.marca.value = '';
@@ -1090,7 +1805,28 @@
     document.getElementById('check_vencimiento').checked = false;
     document.getElementById('fecha_vencimiento').value = '';
     document.getElementById('fecha_vencimiento').disabled = true;
+
+    // Limpiar imagen
+    removeImage();
   }
+
+  // Función para mostrar vista previa de imagen
+  document.getElementById('imagen_producto').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    const previewContainer = document.getElementById('preview-container');
+    const previewImage = document.getElementById('preview-image');
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        previewImage.src = e.target.result;
+        previewContainer.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      previewContainer.style.display = 'none';
+    }
+  });
 
   // Función para actualizar la tabla temporal
   function actualizarTablaTemporal() {
@@ -1106,20 +1842,37 @@
         fechaVencimiento = `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear().toString().slice(-2)}`;
       }
 
+      // Columna para imagen
+      const imagenCol = producto.imagen_base64
+        ? `<td class="text-center">
+           <img src="${producto.imagen_base64}" alt="Imagen" 
+                class="table-image" data-bs-toggle="tooltip" 
+                title="${producto.imagen_nombre}">
+         </td>`
+        : '<td class="text-center text-muted">Sin imagen</td>';
+
       tr.innerHTML = `
-                    <td>${producto.codigo_producto}</td>
-                    <td>${producto.nombre}</td>
-                    <td>${producto.sector}</td>
-                    <td>${producto.marca}</td>
-                    <td>${producto.cantidad}</td>
-                    <td>${producto.precio_compra.toFixed(2)}</td>
-                    <td>${fechaVencimiento}</td>
-                    <td>${producto.ubicacion || 'N/A'}</td>
-                    <td><button class="btn btn-danger btn-sm eliminar-producto" data-index="${index}"><i class="fas fa-trash me-1"></i>Eliminar</button></td>
-                `;
+      <td>${producto.codigo_producto}</td>
+      <td>${producto.nombre}</td>
+      <td>${producto.sector}</td>
+      <td>${producto.marca}</td>
+      <td>${producto.cantidad}</td>
+      <td>${producto.precio_compra.toFixed(2)}</td>
+      <td>${fechaVencimiento}</td>
+      <td>${producto.ubicacion || 'N/A'}</td>
+      ${imagenCol}
+      <td>
+        <button class="btn btn-danger btn-sm eliminar-producto" data-index="${index}">
+          <i class="fas fa-trash me-1"></i>Eliminar
+        </button>
+      </td>
+    `;
 
       tbody.appendChild(tr);
     });
+
+    // Inicializar tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
 
     // Agregar eventos a los botones de eliminar
     document.querySelectorAll('.eliminar-producto').forEach(button => {
@@ -1129,6 +1882,7 @@
       });
     });
   }
+
 
   // Función para eliminar producto de la lista temporal
   function eliminarProductoTemporal(index) {
@@ -1296,4 +2050,231 @@
       submitBtn.innerHTML = '<i class="fas fa-save me-2"></i> Registrar Baja';
     }
   }
+
+
+  // Variables globales para imágenes
+  let imagenActual = null;
+  let imagenNombre = null;
+  let imagenTipo = null;
+
+  // Función para tomar foto desde la cámara
+  function takePhoto() {
+    const input = document.getElementById('imagen_producto');
+
+    // En dispositivos móviles, esto activará la cámara
+    // En desktop, permitirá seleccionar archivo
+    input.setAttribute('capture', 'camera');
+    input.click();
+
+    // Restaurar atributo después de usar
+    setTimeout(() => {
+      input.removeAttribute('capture');
+    }, 1000);
+  }
+
+  // Función para procesar archivo seleccionado
+  function processFile(file) {
+    // Validar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Formato no válido',
+        text: 'Solo se permiten imágenes JPG, PNG, GIF o WebP'
+      });
+      return;
+    }
+
+    // Validar tamaño (2MB máximo)
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo muy grande',
+        text: 'La imagen no debe superar los 2MB'
+      });
+      return;
+    }
+
+    // Mostrar información del archivo
+    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+    document.getElementById('file-info').textContent =
+      `${file.name} • ${fileSize} MB • ${file.type.replace('image/', '').toUpperCase()}`;
+
+    // Crear FileReader para mostrar vista previa
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      imagenActual = e.target.result; // Base64
+      imagenNombre = file.name;
+      imagenTipo = file.type;
+
+      // Mostrar vista previa
+      document.getElementById('preview-image').src = e.target.result;
+      document.getElementById('preview-container').style.display = 'block';
+      document.getElementById('dropZone').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Event Listeners para el área de arrastrar y soltar
+  document.addEventListener('DOMContentLoaded', function () {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('imagen_producto');
+
+    // Click en el área de drop
+    dropZone.addEventListener('click', function (e) {
+      if (e.target.tagName !== 'BUTTON') {
+        fileInput.click();
+      }
+    });
+
+    // Cambio en el input file
+    fileInput.addEventListener('change', function (e) {
+      if (this.files && this.files[0]) {
+        processFile(this.files[0]);
+      }
+    });
+
+    // Arrastrar y soltar
+    dropZone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      this.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', function (e) {
+      e.preventDefault();
+      this.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      this.classList.remove('dragover');
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Soporte para touch en móviles
+    dropZone.addEventListener('touchstart', function (e) {
+      this.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('touchend', function (e) {
+      this.classList.remove('dragover');
+    });
+  });
+
+
+  // Función debug para verificar datos antes de enviar
+  function debugProductosTemp() {
+    console.log('=== DEBUG Productos Temporales ===');
+    productosTemp.forEach((producto, index) => {
+      console.log(`Producto ${index}:`, {
+        codigo: producto.codigo_producto,
+        nombre: producto.nombre,
+        tieneImagen: !!producto.imagen_base64,
+        longitudImagen: producto.imagen_base64 ? producto.imagen_base64.length : 0,
+        tipoImagen: producto.imagen_tipo,
+        nombreImagen: producto.imagen_nombre,
+        // Mostrar primeros 100 caracteres del base64 para verificar
+        base64Preview: producto.imagen_base64 ? producto.imagen_base64.substring(0, 100) + '...' : 'No hay imagen'
+      });
+    });
+    console.log('Total productos:', productosTemp.length);
+    console.log('Productos con imagen:', productosTemp.filter(p => p.imagen_base64).length);
+    console.log('================================');
+  }
+
+  // Modificar la función guardarProductos para incluir debug
+  async function guardarProductos() {
+    if (productosTemp.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Lista vacía',
+        text: 'No hay productos para guardar.'
+      });
+      return;
+    }
+
+    // Debug antes de enviar
+    debugProductosTemp();
+
+    Swal.fire({
+      title: "¿Confirmar registro?",
+      html: `¿Está seguro que desea registrar <strong>${productosTemp.length}</strong> producto(s)?<br>
+               <small>Productos con imagen: ${productosTemp.filter(p => p.imagen_base64).length}</small>`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, registrar",
+      cancelButtonText: "Cancelar"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const btnGuardar = document.getElementById('guardarProductos');
+          btnGuardar.disabled = true;
+          btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
+          console.log('Enviando datos al servidor...');
+
+          const response = await fetch('/productos/api/productos', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              productos: productosTemp
+            })
+          });
+
+          const data = await response.json();
+          console.log('Respuesta del servidor:', data);
+
+          if (data.success) {
+            await Swal.fire({
+              icon: "success",
+              title: "Productos registrados",
+              html: `Se han registrado <strong>${productosTemp.length}</strong> producto(s) exitosamente.<br>
+                               <small>Productos con imagen: ${data.productos_con_imagen || 0}</small>`,
+              showConfirmButton: true
+            }).then(() => {
+              // Limpiar todo después de guardar
+              productosTemp = [];
+              document.getElementById('tablaProductosTemp').innerHTML = '';
+              document.getElementById('form-producto').reset();
+              document.getElementById('fecha_entrada').value = new Date().toISOString().split('T')[0];
+              removeImage();
+
+              // Recargar datos
+              cargarProductos();
+              cargarSelectProductos();
+              cargarProductosParaBajas();
+            });
+          } else {
+            throw new Error(data.message || "No se pudieron registrar los productos.");
+          }
+        } catch (error) {
+          console.error("Error al guardar productos:", error);
+          Swal.fire("Error", error.message || "Hubo un problema al registrar los productos.", "error");
+        } finally {
+          const btnGuardar = document.getElementById('guardarProductos');
+          if (btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Productos';
+          }
+        }
+      }
+    });
+  }
+
+// Función para manejar errores de carga de imágenes
+function manejarErrorImagen(imgElement) {
+  console.log('Error cargando imagen, mostrando placeholder');
+  imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0zMCAzN0MzMi43NjE0IDM3IDM1IDM0Ljc2MTQgMzUgMzJDMzUgMjkuMjM4NiAzMi43NjE0IDI3IDMwIDI3QzI3LjIzODYgMjcgMjUgMjkuMjM4NiAyNSAzMkMyNSAzNC43NjE0IDI3LjIzODYgMzcgMzAgMzdaIiBmaWxsPSIjQ0RDRENEIi8+CjxwYXRoIGQ9Ik0zNi41IDIyLjVIMjMuNUMxOS4zNTc5IDIyLjUgMTYgMjUuODU3OSAxNiAzMFY0MUMxNiA0NS4xNDIxIDE5LjM1NzkgNDguNSAyMy41IDQ4LjVIMzYuNUM0MC42NDIxIDQ4LjUgNDQgNDUuMTNDMjEgNDQgNDEgMjUuODU3OSA0MSAyMS43NVYzMEM0MSAyNS44NTc5IDQwLjY0MjEgMjIuNSAzNi41IDIyLjVaIiBmaWxsPSIjQ0RDRENEIi8+Cjwvc3ZnPgo=';
+  imgElement.alt = 'Imagen no disponible';
+  imgElement.style.cursor = 'default';
+  imgElement.onclick = null;
+}
+
 </script>

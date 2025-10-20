@@ -6,12 +6,13 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #f8f9fa; /* Color de fondo temporal para pruebas */
+    background: linear-gradient(135deg, #cdd0d3 0%, #d9dbdd 100%);
+    background-size: cover;
 }
 
 /* Navbar ajustada */
 .navbar {
-    background: #2c3e50;
+    background: var(--dark-color);
     padding: 10px 15px;
     position: fixed;
     top: 0;
@@ -22,11 +23,12 @@ body {
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand {
     font-weight: 700;
-    color: #ffffff !important;
+    color: var(--light-color) !important;
     font-size: 20px;
     display: flex;
     align-items: center;
@@ -39,7 +41,7 @@ body {
 }
 
 .navbar-nav .nav-link {
-    color: #ffffff !important;
+    color: var(--light-color) !important;
     display: flex;
     align-items: center;
     font-size: 16px;
@@ -102,8 +104,25 @@ main {
 .search-input {
     flex: 1;
     padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
     font-size: 16px;
+    transition: all 0.3s;
 }
 
+.search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    outline: none;
+}
+
+/* Variables de color unificadas */
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --accent-color: #4895ef;
+    --dark-color: #2b2d42;
+    --light-color: #f8f9fa;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+}

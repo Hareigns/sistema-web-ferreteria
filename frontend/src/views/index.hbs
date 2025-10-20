@@ -17,14 +17,18 @@
 
     <!-- Menú desplegable corregido -->
     <div class="dropdown-center">
-      <button class="btn top-link dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+      <button class="btn top-link dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+        aria-expanded="false">
         <i class="fas fa-link"></i> Ir a sección
       </button>
       <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1" style="z-index: 1031;">
         <li><a class="dropdown-item" href="#productos"><i class="fas fa-star me-2"></i>Productos Destacados</a></li>
         <li><a class="dropdown-item" href="#servicios"><i class="fas fa-tools me-2"></i>Nuestros Servicios</a></li>
-        <li><a class="dropdown-item" href="#contacto"><i class="fas fa-map-marker-alt me-2"></i>Ubicación y Contacto</a></li>
-        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="#contacto"><i class="fas fa-map-marker-alt me-2"></i>Ubicación y Contacto</a>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
         <li><a class="dropdown-item" href="#footer-info"><i class="fas fa-info-circle me-2"></i>¿Quiénes somos?</a></li>
       </ul>
     </div>
@@ -118,7 +122,7 @@
                 <i class="fas {{this.Icono}}" style="font-size: 1.8rem;"></i>
               </div>
               <h5 class="card-title product-title">{{this.Nombre_Producto}}</h5>
-              <p class="card-text text-muted small">Vendidos: {{this.CantidadVendida}} unidades</p>
+              <p class="card-text text-muted small">Vendidos: {{this.CantidadVendidaFormatted}} unidades</p>
               <div class="d-flex justify-content-between align-items-center mt-3">
                 <span class="product-price fw-bold">{{this.PrecioPromedio}}</span>
               </div>
@@ -189,7 +193,7 @@
   <div class="container">
     <!-- Título centrado con barra naranja -->
     <h2 class="text-center section-title mb-5">Ubicación y Contacto</h2>
-    
+
     <div class="row g-4 align-items-stretch"> <!-- align-items-stretch para igualar alturas -->
       <!-- Columna izquierda - Información de contacto -->
       <div class="col-lg-6 d-flex">
@@ -201,7 +205,7 @@
               <p class="mb-0">De donde fue el Rastro Municipal 2c al sur, León</p>
             </div>
           </div>
-          
+
           <div class="d-flex mb-3">
             <i class="fas fa-phone-alt text-primary mt-1 me-3"></i>
             <div>
@@ -209,7 +213,7 @@
               <p class="mb-0">+505 8680 0409</p>
             </div>
           </div>
-          
+
           <div class="d-flex mb-3">
             <i class="fas fa-envelope text-primary mt-1 me-3"></i>
             <div>
@@ -217,7 +221,7 @@
               <p class="mb-0">contacto@lasbrisas.com</p>
             </div>
           </div>
-          
+
           <div class="d-flex">
             <i class="fas fa-clock text-primary mt-1 me-3"></i>
             <div>
@@ -227,7 +231,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Columna derecha - Mapa -->
       <div class="col-lg-6 h-100">
         <div class="map-container h-100">
@@ -251,8 +255,8 @@
       <div class="col-lg-3 col-md-6">
         <h5 class="footer-title">Ferretería Las Brisas</h5>
         <p> Somos una ferretería nicaragüense comprometida con ofrecer productos de calidad para tus
-        proyectos de construcción y hogar. Con más de 15 años de experiencia, nos enorgullecemos de nuestro
-        servicio personalizado y atención al cliente. Comprometidos con el desarrollo de Nicaragua.</p>
+          proyectos de construcción y hogar. Con más de 15 años de experiencia, nos enorgullecemos de nuestro
+          servicio personalizado y atención al cliente. Comprometidos con el desarrollo de Nicaragua.</p>
       </div>
 
       <div class="col-lg-3 col-md-6">
@@ -289,7 +293,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   // Debug para dropdowns
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
     var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
       return new bootstrap.Dropdown(dropdownToggleEl)

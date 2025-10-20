@@ -32,21 +32,20 @@ router.get("/add", isLoggedIn, (req, res) => {
   });
 });
 
-
 // Mostrar lista de proveedores
 router.get("/list", isLoggedIn, async (req, res) => {
   try {
-    const [proveedores] = await pool.query(`
-      SELECT p.Cod_Proveedor, p.Nombre, p.Apellido, p.Sector, 
-             t.Numero AS Telefono, t.Compania
-      FROM Proveedor p
-      LEFT JOIN Telefono t ON p.Cod_Proveedor = t.Cod_Proveedor
-      ORDER BY p.Nombre, p.Apellido
+    const proveedores = await pool.query(`
+      SELECT p.cod_proveedor, p.nombre, p.apellido, p.sector, 
+             t.numero AS telefono, t.compania
+      FROM proveedor p
+      LEFT JOIN telefono t ON p.cod_proveedor = t.cod_proveedor
+      ORDER BY p.nombre, p.apellido
     `);
 
     res.render("proveedores/list", {
       title: "Lista de Proveedores",
-      proveedores,
+      proveedores: proveedores.rows,
       messages: req.flash()
     });
   } catch (error) {
@@ -68,6 +67,8 @@ router.post("/add", isLoggedIn, async (req, res) => {
     });
   }
 
+  const client = await pool.connect();
+  
   try {
     // Verificar teléfono
     if (await telefonoExiste(telefono)) {
@@ -77,62 +78,65 @@ router.post("/add", isLoggedIn, async (req, res) => {
       });
     }
 
-    await pool.query('START TRANSACTION');
+    await client.query('BEGIN');
 
     // Insertar proveedor
-    const [proveedorResult] = await pool.query(
-      'INSERT INTO Proveedor (Nombre, Apellido, Sector, Estado) VALUES (?, ?, ?, ?)',
+    const proveedorResult = await client.query(
+      'INSERT INTO proveedor (nombre, apellido, sector, estado) VALUES ($1, $2, $3, $4) RETURNING cod_proveedor',
       [nombre, apellido, sector, estado]
     );
 
+    const codProveedor = proveedorResult.rows[0].cod_proveedor;
+
     // Insertar teléfono
-    await pool.query(
-      'INSERT INTO Telefono (Numero, Compania, Cod_Proveedor) VALUES (?, ?, ?)',
-      [telefono, compania, proveedorResult.insertId]
+    await client.query(
+      'INSERT INTO telefono (numero, compania, cod_proveedor) VALUES ($1, $2, $3)',
+      [telefono, compania, codProveedor]
     );
 
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
     
     // Obtener lista actualizada de proveedores
-    const [proveedores] = await pool.query(`
-      SELECT p.Cod_Proveedor, p.Nombre, p.Apellido, p.Sector, p.Estado,
-             t.Numero AS Telefono, t.Compania
-      FROM Proveedor p
-      LEFT JOIN Telefono t ON p.Cod_Proveedor = t.Cod_Proveedor
-      ORDER BY p.Nombre, p.Apellido
+    const proveedores = await client.query(`
+      SELECT p.cod_proveedor, p.nombre, p.apellido, p.sector, p.estado,
+             t.numero AS telefono, t.compania
+      FROM proveedor p
+      LEFT JOIN telefono t ON p.cod_proveedor = t.cod_proveedor
+      ORDER BY p.nombre, p.apellido
     `);
 
     return res.json({ 
       success: true,
       message: 'Proveedor agregado correctamente',
-      data: proveedores
+      data: proveedores.rows
     });
 
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('Error al agregar proveedor:', error);
     return res.status(500).json({ 
       success: false,
       errors: ['Error al agregar proveedor'] 
     });
+  } finally {
+    client.release();
   }
 });
-  
 
 // Obtener todos los proveedores (para select y tabla)
 router.get('/api/proveedores', isLoggedIn, async (req, res) => {
   try {
-    const [proveedores] = await pool.query(`
-      SELECT p.Cod_Proveedor, p.Nombre, p.Apellido, p.Sector, p.Estado,
-             t.Numero AS Telefono, t.Compania
-      FROM Proveedor p
-      LEFT JOIN Telefono t ON p.Cod_Proveedor = t.Cod_Proveedor
-      ORDER BY p.Estado DESC, p.Nombre ASC
+    const proveedores = await pool.query(`
+      SELECT p.cod_proveedor, p.nombre, p.apellido, p.sector, p.estado,
+             t.numero AS telefono, t.compania
+      FROM proveedor p
+      LEFT JOIN telefono t ON p.cod_proveedor = t.cod_proveedor
+      ORDER BY p.estado DESC, p.nombre ASC
     `);
     
     res.json({ 
       success: true,
-      data: proveedores 
+      data: proveedores.rows 
     });
   } catch (error) {
     console.error('Error al obtener proveedores:', error);
@@ -143,18 +147,17 @@ router.get('/api/proveedores', isLoggedIn, async (req, res) => {
   }
 });
 
-
 // Obtener un proveedor específico
 router.get('/api/proveedores/:id', isLoggedIn, async (req, res) => {
   try {
-    const [proveedor] = await pool.query(`
-      SELECT p.*, t.Numero AS Telefono, t.Compania
-      FROM Proveedor p
-      LEFT JOIN Telefono t ON p.Cod_Proveedor = t.Cod_Proveedor
-      WHERE p.Cod_Proveedor = ?
+    const proveedor = await pool.query(`
+      SELECT p.*, t.numero AS telefono, t.compania
+      FROM proveedor p
+      LEFT JOIN telefono t ON p.cod_proveedor = t.cod_proveedor
+      WHERE p.cod_proveedor = $1
     `, [req.params.id]);
     
-    if (proveedor.length === 0) {
+    if (proveedor.rows.length === 0) {
       return res.status(404).json({ 
         success: false,
         error: 'Proveedor no encontrado' 
@@ -163,7 +166,7 @@ router.get('/api/proveedores/:id', isLoggedIn, async (req, res) => {
     
     res.json({ 
       success: true,
-      data: proveedor[0] 
+      data: proveedor.rows[0] 
     });
   } catch (error) {
     console.error('Error al obtener proveedor:', error);
@@ -174,34 +177,35 @@ router.get('/api/proveedores/:id', isLoggedIn, async (req, res) => {
   }
 });
 
-
 // Ruta PUT actualizada para proveedores
 router.put('/api/proveedores/:id', isLoggedIn, async (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, sector, telefono, compania, estado } = req.body;
 
+  const client = await pool.connect();
+  
   try {
     // 1. Iniciar transacción
-    await pool.query('START TRANSACTION');
+    await client.query('BEGIN');
 
     // 2. Verificar teléfono DENTRO de la transacción
     if (telefono) {
-      const [current] = await pool.query(
-        'SELECT Numero FROM Telefono WHERE Cod_Proveedor = ?', 
+      const current = await client.query(
+        'SELECT numero FROM telefono WHERE cod_proveedor = $1', 
         [id]
       );
       
-      const telefonoActual = current[0]?.Numero;
+      const telefonoActual = current.rows[0]?.numero;
       
       // Solo verificar si el teléfono cambió
       if (telefono !== telefonoActual) {
-        const [existente] = await pool.query(
-          'SELECT 1 FROM Telefono WHERE Numero = ? AND Cod_Proveedor != ? LIMIT 1',
+        const existente = await client.query(
+          'SELECT 1 FROM telefono WHERE numero = $1 AND cod_proveedor != $2 LIMIT 1',
           [telefono, id]
         );
         
-        if (existente.length > 0) {
-          await pool.query('ROLLBACK');
+        if (existente.rows.length > 0) {
+          await client.query('ROLLBACK');
           return res.status(400).json({
             success: false,
             errors: ['El teléfono ya está registrado para otro proveedor']
@@ -211,25 +215,25 @@ router.put('/api/proveedores/:id', isLoggedIn, async (req, res) => {
     }
 
     // 3. Actualizar Proveedor
-    await pool.query(
-      'UPDATE Proveedor SET Nombre = ?, Apellido = ?, Sector = ?, Estado = ? WHERE Cod_Proveedor = ?',
+    await client.query(
+      'UPDATE proveedor SET nombre = $1, apellido = $2, sector = $3, estado = $4 WHERE cod_proveedor = $5',
       [nombre, apellido, sector, estado, id]
     );
 
     // 4. Actualizar Telefono
-    await pool.query(
-      'UPDATE Telefono SET Numero = ?, Compania = ? WHERE Cod_Proveedor = ?',
+    await client.query(
+      'UPDATE telefono SET numero = $1, compania = $2 WHERE cod_proveedor = $3',
       [telefono, compania, id]
     );
 
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
     
     res.json({ success: true, message: 'Proveedor actualizado exitosamente' });
 
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await client.query('ROLLBACK');
     
-    if (error.code === 'ER_DUP_ENTRY') {
+    if (error.code === '23505') { // Código de violación de restricción única en PostgreSQL
       return res.status(400).json({
         success: false,
         errors: ['Error: El número de teléfono ya existe']
@@ -241,9 +245,10 @@ router.put('/api/proveedores/:id', isLoggedIn, async (req, res) => {
       success: false,
       errors: ['Error interno del servidor']
     });
+  } finally {
+    client.release();
   }
 });
-
 
 // Ruta para verificar teléfono (mejorada)
 router.get('/api/telefono/existe/:numero', isLoggedIn, async (req, res) => {
@@ -261,17 +266,17 @@ router.get('/api/telefono/existe/:numero', isLoggedIn, async (req, res) => {
 
     let query = `
       SELECT COUNT(*) as count 
-      FROM Telefono 
-      WHERE Numero = ? 
-      AND (Cod_Proveedor != ? OR ? IS NULL)
+      FROM telefono 
+      WHERE numero = $1 
+      AND (cod_proveedor != $2 OR $2 IS NULL)
     `;
     
-    const [result] = await pool.query(query, [numero, excluirProveedor || null, excluirProveedor || null]);
+    const result = await pool.query(query, [numero, excluirProveedor || null]);
     
     return res.json({
       success: true,
-      existe: result[0].count > 0,
-      message: result[0].count > 0 
+      existe: parseInt(result.rows[0].count) > 0,
+      message: parseInt(result.rows[0].count) > 0 
         ? 'Teléfono ya registrado' 
         : 'Teléfono disponible'
     });
@@ -291,15 +296,15 @@ async function telefonoExiste(numero, excluirEmpleadoId = null, excluirProveedor
   try {
     let query = `
       SELECT COUNT(*) as count 
-      FROM Telefono 
-      WHERE Numero = ? 
-      AND (Cod_Empleado != ? OR ? IS NULL)
-      AND (Cod_Proveedor != ? OR ? IS NULL)
+      FROM telefono 
+      WHERE numero = $1 
+      AND (cod_empleado != $2 OR $2 IS NULL)
+      AND (cod_proveedor != $3 OR $3 IS NULL)
     `;
-    const params = [numero, excluirEmpleadoId, excluirEmpleadoId, excluirProveedorId, excluirProveedorId];
+    const params = [numero, excluirEmpleadoId, excluirProveedorId];
     
-    const [result] = await pool.query(query, params);
-    return result[0].count > 0;
+    const result = await pool.query(query, params);
+    return parseInt(result.rows[0].count) > 0;
   } catch (error) {
     console.error('Error al verificar teléfono:', error);
     throw error;

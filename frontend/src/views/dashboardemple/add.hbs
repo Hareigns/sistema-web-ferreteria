@@ -113,7 +113,7 @@
                     labels: data.ventasDiarias.map(v => formatDate(v.fecha)),
                     datasets: [{
                         label: 'Mis Ventas Diarias (C$)',
-                        data: data.ventasDiarias.map(v => v.total),
+                        data: data.ventasDiarias.map(v => parseFloat(v.total) || 0), // Convertir a número
                         backgroundColor: 'rgba(41, 128, 185, 0.9)',
                         borderColor: 'rgba(41, 128, 185, 1)',
                         borderWidth: 1
@@ -154,13 +154,19 @@
         // Tabla de ventas diarias del empleado
         const ventasTable = document.getElementById('tabla-ventas');
         if (data.ventasDiarias && data.ventasDiarias.length > 0) {
-            ventasTable.innerHTML = data.ventasDiarias.map(v => `
-        <tr>
-          <td>${formatDate(v.fecha)}</td>
-          <td>C$${v.total?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '0.00'}</td>
-          <td>${v.cantidad_ventas || 0}</td>
-        </tr>
-      `).join('');
+            ventasTable.innerHTML = data.ventasDiarias.map(v => {
+                // Convertir total a número
+                const total = parseFloat(v.total) || 0;
+                const cantidadVentas = parseInt(v.cantidad_ventas) || 0;
+
+                return `
+                <tr>
+                    <td>${formatDate(v.fecha)}</td>
+                    <td>C$${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+                    <td>${cantidadVentas}</td>
+                </tr>
+            `;
+            }).join('');
         } else {
             ventasTable.innerHTML = '<tr><td colspan="3">No hay registros de ventas en los últimos 15 días</td></tr>';
         }
@@ -203,14 +209,14 @@
                 throw new Error(data.message || 'Error al obtener datos del empleado');
             }
 
-            // Versión más flexible para manejar diferentes estructuras de respuesta
-            const nombre = data.Nombre || data.nombre || data.Nombre_Empleado || data.nombre_empleado || 'Nombre';
-            const apellido = data.Apellido || data.apellido || data.Apellido_Empleado || data.apellido_empleado || 'Apellido';
+            // Versión CORREGIDA - usar minúsculas consistentemente
+            const nombre = data.nombre || data.Nombre || 'Nombre';
+            const apellido = data.apellido || data.Apellido || 'Apellido';
 
             return {
-                id: data.Cod_Empleado || data.id || data.empleadoId || null,
-                nombre: nombre.split(' ')[0], // Tomar solo el primer nombre
-                apellido: apellido.split(' ')[0] // Tomar solo el primer apellido
+                id: data.cod_empleado || data.Cod_Empleado || data.id || data.empleadoId || null,
+                nombre: nombre.split(' ')[0],
+                apellido: apellido.split(' ')[0]
             };
 
         } catch (error) {
@@ -226,47 +232,47 @@
 
 <!-- Botón Manual de Usuario -->
 <a href="#" id="manualUsuarioBtn" class="manual-btn">
-  📖 Descargar Manual
+    📖 Descargar Manual
 </a>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    configurarManualUsuario();
-  });
+    document.addEventListener('DOMContentLoaded', function () {
+        configurarManualUsuario();
+    });
 
-  async function configurarManualUsuario() {
-    const manualBtn = document.getElementById('manualUsuarioBtn');
+    async function configurarManualUsuario() {
+        const manualBtn = document.getElementById('manualUsuarioBtn');
 
-    manualBtn.onclick = async function (e) {
-      e.preventDefault();
+        manualBtn.onclick = async function (e) {
+            e.preventDefault();
 
-      try {
-        const response = await fetch('/obtener-manual', {
-          credentials: 'include'
-        });
+            try {
+                const response = await fetch('/obtener-manual', {
+                    credentials: 'include'
+                });
 
-        if (!response.ok) throw new Error('Error al descargar');
+                if (!response.ok) throw new Error('Error al descargar');
 
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
 
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = 'manual.pdf';
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-          if (filenameMatch) filename = filenameMatch[1];
-        }
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'manual.pdf';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) filename = filenameMatch[1];
+                }
 
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error al descargar el manual');
-      }
-    };
-  }
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al descargar el manual');
+            }
+        };
+    }
 </script>

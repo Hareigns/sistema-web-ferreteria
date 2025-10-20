@@ -146,7 +146,10 @@
         });
         $('#search-button').click(validateAndSearch);
         $(document).on('click', '#reset-button', resetSearchControls);
+
+        // Este es el event listener importante para los filtros
         $(document).on('click', '.summary-filter', handleSummaryFilterClick);
+
         $(document).keyup(function (e) {
             if (e.key === "Escape") resetSearchControls();
         });
@@ -182,17 +185,18 @@
 
     function getColumnConfigs() {
         return [
-            { data: 'Cod_Producto', defaultContent: 'N/A', render: renderProductCode },
-            { data: 'Nombre', defaultContent: 'N/A', render: renderProductName },
-            { data: 'Marca', defaultContent: 'N/A', render: renderDefaultContent },
-            { data: 'Descripcion', defaultContent: 'N/A', render: renderDefaultContent },
-            { data: 'FechaEntrada', render: renderDate },
-            { data: 'Cantidad', render: renderQuantity },
-            { data: 'FechaVencimiento', render: renderDate },
-            { data: 'Sector', defaultContent: 'N/A', render: renderSector },
+            { data: 'cod_producto', defaultContent: 'N/A', render: renderProductCode }, // Cambiado de Cod_Producto
+            { data: 'nombre', defaultContent: 'N/A', render: renderProductName }, // Cambiado de Nombre
+            { data: 'marca', defaultContent: 'N/A', render: renderDefaultContent }, // Cambiado de Marca
+            { data: 'descripcion', defaultContent: 'N/A', render: renderDefaultContent }, // Cambiado de Descripcion
+            { data: 'fechaentrada', render: renderDate }, // Cambiado de FechaEntrada
+            { data: 'cantidad', render: renderQuantity }, // Cambiado de Cantidad
+            { data: 'fechavencimiento', render: renderDate }, // Cambiado de FechaVencimiento
+            { data: 'sector', defaultContent: 'N/A', render: renderSector }, // Cambiado de Sector
             { data: null, render: renderStatus }
         ];
     }
+
 
     // Funciones de renderizado
     function renderProductCode(data) {
@@ -226,37 +230,39 @@
     }
 
     function renderStatus(data, type, row) {
-        const expiryDate = parseDate(row.FechaVencimiento);
+        const expiryDate = parseDate(row.fechavencimiento); // Cambiado de FechaVencimiento
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const quantity = parseInt(row.Cantidad) || 0;
+        const quantity = parseInt(row.cantidad) || 0; // Cambiado de Cantidad
 
+        // Resto del código permanece igual...
         if (!expiryDate) {
             return `<span class="text-secondary cell-content">
-                <i class="fas fa-question-circle me-1"></i>Sin fecha
-            </span>`;
+            <i class="fas fa-question-circle me-1"></i>Sin fecha
+        </span>`;
         }
 
         const daysToExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
 
         if (daysToExpiry < 0) {
             return `<span class="text-danger cell-content">
-                <i class="fas fa-times-circle me-1"></i>Vencido
-            </span>`;
+            <i class="fas fa-times-circle me-1"></i>Vencido
+        </span>`;
         } else if (daysToExpiry <= 30) {
             return `<span class="text-danger cell-content">
-                <i class="fas fa-exclamation-triangle me-1"></i>Vence en ${daysToExpiry} días
-            </span>`;
+            <i class="fas fa-exclamation-triangle me-1"></i>Vence en ${daysToExpiry} días
+        </span>`;
         } else if (quantity < 10) {
             return `<span class="text-warning cell-content">
-                <i class="fas fa-exclamation-circle me-1"></i>Stock bajo
-            </span>`;
+            <i class="fas fa-exclamation-circle me-1"></i>Stock bajo
+        </span>`;
         } else {
             return `<span class="text-success cell-content">
-                <i class="fas fa-check-circle me-1"></i>OK
-            </span>`;
+            <i class="fas fa-check-circle me-1"></i>OK
+        </span>`;
         }
     }
+
 
     // Funciones de búsqueda
     function validateAndSearch() {
@@ -338,10 +344,10 @@
             const row = this.data();
             total++;
 
-            const quantity = parseInt(row.Cantidad) || 0;
+            const quantity = parseInt(row.cantidad) || 0; // Cambiado de Cantidad a cantidad
             if (quantity < 10) lowStock++;
 
-            const expiryDate = parseDate(row.FechaVencimiento);
+            const expiryDate = parseDate(row.fechavencimiento); // Cambiado de FechaVencimiento a fechavencimiento
             if (expiryDate) {
                 const daysToExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
                 if (daysToExpiry < 0) expired++;
@@ -352,8 +358,9 @@
         return { total, expiring, lowStock, expired };
     }
 
+
     function updateSummaryUI({ total, expiring, lowStock, expired }) {
-        // Hacer el total clickeable
+        // Hacer los totales clickeables
         $('#total-products').html(`<a href="javascript:void(0)" class="summary-filter" data-filter="all">${total}</a>`);
         $('#low-stock').html(`<a href="javascript:void(0)" class="summary-filter" data-filter="low-stock">${lowStock}</a>`);
         $('#expiring-products').html(`<a href="javascript:void(0)" class="summary-filter" data-filter="expiring">${expiring}</a>`);
@@ -382,20 +389,23 @@
 
         dataTable.rows().every(function () {
             const row = this.data();
-            const quantity = parseInt(row.Cantidad) || 0;
-            const expiryDate = parseDate(row.FechaVencimiento);
-            let showRow = shouldShowRow(filterType, quantity, expiryDate, today);
-
+            const showRow = shouldShowRow(filterType, row);
             $(this.node()).toggle(showRow);
         });
 
         dataTable.page('first').draw('page');
     }
 
-    function shouldShowRow(filterType, quantity, expiryDate, today) {
+    function shouldShowRow(filterType, row) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const quantity = parseInt(row.cantidad) || 0; // Cambiado de Cantidad a cantidad
+        const expiryDate = parseDate(row.fechavencimiento); // Cambiado de FechaVencimiento a fechavencimiento
+
         switch (filterType) {
             case 'all':
-                return true; // Mostrar todos los productos
+                return true;
             case 'low-stock':
                 return quantity < 10;
             case 'expiring':
@@ -409,6 +419,7 @@
                 return true;
         }
     }
+
 
     // Funciones de utilidad
     function parseDate(dateString) {

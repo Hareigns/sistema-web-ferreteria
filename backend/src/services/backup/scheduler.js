@@ -1,21 +1,15 @@
 import cron from 'node-cron';
-import { exec } from 'child_process';
+import { ejecutarBackupSupabase } from './backupDiario.js';
 import { verifyBackups } from './verifyBackups.js';
 
-// Configuración del programador
-cron.schedule('30 2 * * *', () => {
-    console.log('\n=== INICIANDO BACKUP AUTOMÁTICO ===');
+// Configuración del programador para Supabase
+cron.schedule('30 2 * * *', async () => {
+    console.log('\n=== INICIANDO BACKUP AUTOMÁTICO DE SUPABASE ===');
     console.log('Hora:', new Date().toLocaleString());
     
-    // 1. Ejecutar backup
-    exec('node src/services/backup/backupDiario.js', (error, stdout, stderr) => {
-        if (error) {
-            console.error('Error ejecutando backup:', error);
-            return;
-        }
-        
-        console.log(stdout);
-        if (stderr) console.error(stderr);
+    try {
+        // 1. Ejecutar backup de Supabase
+        await ejecutarBackupSupabase();
         
         // 2. Verificar backups después de ejecutar
         console.log('\n=== VERIFICANDO BACKUPS ===');
@@ -29,7 +23,9 @@ cron.schedule('30 2 * * *', () => {
         }
         
         console.log('\n=== PROCESO COMPLETADO ===\n');
-    });
+    } catch (error) {
+        console.error('❌ Error en el backup automático:', error);
+    }
 });
 
-console.log('🔄 Programador de backups iniciado. Se ejecutará diariamente a las 2:30 AM');
+console.log('🔄 Programador de backups de Supabase iniciado. Se ejecutará diariamente a las 2:30 AM');

@@ -282,11 +282,26 @@
                 const selectedRadio = document.querySelector('input[name="filtroVentas"]:checked');
                 if (!selectedRadio) return null;
 
+                let fechaValue = '';
+
+                if (selectedRadio.id === 'diario') {
+                    fechaValue = document.getElementById('fechaDiarioInput').value;
+                } else if (selectedRadio.id === 'semanal') {
+                    const weekInput = document.getElementById('fechaSemanalInput').value;
+                    if (weekInput) {
+                        // Extraer solo el número de la semana (sin el "W")
+                        const [year, week] = weekInput.split('-W');
+                        fechaValue = `${year}-${week}`; // Formato: "2023-19" (no "2023-W19")
+
+                        console.log('Semana formateada para servidor:', fechaValue);
+                    }
+                } else if (selectedRadio.id === 'mensual') {
+                    fechaValue = document.getElementById('fechaMensualInput').value;
+                }
+
                 return {
                     tipo: selectedRadio.id,
-                    fecha: selectedRadio.id === 'diario' ? document.getElementById('fechaDiarioInput').value :
-                        selectedRadio.id === 'semanal' ? document.getElementById('fechaSemanalInput').value :
-                            document.getElementById('fechaMensualInput').value
+                    fecha: fechaValue
                 };
             },
 
@@ -296,41 +311,71 @@
                     const workbook = new ExcelJS.Workbook();
                     const worksheet = workbook.addWorksheet('Reporte Ventas');
 
-                    // Función para formatear la fecha
-                    const formatDate = (dateString) => {
-                        const parts = dateString.split('-');
-                        if (parts.length === 3) {
-                            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    // Función segura para formatear la fecha
+                    const safeFormatDate = (dateString) => {
+                        try {
+                            if (!dateString) return 'N/A';
+
+                            // Si ya está en formato dd/mm/yyyy, devolverlo tal cual
+                            if (typeof dateString === 'string' && dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                                return dateString;
+                            }
+
+                            // Si es una fecha ISO o similar
+                            const date = new Date(dateString);
+                            if (isNaN(date.getTime())) {
+                                // Si es un número, podría ser un timestamp
+                                if (!isNaN(dateString)) {
+                                    const timestampDate = new Date(parseInt(dateString));
+                                    if (!isNaN(timestampDate.getTime())) {
+                                        const day = timestampDate.getDate().toString().padStart(2, '0');
+                                        const month = (timestampDate.getMonth() + 1).toString().padStart(2, '0');
+                                        const year = timestampDate.getFullYear();
+                                        return `${day}/${month}/${year}`;
+                                    }
+                                }
+                                return 'N/A';
+                            }
+
+                            const day = date.getDate().toString().padStart(2, '0');
+                            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                            const year = date.getFullYear();
+
+                            return `${day}/${month}/${year}`;
+                        } catch (error) {
+                            console.warn('Error formateando fecha en Excel:', dateString, error);
+                            return 'N/A';
                         }
-                        const now = new Date();
-                        return `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
                     };
 
-                    // Preparar datos con el formato de fecha
+                    // Preparar datos con el formato de fecha seguro
                     const processedData = data.map(item => {
+                        // Convertir cantidad_venta a número entero
+                        const cantidad = parseInt(item.cantidad_venta || item.Cantidad_Venta || 0);
+
                         return {
-                            Cod_Venta: item.Cod_Venta,
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre_Producto: item.Nombre_Producto,
-                            Cantidad_Venta: item.Cantidad_Venta,
-                            Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2)),
-                            Fecha_Venta: formatDate(item.Fecha_Venta)
+                            cod_venta: item.cod_venta || item.Cod_Venta || 'N/A',
+                            cod_producto: item.cod_producto || item.Cod_Producto || 'N/A',
+                            nombre_producto: item.nombre_producto || item.Nombre_Producto || 'N/A',
+                            cantidad_venta: cantidad,
+                            monto_total: Number(parseFloat(item.monto_total || item.Monto_Total || 0).toFixed(2)),
+                            fecha_venta: safeFormatDate(item.fecha_venta || item.Fecha_Venta)
                         };
                     });
 
                     // Configurar columnas
                     worksheet.columns = [
-                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
-                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
-                        { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
-                        { header: 'Cantidad Vendida', key: 'Cantidad_Venta', width: 18 },
-                        { header: 'Monto Total', key: 'Monto_Total', width: 15 },
+                        { header: 'Código Venta', key: 'cod_venta', width: 15 },
+                        { header: 'Código Producto', key: 'cod_producto', width: 15 },
+                        { header: 'Nombre Producto', key: 'nombre_producto', width: 30 },
+                        { header: 'Cantidad Vendida', key: 'cantidad_venta', width: 18 },
                         {
-                            header: 'Fecha Venta',
-                            key: 'Fecha_Venta',
+                            header: 'Monto Total',
+                            key: 'monto_total',
                             width: 15,
-                            style: { numFmt: 'd/m/yyyy' }
-                        }
+                            style: { numFmt: '#,##0.00' }
+                        },
+                        { header: 'Fecha Venta', key: 'fecha_venta', width: 15 }
                     ];
 
                     // Aplicar estilo a los encabezados
@@ -357,17 +402,11 @@
 
                     // Agregar datos
                     processedData.forEach(item => {
-                        const row = worksheet.addRow([
-                            item.Cod_Venta,
-                            item.Cod_Producto,
-                            item.Nombre_Producto,
-                            item.Cantidad_Venta,
-                            item.Monto_Total,
-                            item.Fecha_Venta
-                        ]);
+                        const row = worksheet.addRow(item);
 
-                        const fechaCell = row.getCell(6);
-                        fechaCell.numFmt = 'd/m/yyyy';
+                        // Formatear celda de monto total
+                        const montoCell = row.getCell('monto_total');
+                        montoCell.numFmt = '#,##0.00';
 
                         row.eachCell(cell => {
                             cell.border = {
@@ -380,18 +419,19 @@
                     });
 
                     // Calcular totales
-                    const totalVentas = processedData.reduce((sum, item) => sum + item.Monto_Total, 0);
-                    const totalCantidad = processedData.reduce((sum, item) => sum + item.Cantidad_Venta, 0);
+                    const totalVentas = processedData.reduce((sum, item) => sum + item.monto_total, 0);
+                    const totalCantidad = processedData.reduce((sum, item) => sum + item.cantidad_venta, 0);
 
-                    const totalRow = worksheet.addRow([
-                        '',
-                        '',
-                        'Totales',
-                        totalCantidad,
-                        totalVentas,
-                        ''
-                    ]);
+                    const totalRow = worksheet.addRow({
+                        cod_venta: 'TOTALES',
+                        cod_producto: '',
+                        nombre_producto: '',
+                        cantidad_venta: totalCantidad,
+                        monto_total: totalVentas,
+                        fecha_venta: ''
+                    });
 
+                    // Formatear celdas de totales
                     totalRow.eachCell((cell, colNumber) => {
                         cell.font = { bold: true };
                         cell.fill = {
@@ -405,29 +445,37 @@
                             bottom: { style: 'thin' },
                             right: { style: 'thin' }
                         };
-                        if (colNumber === 5) cell.numFmt = '#,##0.00';
+
+                        if (colNumber === 4) { // Columna de cantidad (entero)
+                            cell.numFmt = '0';
+                        } else if (colNumber === 5) { // Columna de monto total (decimal)
+                            cell.numFmt = '#,##0.00';
+                        }
                     });
 
                     // Autoajustar columnas
-                    worksheet.columns.forEach(column => {
-                        let maxLength = 0;
-                        column.eachCell({ includeEmpty: true }, cell => {
-                            let columnLength = cell.value ? cell.value.toString().length : 0;
-                            if (columnLength > maxLength) {
-                                maxLength = columnLength;
-                            }
-                        });
-                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                    worksheet.eachRow((row, rowNumber) => {
+                        if (rowNumber > 1) { // Saltar la fila de encabezados
+                            const cantidadCell = row.getCell(4); // Columna 4 es cantidad_venta
+                            cantidadCell.numFmt = '0'; // Formato entero sin decimales
+
+                            const montoCell = row.getCell(5); // Columna 5 es monto_total
+                            montoCell.numFmt = '#,##0.00'; // Formato decimal con 2 decimales
+                        }
                     });
 
                     // Descargar archivo
                     const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const blob = new Blob([buffer], {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = `reporte_ventas_${filter}.xlsx`;
+                    document.body.appendChild(a);
                     a.click();
+                    document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
                 } catch (error) {
@@ -445,7 +493,7 @@
                         return;
                     }
 
-                    const data = await reportUtils.fetchData(
+                    const response = await reportUtils.fetchData(
                         reportConfig.ventas.endpoint,
                         'POST',
                         {
@@ -454,13 +502,30 @@
                         }
                     );
 
-                    if (!Array.isArray(data)) {
-                        throw new Error('Formato de respuesta inválido');
+                    // Verificar la estructura de la respuesta
+                    console.log('Respuesta completa:', response);
+
+                    let data = [];
+                    if (Array.isArray(response)) {
+                        data = response;
+                    } else if (response && Array.isArray(response.data)) {
+                        data = response.data;
+                    } else if (response && Array.isArray(response.rows)) {
+                        data = response.rows;
+                    } else if (response && response.success && Array.isArray(response.data)) {
+                        data = response.data;
                     }
 
                     if (data.length === 0) {
                         await reportUtils.showAlert('info', 'Sin datos', 'No hay ventas registradas para el período seleccionado.');
                         return;
+                    }
+
+                    // Debug: ver la estructura de los datos
+                    console.log('Datos procesados:', data);
+                    if (data.length > 0) {
+                        console.log('Primer elemento:', data[0]);
+                        console.log('Keys del primer elemento:', Object.keys(data[0]));
                     }
 
                     await reportHandlers.ventas.exportToExcel(data, filterInfo.tipo);
@@ -486,10 +551,10 @@
                     ];
 
                     worksheet.columns = [
-                        { header: 'Código', key: 'Cod_Producto', width: 15 },
-                        { header: 'Nombre', key: 'Nombre', width: 30 },
-                        { header: 'Cantidad Vendida', key: 'CantidadVendida', width: 20 },
-                        { header: 'Tipo', key: 'Tipo', width: 20 }
+                        { header: 'Código', key: 'producto_codigo', width: 15 },
+                        { header: 'Nombre', key: 'producto_nombre', width: 30 },
+                        { header: 'Cantidad Vendida', key: 'cantidad_vendida', width: 20 },
+                        { header: 'Tipo', key: 'producto_tipo', width: 20 }
                     ];
 
                     worksheet.getRow(1).eachCell(cell => {
@@ -500,10 +565,10 @@
 
                     processedData.forEach(item => {
                         worksheet.addRow({
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre: item.Nombre,
-                            CantidadVendida: item.CantidadVendida || 0,
-                            Tipo: item.Tipo
+                            producto_codigo: item.producto_codigo || 'N/A',
+                            producto_nombre: item.producto_nombre || 'N/A',
+                            cantidad_vendida: item.cantidad_vendida || 0,
+                            producto_tipo: item.producto_tipo || 'N/A'
                         });
                     });
 
@@ -968,14 +1033,14 @@
                     const workbook = new ExcelJS.Workbook();
                     const worksheet = workbook.addWorksheet(`Ventas ${empleadoNombre}`);
 
-                    // Configurar columnas
+                    // Configurar columnas (usando minúsculas para las keys)
                     worksheet.columns = [
-                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
-                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
-                        { header: 'Producto', key: 'Nombre_Producto', width: 30 },
-                        { header: 'Cantidad', key: 'Cantidad_Venta', width: 15 },
-                        { header: 'Monto Total', key: 'Monto_Total', width: 15, style: { numFmt: 'C$#,##0.00' } },
-                        { header: 'Fecha Venta', key: 'Fecha_Venta_Formateada', width: 15 }
+                        { header: 'Código Venta', key: 'cod_venta', width: 15 },
+                        { header: 'Código Producto', key: 'cod_producto', width: 15 },
+                        { header: 'Producto', key: 'nombre_producto', width: 30 },
+                        { header: 'Cantidad', key: 'cantidad_venta', width: 15 },
+                        { header: 'Monto Total', key: 'monto_total', width: 15, style: { numFmt: 'C$#,##0.00' } },
+                        { header: 'Fecha Venta', key: 'fecha_venta_formateada', width: 15 }
                     ];
 
                     // Estilo encabezados
@@ -988,34 +1053,39 @@
                         cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                     });
 
-                    // Procesar datos y formatear fechas
+                    // Procesar datos y formatear fechas (usando minúsculas)
                     const processedData = data.map(item => ({
-                        ...item,
-                        Fecha_Venta_Formateada: formatDate(item.Fecha_Venta),
-                        Monto_Total: Number(parseFloat(item.Monto_Total).toFixed(2))
+                        cod_venta: item.cod_venta || item.Cod_Venta,
+                        cod_producto: item.cod_producto || item.Cod_Producto,
+                        nombre_producto: item.nombre_producto || item.Nombre_Producto,
+                        cantidad_venta: item.cantidad_venta || item.Cantidad_Venta,
+                        monto_total: Number(parseFloat(item.monto_total || item.Monto_Total || 0).toFixed(2)),
+                        fecha_venta_formateada: formatDate(item.fecha_venta || item.Fecha_Venta)
                     }));
 
-                    // Agregar datos
+                    // Agregar datos (usando minúsculas)
                     processedData.forEach(item => {
                         worksheet.addRow({
-                            Cod_Venta: item.Cod_Venta,
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre_Producto: item.Nombre_Producto,
-                            Cantidad_Venta: item.Cantidad_Venta,
-                            Monto_Total: item.Monto_Total,
-                            Fecha_Venta_Formateada: item.Fecha_Venta_Formateada
+                            cod_venta: item.cod_venta,
+                            cod_producto: item.cod_producto,
+                            nombre_producto: item.nombre_producto,
+                            cantidad_venta: item.cantidad_venta,
+                            monto_total: item.monto_total,
+                            fecha_venta_formateada: item.fecha_venta_formateada
                         });
                     });
 
-                    // Agregar totales
-                    const totalVentas = data.reduce((sum, item) => sum + parseFloat(item.Monto_Total), 0);
+                    // Agregar totales (usando minúsculas)
+                    const totalVentas = processedData.reduce((sum, item) => sum + item.monto_total, 0);
+                    const totalCantidad = processedData.reduce((sum, item) => sum + parseInt(item.cantidad_venta), 0);
+
                     const totalRow = worksheet.addRow({
-                        Cod_Venta: 'TOTAL',
-                        Cod_Producto: '',
-                        Nombre_Producto: '',
-                        Cantidad_Venta: data.reduce((sum, item) => sum + parseInt(item.Cantidad_Venta), 0),
-                        Monto_Total: totalVentas,
-                        Fecha_Venta_Formateada: ''
+                        cod_venta: 'TOTAL',
+                        cod_producto: '',
+                        nombre_producto: '',
+                        cantidad_venta: totalCantidad,
+                        monto_total: totalVentas,
+                        fecha_venta_formateada: ''
                     });
 
                     // Estilo fila total
@@ -1027,6 +1097,9 @@
                             fgColor: { argb: 'FFE2D4F8' } // Morado claro
                         };
                     });
+
+                    // Formatear celdas numéricas en la fila total
+                    totalRow.getCell('monto_total').numFmt = 'C$#,##0.00';
 
                     // Generar y descargar archivo
                     const buffer = await workbook.xlsx.writeBuffer();
@@ -1045,6 +1118,7 @@
                 }
             }
         },
+
         bajas: {
             getFilterParams: () => {
                 const filtro = document.getElementById('filtroBajas').value;

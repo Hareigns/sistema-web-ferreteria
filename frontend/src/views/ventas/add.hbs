@@ -39,14 +39,12 @@
                             <select id="nombreProducto" class="form-select select2-product">
                                 <option value="" disabled selected>Seleccione un producto</option>
                             </select>
-                            <!-- Agregar este div para mostrar la descripción -->
                             <div id="descripcionProducto" class="mt-2 small text-muted" style="display: none;"></div>
                         </div>
                         <div class="col-md-2">
                             <label for="cantidad" class="form-label">Cantidad:</label>
                             <input type="number" id="cantidad" class="form-control" placeholder="Cantidad" min="1"
                                 required>
-                            <!-- Agregar este div para mostrar el stock disponible -->
                             <div id="stockDisponible" class="mt-2 small text-muted" style="display: none;"></div>
                         </div>
                         <div class="col-md-2">
@@ -103,9 +101,74 @@
                     </div>
                     <div class="d-flex justify-content-between mt-3">
                         <button id="guardarVenta" class="btn btn-custom btn-custom-success">💾 Guardar Venta</button>
+                        <button id="imprimirRecibo" class="btn btn-custom btn-custom-info no-print" disabled>
+                            🖨️ Imprimir Recibo
+                        </button>
                     </div>
 
-                    <div class="mt-5">
+                    <!-- Contenedor del recibo -->
+                    <div id="reciboContainer" class="recibo-container">
+                        <div class="recibo-header">
+                            <img src="/images/logo1.webp" alt="Logo Ferretería" class="recibo-logo"
+                                onerror="this.style.display='none'">
+                            <div class="bold" style="font-size: 14px;">FERRETERÍA LAS BRISAS DE ASOSOSCA</div>
+                            <div style="font-size: 10px;">Tel: 2222-2222</div>
+                            <div style="font-size: 10px;">contacto@lasbrisas.com</div>
+                        </div>
+
+                        <div class="recibo-body">
+                            <div class="recibo-line">
+                                <span>FECHA:</span>
+                                <span id="reciboFecha"></span>
+                            </div>
+                            <div class="recibo-line">
+                                <span>HORA:</span>
+                                <span id="reciboHora"></span>
+                            </div>
+                            <div class="recibo-line">
+                                <span>FACTURA #:</span>
+                                <span id="reciboFactura"></span>
+                            </div>
+                            <div class="recibo-line">
+                                <span>EMPLEADO:</span>
+                                <span id="reciboEmpleado"></span>
+                            </div>
+
+                            <div class="recibo-productos">
+                                <div class="text-center bold" style="margin: 8px 0; font-size: 12px;">DETALLE DE VENTA
+                                </div>
+                                <div id="reciboProductos">
+                                    <!-- Los productos se insertarán aquí -->
+                                </div>
+                            </div>
+
+                            <div class="recibo-totales">
+                                <div class="recibo-line">
+                                    <span>SUBTOTAL:</span>
+                                    <span id="reciboSubtotal"></span>
+                                </div>
+                                <div class="recibo-line">
+                                    <span>IVA (15%):</span>
+                                    <span id="reciboIva"></span>
+                                </div>
+                                <div class="recibo-line">
+                                    <span>TOTAL:</span>
+                                    <span id="reciboTotal"></span>
+                                </div>
+                                <div class="recibo-line">
+                                    <span>FORMA DE PAGO:</span>
+                                    <span id="reciboMetodoPago"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="recibo-footer">
+                            <div class="bold">¡GRACIAS POR SU COMPRA!</div>
+                            <div>Vuelva pronto</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 no-print">
                         <h5 class="text-center"
                             style="background-color: #007bff; color: #fff; padding: 8px; border-radius: 5px;">Historial
                             de Ventas</h5>
@@ -136,17 +199,419 @@
     </div>
 </div>
 
-
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
     let productos = [];
+    let ultimaVentaGuardada = null;
 
+    // Función para generar el recibo
+    function generarRecibo(ventaData) {
+        console.log('Generando recibo con datos:', ventaData);
+
+        const ahora = new Date();
+        const fecha = ahora.toLocaleDateString('es-ES');
+        const hora = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+        // Actualizar los datos del recibo
+        document.getElementById('reciboFecha').textContent = fecha;
+        document.getElementById('reciboHora').textContent = hora;
+        document.getElementById('reciboFactura').textContent = ventaData.codigo_venta || 'N/A';
+        document.getElementById('reciboEmpleado').textContent = ventaData.empleado || document.getElementById('empleado').value || 'N/A';
+        document.getElementById('reciboSubtotal').textContent = `C$${parseFloat(ventaData.subtotal || 0).toFixed(2)}`;
+        document.getElementById('reciboIva').textContent = `C$${parseFloat(ventaData.iva || 0).toFixed(2)}`;
+        document.getElementById('reciboTotal').textContent = `C$${parseFloat(ventaData.total || 0).toFixed(2)}`;
+        document.getElementById('reciboMetodoPago').textContent = ventaData.metodo_pago || 'Efectivo';
+
+        // Generar lista de productos CON LOS CUATRO CAMPOS
+        const productosContainer = document.getElementById('reciboProductos');
+        productosContainer.innerHTML = '';
+
+        if (ventaData.productos && ventaData.productos.length > 0) {
+            ventaData.productos.forEach(producto => {
+                const productoDiv = document.createElement('div');
+                productoDiv.className = 'producto-line';
+                const precioUnitario = parseFloat(producto.precio_venta).toFixed(2);
+                const totalProducto = (parseFloat(producto.precio_venta) * parseInt(producto.cantidad)).toFixed(2);
+
+                productoDiv.innerHTML = `
+                <div class="producto-nombre">${producto.nombre_producto}</div>
+                <div class="producto-cantidad">${producto.cantidad}</div>
+                <div class="producto-precio-unitario">C$${precioUnitario}</div>
+                <div class="producto-precio-total">C$${totalProducto}</div>
+            `;
+                productosContainer.appendChild(productoDiv);
+            });
+        } else {
+            productosContainer.innerHTML = '<div class="text-center">No hay productos</div>';
+        }
+
+        // Mostrar el botón de imprimir
+        document.getElementById('imprimirRecibo').disabled = false;
+        ultimaVentaGuardada = ventaData;
+
+        console.log('Recibo generado exitosamente');
+    }
+
+    // Función MEJORADA para imprimir el recibo en formato EXACTO 210x297 mm
+    function imprimirRecibo() {
+        if (!ultimaVentaGuardada) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No hay recibo',
+                text: 'No hay un recibo disponible para imprimir'
+            });
+            return;
+        }
+
+        console.log('Imprimiendo recibo:', ultimaVentaGuardada);
+
+        // Generar el recibo nuevamente para asegurar datos actualizados
+        generarRecibo(ultimaVentaGuardada);
+
+        // Crear una ventana nueva específicamente para imprimir
+        const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
+
+        // Contenido HTML optimizado para impresión EXACTA 210x297 mm
+        const contenidoRecibo = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Recibo de Venta - Ferretería Las Brisas</title>
+                <meta charset="UTF-8">
+                <style>
+                    /* ESTILOS PARA FORMATO EXACTO 210x297 mm */
+                    @page {
+                        size: 210mm 297mm;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    
+                    body {
+                        width: 210mm;
+                        height: 297mm;
+                        margin: 0;
+                        padding: 10mm;
+                        font-family: 'Arial', sans-serif;
+                        font-size: 12px;
+                        background: white;
+                        line-height: 1.3;
+                        color: #000;
+                        box-sizing: border-box;
+                        overflow: hidden;
+                    }
+                    
+                    .recibo-container {
+                        width: 190mm;
+                        height: 277mm;
+                        margin: 0 auto;
+                        border: 1px solid #000;
+                        padding: 8mm;
+                        box-sizing: border-box;
+                        position: relative;
+                    }
+                    
+                    .recibo-header { 
+                        text-align: center; 
+                        border-bottom: 1px solid #000; 
+                        padding-bottom: 5px; 
+                        margin-bottom: 8px; 
+                    }
+                    
+                    .recibo-logo {
+                        max-width: 60px;
+                        max-height: 60px;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .empresa-nombre {
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #000;
+                        margin: 5px 0;
+                    }
+                    
+                    .empresa-info {
+                        font-size: 10px;
+                        color: #000;
+                        margin: 3px 0;
+                    }
+                    
+                    .recibo-body {
+                        margin: 10px 0;
+                    }
+                    
+                    .recibo-line { 
+                        display: flex; 
+                        justify-content: space-between; 
+                        margin: 5px 0; 
+                        padding: 3px 0;
+                        border-bottom: 1px dashed #ccc;
+                        font-size: 11px;
+                    }
+                    
+                    .recibo-totales { 
+                        border-top: 1px solid #000; 
+                        margin-top: 15px; 
+                        padding-top: 10px; 
+                        font-weight: bold;
+                        background: #f0f0f0;
+                        padding: 8px;
+                        border-radius: 3px;
+                    }
+                    
+                    .recibo-productos { 
+                        margin: 15px 0; 
+                    }
+                    
+                    .productos-header {
+                        display: flex;
+                        justify-content: space-between;
+                        margin: 8px 0 4px 0;
+                        padding: 6px;
+                        background: #000;
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 3px;
+                        font-size: 10px;
+                    }
+                    
+                    .producto-line { 
+                        display: flex; 
+                        justify-content: space-between; 
+                        margin: 4px 0; 
+                        padding: 5px;
+                        background: #f8f8f8;
+                        border-radius: 2px;
+                        font-size: 10px;
+                    }
+                    
+                    .producto-nombre { 
+                        flex: 3; 
+                        text-align: left; 
+                        font-weight: bold;
+                    }
+                    
+                    .producto-cantidad { 
+                        flex: 1; 
+                        text-align: center; 
+                    }
+                    
+                    .producto-precio-unitario { 
+                        flex: 2; 
+                        text-align: center; 
+                    }
+                    
+                    .producto-precio-total { 
+                        flex: 2; 
+                        text-align: right; 
+                        font-weight: bold;
+                    }
+                    
+                    .text-center { 
+                        text-align: center; 
+                    }
+                    
+                    .bold { 
+                        font-weight: bold; 
+                    }
+                    
+                    .section-title {
+                        font-size: 12px;
+                        font-weight: bold;
+                        color: #000;
+                        margin: 10px 0 6px 0;
+                        padding-bottom: 3px;
+                        border-bottom: 1px solid #ccc;
+                    }
+                    
+                    .total-amount {
+                        font-size: 14px;
+                        color: #000;
+                    }
+                    
+                    .recibo-footer {
+                        text-align: center;
+                        margin-top: 15px;
+                        padding-top: 10px;
+                        border-top: 1px solid #000;
+                        font-size: 10px;
+                        position: absolute;
+                        bottom: 8mm;
+                        left: 8mm;
+                        right: 8mm;
+                    }
+                    
+                    .thank-you {
+                        font-size: 12px;
+                        font-weight: bold;
+                        color: #000;
+                        margin: 5px 0;
+                    }
+                    
+                    /* Configuración de impresión para tamaño exacto */
+                    @media print {
+                        html, body {
+                            width: 210mm;
+                            height: 297mm;
+                            margin: 0;
+                            padding: 0;
+                            overflow: hidden;
+                        }
+                        
+                        body {
+                            padding: 10mm;
+                        }
+                        
+                        .recibo-container {
+                            width: 190mm !important;
+                            height: 277mm !important;
+                            margin: 0 !important;
+                            padding: 8mm !important;
+                            border: 1px solid #000 !important;
+                            box-shadow: none !important;
+                            page-break-inside: avoid;
+                        }
+                        
+                        .no-print {
+                            display: none !important;
+                        }
+                        
+                        /* Forzar el tamaño exacto en todos los navegadores */
+                        @page {
+                            size: 210mm 297mm;
+                            margin: 0;
+                        }
+                    }
+                    
+                    /* Estilos específicos para navegadores */
+                    @media screen {
+                        body {
+                            background: #f0f0f0;
+                        }
+                        
+                        .recibo-container {
+                            background: white;
+                            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="recibo-container">
+                    <div class="recibo-header">
+                        <img src="/images/logo1.webp" alt="Logo Ferretería" class="recibo-logo" onerror="this.style.display='none'">
+                        <div class="empresa-nombre">FERRETERÍA LAS BRISAS DE ASOSOSCA</div>
+                        <div class="empresa-info">Tel: 2222-2222 | contacto@lasbrisas.com</div>
+                        <div class="empresa-info">Dirección: De donde fue el Rastro Municipal 2c al sur, León</div>
+                        <div class="empresa-info">Sistema de Ventas - Recibo Oficial</div>
+                    </div>
+
+                    <div class="recibo-body">
+                        <div class="section-title">INFORMACIÓN DE LA VENTA</div>
+                        
+                        <div class="recibo-line">
+                            <span class="bold">FACTURA #:</span>
+                            <span class="bold">${document.getElementById('reciboFactura').textContent}</span>
+                        </div>
+                        <div class="recibo-line">
+                            <span class="bold">FORMA DE PAGO:</span>
+                            <span>${document.getElementById('reciboMetodoPago').textContent}</span>
+                        </div>
+                        <div class="recibo-line">
+                            <span class="bold">FECHA Y HORA:</span>
+                            <span>${document.getElementById('reciboFecha').textContent} ${document.getElementById('reciboHora').textContent}</span>
+                        </div>
+                        <div class="recibo-line">
+                            <span class="bold">EMPLEADO:</span>
+                            <span>${document.getElementById('reciboEmpleado').textContent}</span>
+                        </div>
+
+                        <div class="recibo-productos">
+                            <div class="section-title">DETALLE DE PRODUCTOS</div>
+                            
+                            <!-- ENCABEZADOS DE PRODUCTOS -->
+                            <div class="productos-header">
+                                <div class="producto-nombre">PRODUCTO</div>
+                                <div class="producto-cantidad">CANTIDAD</div>
+                                <div class="producto-precio-unitario">UNITARIO</div>
+                                <div class="producto-precio-total">TOTAL</div>
+                            </div>
+                            
+                            <div>
+                                ${document.getElementById('reciboProductos').innerHTML}
+                            </div>
+                        </div>
+
+                        <div class="recibo-totales">
+                            <div class="section-title">RESUMEN DE PAGO</div>
+                            <div class="recibo-line">
+                                <span>SUBTOTAL:</span>
+                                <span>${document.getElementById('reciboSubtotal').textContent}</span>
+                            </div>
+                            <div class="recibo-line">
+                                <span>IVA (15%):</span>
+                                <span>${document.getElementById('reciboIva').textContent}</span>
+                            </div>
+                            <div class="recibo-line">
+                                <span class="bold">TOTAL:</span>
+                                <span class="bold total-amount">${document.getElementById('reciboTotal').textContent}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recibo-footer">
+                        <div class="thank-you">¡GRACIAS POR SU COMPRA!</div>
+                        <div>Este recibo es un documento oficial</div>
+                        <div>Conserve este comprobante, garantia /24 horas</div>
+                        <div>Aplica solo para herramientas y equipos. No aplica para consumibles</div>
+                    </div>
+                </div>
+
+                <script>
+                    // Imprimir automáticamente cuando se carga la ventana
+                    window.onload = function() {
+                        setTimeout(function() {
+                            // Forzar el tamaño de página antes de imprimir
+                            const style = document.createElement('style');
+                            style.innerHTML = \`
+                                @page {
+                                    size: 210mm 297mm;
+                                    margin: 0;
+                                }
+                                @media print {
+                                    html, body {
+                                        width: 210mm;
+                                        height: 297mm;
+                                    }
+                                }
+                            \`;
+                            document.head.appendChild(style);
+                            
+                            window.print();
+                            
+                            // Cerrar la ventana después de imprimir
+                            setTimeout(function() {
+                                window.close();
+                            }, 1000);
+                        }, 500);
+                    };
+                <\/script>
+            </body>
+            </html>
+        `;
+
+        ventanaImpresion.document.write(contenidoRecibo);
+        ventanaImpresion.document.close();
+    }
+
+    // Event listener para el botón de imprimir
+    document.getElementById('imprimirRecibo').addEventListener('click', imprimirRecibo);
+
+    // [El resto del código JavaScript permanece igual...]
     // Modificar el evento agregarProducto para usar el nombre:
     document.getElementById("agregarProducto").addEventListener("click", async function () {
         const selectProducto = $('#nombreProducto');
-        const selectedOption = selectProducto.select2('data')[0]; // Esta es la forma correcta de obtener el elemento seleccionado en Select2
+        const selectedOption = selectProducto.select2('data')[0];
 
-        // Verificar si se seleccionó un producto válido
         if (!selectedOption) {
             Swal.fire({
                 icon: 'warning',
@@ -156,16 +621,15 @@
             return;
         }
 
-        let codigo = selectedOption.id; // Select2 usa 'id' para el valor
-        let nombre = selectedOption.text; // El texto visible del option
+        let codigo = selectedOption.id;
+        let nombre = selectedOption.text;
         let cantidad = document.getElementById("cantidad").value;
         let precio = document.getElementById("precio").value;
         let metodoPago = document.getElementById("metodoPago").value;
         let sector = document.getElementById("sector").value;
-        let fechaVencimiento = selectedOption.element.dataset.vencimiento; // Acceder a data-attributes
+        let fechaVencimiento = selectedOption.element.dataset.vencimiento;
         let stockDisponible = selectedOption.element.dataset.stock;
 
-        // Validar campos vacíos
         if (!codigo || !cantidad || !precio || !metodoPago || !sector) {
             Swal.fire({
                 icon: 'warning',
@@ -175,19 +639,15 @@
             return;
         }
 
-        // Convertir a números para validación
         const cantidadNum = parseInt(cantidad, 10);
         const stockNum = stockDisponible ? parseInt(stockDisponible, 10) : 0;
 
-        // Calcular stock ya reservado en productos agregados
         const cantidadReservada = productos.reduce((total, p) => {
             return p.codigo_producto === codigo ? total + parseInt(p.cantidad, 10) : total;
         }, 0);
 
-        // Stock realmente disponible (total - reservado)
         const stockRealDisponible = stockNum - cantidadReservada;
 
-        // Validar stock disponible considerando lo ya reservado
         if (stockRealDisponible < cantidadNum) {
             Swal.fire({
                 icon: 'warning',
@@ -195,7 +655,6 @@
                 html: `
                 <div style="text-align: left;">
                     <p style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffeeba;">
-                        <i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #ffc107;"></i>
                         No hay suficiente inventario para "${nombre}"
                     </p>
                     <p style="margin-top: 15px;"><strong>Disponible total:</strong> ${stockNum}</p>
@@ -209,7 +668,6 @@
             return;
         }
 
-        // Validar fecha de vencimiento
         if (fechaVencimiento) {
             const hoy = new Date();
             const vencimiento = new Date(fechaVencimiento);
@@ -221,7 +679,6 @@
                     html: `
                 <div style="text-align: left;">
                     <p style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffeeba;">
-                        <i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #ffc107;"></i>
                         No se puede vender "${nombre}" porque está vencido
                     </p>
                     <p style="margin-top: 15px;"><strong>Vencimiento:</strong> ${vencimiento.toLocaleDateString()}</p>
@@ -234,20 +691,15 @@
             }
         }
 
-        // Verificar si el producto ya existe para actualizarlo
         const productoExistenteIndex = productos.findIndex(p => p.codigo_producto === codigo);
 
         if (productoExistenteIndex !== -1) {
-            // Actualizar producto existente
             productos[productoExistenteIndex].cantidad = (parseInt(productos[productoExistenteIndex].cantidad) + cantidadNum);
-
-            // Actualizar la fila en la tabla
             const filaExistente = document.querySelector(`tr[data-codigo="${codigo}"]`);
             if (filaExistente) {
                 filaExistente.querySelector(".cantidad-cell").textContent = productos[productoExistenteIndex].cantidad;
             }
         } else {
-            // Agregar nuevo producto
             productos.push({
                 codigo_producto: codigo,
                 nombre_producto: nombre,
@@ -257,7 +709,6 @@
                 sector: sector
             });
 
-            // Crear nueva fila en la tabla
             let tabla = document.getElementById("tablaProductos");
             let fila = document.createElement("tr");
             fila.dataset.codigo = codigo;
@@ -275,7 +726,6 @@
 
             tabla.appendChild(fila);
 
-            // Agregar eventos a los botones
             fila.querySelector(".editar").addEventListener("click", function () {
                 editarProducto(fila, codigo);
             });
@@ -304,7 +754,6 @@
             });
         }
 
-        // Limpiar campos
         document.getElementById("nombreProducto").value = "";
         document.getElementById("cantidad").value = "";
         document.getElementById("precio").value = "";
@@ -317,14 +766,11 @@
         actualizarTotales();
     });
 
-    // Función para editar producto (única versión)
     function editarProducto(fila, codigo) {
-        // Obtener el producto para validar stock
         const producto = productos.find(p => p.codigo_producto === codigo);
         const selectedOption = document.querySelector(`#nombreProducto option[value="${codigo}"]`);
         const stockTotal = selectedOption ? parseInt(selectedOption.dataset.stock) : 0;
 
-        // Obtener los valores actuales
         const cantidadCell = fila.querySelector(".cantidad-cell");
         const precioCell = fila.querySelector(".precio-cell");
         const metodoPagoCell = fila.querySelector(".metodo-pago-cell");
@@ -332,11 +778,9 @@
         const precioActual = precioCell.textContent;
         const metodoPagoActual = metodoPagoCell.textContent.trim();
 
-        // Convertir celdas en campos editables
         cantidadCell.innerHTML = `<input type="number" class="form-control form-control-sm edit-cantidad" value="${cantidadActual}" min="1" max="${stockTotal}">`;
         precioCell.innerHTML = `<input type="number" class="form-control form-control-sm edit-precio" value="${precioActual}" min="0.01" step="0.01">`;
 
-        // Crear select para método de pago
         const metodosPago = ['Efectivo', 'Tarjeta', 'Transferencia'];
         let options = metodosPago.map(mp =>
             `<option value="${mp}" ${mp === metodoPagoActual ? 'selected' : ''}>${mp}</option>`
@@ -348,26 +792,22 @@
         </select>
     `;
 
-        // Cambiar botón de editar a guardar
         const btnEditar = fila.querySelector(".editar");
         btnEditar.innerHTML = "💾 Guardar";
         btnEditar.classList.remove("btn-warning");
         btnEditar.classList.add("btn-success");
 
-        // Remover el evento anterior y agregar el de guardar
         btnEditar.replaceWith(btnEditar.cloneNode(true));
         fila.querySelector(".editar").addEventListener("click", function () {
             guardarEdicion(fila, codigo, stockTotal);
         });
     }
 
-    // Función para guardar los cambios
     function guardarEdicion(fila, codigo, stockTotal) {
         const nuevaCantidad = parseInt(fila.querySelector(".edit-cantidad").value);
         const nuevoPrecio = parseFloat(fila.querySelector(".edit-precio").value);
         const nuevoMetodoPago = fila.querySelector(".edit-metodo-pago").value;
 
-        // Validar los valores
         if (!nuevaCantidad || nuevaCantidad < 1 || !nuevoPrecio || nuevoPrecio <= 0) {
             Swal.fire({
                 icon: 'error',
@@ -377,7 +817,6 @@
             return;
         }
 
-        // Validar stock (considerando otros productos en el carrito)
         const cantidadOriginal = parseInt(fila.querySelector(".edit-cantidad").defaultValue);
         const cantidadReservada = productos.reduce((total, p) => {
             return p.codigo_producto === codigo ? total + parseInt(p.cantidad, 10) : total;
@@ -394,12 +833,10 @@
             return;
         }
 
-        // Actualizar la fila
         fila.querySelector(".cantidad-cell").textContent = nuevaCantidad;
         fila.querySelector(".precio-cell").textContent = nuevoPrecio.toFixed(2);
         fila.querySelector(".metodo-pago-cell").textContent = nuevoMetodoPago;
 
-        // Actualizar el array de productos
         const productoIndex = productos.findIndex(p => p.codigo_producto === codigo);
         if (productoIndex !== -1) {
             productos[productoIndex].cantidad = nuevaCantidad;
@@ -407,22 +844,18 @@
             productos[productoIndex].metodo_pago = nuevoMetodoPago;
         }
 
-        // Restaurar botón de editar
         const btnGuardar = fila.querySelector(".editar");
         btnGuardar.innerHTML = "✏️ Editar";
         btnGuardar.classList.remove("btn-success");
         btnGuardar.classList.add("btn-warning");
 
-        // Volver a asignar el evento de editar
         btnGuardar.replaceWith(btnGuardar.cloneNode(true));
         fila.querySelector(".editar").addEventListener("click", function () {
             editarProducto(fila, codigo);
         });
 
-        // Actualizar totales
         actualizarTotales();
     }
-
 
     document.getElementById("guardarVenta").addEventListener("click", async function () {
         if (productos.length === 0) {
@@ -435,8 +868,13 @@
         }
 
         try {
+            const subtotal = productos.reduce((total, producto) => {
+                return total + (parseFloat(producto.precio_venta) * parseInt(producto.cantidad));
+            }, 0);
 
-            // Calcular total
+            const iva = subtotal * 0.15;
+            const total = subtotal + iva;
+
             const detallesVenta = productos.map(producto => ({
                 codigo_producto: producto.codigo_producto,
                 cantidad: parseInt(producto.cantidad, 10),
@@ -445,13 +883,8 @@
                 sector: producto.sector
             }));
 
-            const totalVenta = detallesVenta.reduce((total, producto) => {
-                return total + (producto.cantidad * producto.precio_unitario);
-            }, 0).toFixed(2);
+            console.log('Enviando venta con detalles:', detallesVenta);
 
-            const codigoVenta = document.getElementById("codigoVenta").value;
-
-            // Enviar los datos de la venta
             const response = await fetch("http://localhost:4000/ventas/api/ventas", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -463,45 +896,97 @@
 
             if (!response.ok) {
                 const errorData = await response.json();
-                // Extraer el nombre del producto del mensaje de error (asumiendo que está disponible)
-                const productoError = productos.find(p => p.codigo_producto == errorData.message.match(/producto (\d+)/)[1]);
-                const nombreProducto = productoError ? productoError.nombre_producto : 'el producto';
-
-                throw new Error(errorData.message
-                    ? `Mercancía insuficiente para ${nombreProducto}. Disponible: ${errorData.message.match(/Disponible: (\d+)/)[1]}, solicitado: ${errorData.message.match(/solicitado: (\d+)/)[1]}`
-                    : `Error HTTP: ${response.status}`);
+                console.error('Error del servidor:', errorData);
+                throw new Error(errorData.message || `Error HTTP: ${response.status}`);
             }
 
             const result = await response.json();
+            console.log('Respuesta del servidor:', result);
 
-            // Mostrar SweetAlert con el código de venta
+            if (!result.success) {
+                throw new Error(result.message || 'Error al guardar la venta');
+            }
+
+            // PREPARAR DATOS PARA EL RECIBO
+            const ventaData = {
+                codigo_venta: result.codigo_venta,
+                productos: [...productos],
+                subtotal: subtotal,
+                iva: iva,
+                total: total,
+                metodo_pago: detallesVenta[0]?.metodo_pago || 'Efectivo',
+                empleado: document.getElementById('empleado').value
+            };
+
+            console.log('Datos para recibo:', ventaData);
+
+            // Generar el recibo
+            generarRecibo(ventaData);
+
             Swal.fire({
                 icon: 'success',
                 title: 'Venta registrada',
-                text: `✅ Venta registrada exitosamente`  // Asegúrate de que el código de venta se obtenga correctamente
+                html: `
+                    <div style="text-align: left;">
+                        <p>✅ Venta registrada exitosamente</p>
+                        <p><strong>Número de Factura:</strong> ${result.codigo_venta}</p>
+                        <p><strong>Total:</strong> C$${total.toFixed(2)}</p>
+                        <p><strong>Productos:</strong> ${productos.length}</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Imprimir Recibo',
+                cancelButtonText: 'Continuar',
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    setTimeout(() => {
+                        imprimirRecibo();
+                    }, 500);
+                }
             });
 
             // Resetear la venta
             productos = [];
             document.getElementById("tablaProductos").innerHTML = "";
+            document.getElementById("subtotal").value = "0.00";
+            document.getElementById("iva").value = "0.00";
+            document.getElementById("total").value = "0.00";
 
-            if (codigoVenta) {
-                localStorage.setItem("ultimaVenta", result.codigo_venta);  // Usa result.codigo_venta
-                cargarCodigoVenta();
+            if (result.codigo_venta) {
+                document.getElementById("codigoVenta").value = parseInt(result.codigo_venta) + 1;
                 cargarHistorialVentas();
-                actualizarTotales();
             }
 
         } catch (error) {
             console.error("Error en el proceso:", error);
             Swal.fire({
-                icon: 'warning',  // Cambiado de 'error' a 'warning'
-                title: 'Atención', // Cambiado el título
-                text: error.message.replace('Stock', 'Mercancía') // Reemplazamos "Stock" por "Mercancía"
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Error al procesar la venta'
             });
         }
     });
 
+    async function cargarCodigoVenta() {
+        try {
+            const response = await fetch('http://localhost:4000/ventas/api/ventas');
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+                const ultimoCodigo = Math.max(...data.data.map(venta => venta.cod_venta));
+                document.getElementById("codigoVenta").value = ultimoCodigo + 1;
+            } else {
+                document.getElementById("codigoVenta").value = 1;
+            }
+        } catch (error) {
+            console.error("Error al cargar el código de venta:", error);
+            document.getElementById("codigoVenta").value = 1;
+        }
+    }
 
     fetch("http://localhost:4000/ventas/api/ventas/")
         .then(response => response.json())
@@ -518,7 +1003,7 @@
             if (data.success) {
                 const empleado = data.empleado;
                 const empleadoInput = document.getElementById('empleado');
-                empleadoInput.value = `${empleado.Nombre} ${empleado.Apellido}`;
+                empleadoInput.value = `${empleado.nombre} ${empleado.apellido}`;
             } else {
                 console.log(data.message);
             }
@@ -528,7 +1013,6 @@
     function actualizarTotales() {
         let subtotal = 0;
 
-        // Calcular subtotal sumando todos los productos
         productos.forEach(producto => {
             subtotal += parseFloat(producto.precio_venta) * parseInt(producto.cantidad);
         });
@@ -536,7 +1020,6 @@
         const iva = subtotal * 0.15;
         const total = subtotal + iva;
 
-        // Actualizar los campos
         document.getElementById("subtotal").value = subtotal.toFixed(2);
         document.getElementById("iva").value = iva.toFixed(2);
         document.getElementById("total").value = total.toFixed(2);
@@ -544,7 +1027,6 @@
 
     async function cargarHistorialVentas() {
         try {
-            // 1. Obtener productos primero
             const productosResponse = await fetch('http://localhost:4000/productos/api/productos');
             const productosData = await productosResponse.json();
 
@@ -552,13 +1034,11 @@
                 throw new Error('Error al cargar productos');
             }
 
-            // Crear mapa de productos
             const mapaProductos = {};
             productosData.data.forEach(p => {
-                mapaProductos[p.Cod_Producto] = p.Nombre;
+                mapaProductos[p.cod_producto] = p.nombre;
             });
 
-            // 2. Obtener ventas
             const ventasResponse = await fetch('http://localhost:4000/ventas/api/ventas');
             const ventasData = await ventasResponse.json();
 
@@ -566,10 +1046,8 @@
                 throw new Error('Error al cargar ventas');
             }
 
-            // Ordenar ventas por fecha descendente (más recientes primero)
-            const ventas = ventasData.data.sort((a, b) => new Date(b.Fecha_salida) - new Date(a.Fecha_salida));
+            const ventas = ventasData.data.sort((a, b) => new Date(b.fecha_salida) - new Date(a.fecha_salida));
 
-            // Inicializar DataTable
             $('#tablaHistorialVentas').DataTable({
                 paging: true,
                 searching: true,
@@ -602,32 +1080,32 @@
                 },
                 data: ventas,
                 columns: [
-                    { data: 'Cod_Venta' },
-                    { data: 'Cod_Producto' },
+                    { data: 'cod_venta' },
+                    { data: 'cod_producto' },
                     {
-                        data: 'Cod_Producto',
+                        data: 'cod_producto',
                         render: function (data) {
                             return mapaProductos[data] || 'Desconocido';
                         }
                     },
-                    { data: 'Cantidad_Venta' },
+                    { data: 'cantidad_venta' },
                     {
-                        data: 'Precio_Venta',
+                        data: 'precio_venta',
                         render: function (data) {
                             return `C$${parseFloat(data).toFixed(2)}`;
                         }
                     },
-                    { data: 'Metodo_Pago' },
-                    { data: 'Sector' },
+                    { data: 'metodo_pago' },
+                    { data: 'sector' },
                     {
-                        data: 'Fecha_salida',
+                        data: 'fecha_salida',
                         render: function (data) {
                             return formatearFecha(data);
                         }
                     }
                 ],
-                order: [[0, 'desc']], // Ordenar por código de venta descendente
-                destroy: true // Para permitir reinicialización
+                order: [[0, 'desc']],
+                destroy: true
             });
 
         } catch (error) {
@@ -646,45 +1124,13 @@
         }
     }
 
-    async function cargarCodigoVenta() {
-        try {
-            const response = await fetch('http://localhost:4000/ventas/api/ventas');
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success && Array.isArray(data.data)) {
-                const ultimoCodigo = data.data.reduce((max, venta) => {
-                    return venta.Cod_Venta > max ? venta.Cod_Venta : max;
-                }, 0);
-
-                document.getElementById("codigoVenta").value = ultimoCodigo + 1;
-            } else {
-                throw new Error(data.message || "No se pudo obtener la lista de ventas");
-            }
-        } catch (error) {
-            console.error("Error al cargar el código de venta:", error);
-            document.getElementById("codigoVenta").value = "TEMP-" + Date.now();
-
-            Swal.fire({
-                icon: 'warning',
-                title: 'Advertencia',
-                text: 'No se pudo obtener el código de venta. Se usará un código temporal.',
-                footer: error.message
-            });
-        }
-    }
-
     async function cargarSectores() {
         try {
             const response = await fetch("http://localhost:4000/productos/api/productos");
             const data = await response.json();
 
             if (data.success) {
-                const sectoresUnicos = [...new Set(data.data.map(producto => producto.Sector))];
+                const sectoresUnicos = [...new Set(data.data.map(producto => producto.sector))];
                 const selectSector = document.getElementById("sector");
 
                 selectSector.innerHTML = `<option value="" disabled selected>Seleccione un sector</option>`;
@@ -700,32 +1146,6 @@
         }
     }
 
-    // Función segura para inicializar Select2
-    function safeSelect2Init(selector, options) {
-        // Intento 1: Verificar si Select2 está disponible inmediatamente
-        if (typeof $.fn.select2 === 'function') {
-            return $(selector).select2(options);
-        }
-
-        // Intento 2: Esperar un breve periodo por si está cargando
-        return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                if (typeof $.fn.select2 === 'function') {
-                    clearInterval(checkInterval);
-                    resolve($(selector).select2(options));
-                }
-            }, 100);
-
-            // Timeout después de 3 segundos
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                console.error('Select2 no se cargó después de 3 segundos');
-                resolve(false);
-            }, 3000);
-        });
-    }
-
-    // Versión mejorada de cargarProductosPorSector
     async function cargarProductosPorSector(sectorSeleccionado) {
         try {
             const response = await fetch("http://localhost:4000/productos/api/productos");
@@ -734,33 +1154,30 @@
             const selectProducto = $('#nombreProducto');
             selectProducto.empty().append('<option value="" disabled selected>Seleccione un producto</option>');
 
-            // Primero llenar el select con las opciones
             data.data
-                .filter(producto => producto.Sector === sectorSeleccionado)
+                .filter(producto => producto.sector === sectorSeleccionado)
                 .forEach(producto => {
                     const option = new Option(
-                        producto.Nombre,
-                        producto.Cod_Producto,
+                        producto.nombre,
+                        producto.cod_producto,
                         false,
                         false
                     );
-                    // Asignar datos como atributos
-                    $(option).attr('data-precio', producto.Precio_Compra);
-                    $(option).attr('data-stock', producto.Cantidad);
-                    $(option).attr('data-descripcion', producto.Descripcion);
-                    $(option).attr('data-vencimiento', producto.FechaVencimiento);
-                    $(option).attr('data-nombre', producto.Nombre);
+                    $(option).attr('data-precio', producto.precio_compra);
+                    $(option).attr('data-stock', producto.cantidad);
+                    $(option).attr('data-descripcion', producto.descripcion);
+                    $(option).attr('data-vencimiento', producto.fechavencimiento);
+                    $(option).attr('data-nombre', producto.nombre);
 
                     selectProducto.append(option);
                 });
 
-            // Luego inicializar Select2
             selectProducto.select2({
                 placeholder: "Seleccione un producto",
                 allowClear: false,
                 width: '100%',
                 dropdownParent: selectProducto.closest('.card'),
-                language: "es"  // Esta línea configura el idioma
+                language: "es"
             });
 
         } catch (error) {
@@ -785,8 +1202,6 @@
         await cargarProductosPorSector(sectorSeleccionado);
     });
 
-
-    // Ajustar el event listener para el cambio de producto
     $('#nombreProducto').on('change', function () {
         const selectedOption = $(this).find('option:selected');
         const precioBase = selectedOption.data('precio') || 0;
@@ -794,16 +1209,13 @@
 
         $('#precio').val(precioConIVA);
 
-        // Mostrar descripción y stock
         $('#descripcionProducto').text(selectedOption.data('descripcion') || '').toggle(!!selectedOption.data('descripcion'));
         $('#stockDisponible').text(`Inventario: ${selectedOption.data('stock') || 0}`).toggle(!!selectedOption.data('stock'));
 
-        // Establecer máximo en cantidad
         const stock = selectedOption.data('stock') || 0;
         $('#cantidad').attr('max', stock).val('');
     });
 
-    // Función para verificar si un producto está vencido
     function productoEstaVencido(fechaVencimiento) {
         if (!fechaVencimiento) return false;
         const hoy = new Date();
@@ -811,7 +1223,6 @@
         return vencimiento < hoy;
     }
 
-    // Función auxiliar para formatear fechas
     function formatearFecha(fechaISO) {
         if (!fechaISO) return 'Sin fecha';
         try {
@@ -827,22 +1238,16 @@
         }
     }
 
-
-    // Inicialización única al cargar la página
     $(document).ready(async function () {
-        // Primero cargar sectores
         await cargarSectores();
-
-        // Inicializar selects
         $('#nombreProducto').select2({
             placeholder: "Seleccione un sector primero",
             disabled: true,
             width: '100%',
             dropdownParent: $('.card'),
-            language: "es"  // Configuración del idioma
+            language: "es"
         });
 
-        // Resto de inicializaciones
         cargarHistorialVentas();
         cargarCodigoVenta();
         actualizarTotales();

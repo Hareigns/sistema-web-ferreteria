@@ -10,36 +10,39 @@ router.get('/', isLoggedIn, (req, res) => {
 });
 
 // Ruta para las estadísticas del empleado específico
-router.get('/:empleadoId', isLoggedIn, async (req, res) => { // Agregué isLoggedIn aquí también
+router.get('/:empleadoId', isLoggedIn, async (req, res) => {
   try {
     const { empleadoId } = req.params;
 
+    console.log('Usuario autenticado:', req.user); // ← Agrega esto para debuggear
+    console.log('ID solicitado:', empleadoId); // ← Y esto
+
     // Validar que el empleado solo pueda ver sus propios datos
-    if (req.user.Cod_Empleado != empleadoId) {
+    if (req.user.cod_empleado != empleadoId) { // ← Cambiado a minúsculas
       return res.status(403).json({
         success: false,
         message: 'No autorizado para ver estos datos'
       });
     }
 
-    // 1. Consulta de ventas diarias del empleado específico
-    const [ventasDiarias] = await pool.query(`
+    // 1. Consulta de ventas diarias del empleado específico (PostgreSQL)
+    const ventasDiarias = await pool.query(`
       SELECT 
-        DATE(pv.Fecha_salida) AS fecha,
-        SUM(pv.Precio_Venta * pv.Cantidad_Venta) AS total,
-        COUNT(DISTINCT v.Cod_Venta) AS cantidad_ventas
-      FROM Venta v
-      JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      WHERE v.Estado_Venta IN ('Finalizada', 'Completada')
-        AND v.Cod_Empleado = ?
-        AND pv.Fecha_salida >= DATE(DATE_SUB(NOW(), INTERVAL 15 DAY))
-      GROUP BY DATE(pv.Fecha_salida)
+        DATE(pv.fecha_salida) AS fecha,
+        SUM(pv.precio_venta * pv.cantidad_venta) AS total,
+        COUNT(DISTINCT v.cod_venta) AS cantidad_ventas
+      FROM venta v
+      JOIN productventa pv ON v.cod_venta = pv.cod_venta
+      WHERE v.estado_venta IN ('Finalizada', 'Completada')
+        AND v.cod_empleado = $1
+        AND pv.fecha_salida >= CURRENT_DATE - INTERVAL '15 days'
+      GROUP BY DATE(pv.fecha_salida)
       ORDER BY fecha DESC
     `, [empleadoId]);
 
     res.json({
       success: true,
-      ventasDiarias
+      ventasDiarias: ventasDiarias.rows
     });
 
   } catch (error) {

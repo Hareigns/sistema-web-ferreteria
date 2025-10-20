@@ -36,44 +36,53 @@
                                                 <div class="list-group-item">
                                                     <div class="d-flex align-items-center">
                                                         <div class="form-check me-3">
-                                                            <input class="form-check-input" type="radio" name="filtroVentas" id="diario" checked>
-                                                            <label class="form-check-label fw-bold" for="diario">Diario</label>
+                                                            <input class="form-check-input" type="radio"
+                                                                name="filtroVentas" id="diario" checked>
+                                                            <label class="form-check-label fw-bold"
+                                                                for="diario">Diario</label>
                                                         </div>
                                                         <div class="flex-grow-1" id="fechaDiario">
-                                                            <input type="date" class="form-control" id="fechaDiarioInput">
+                                                            <input type="date" class="form-control"
+                                                                id="fechaDiarioInput">
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Filtro Semanal -->
                                                 <div class="list-group-item">
                                                     <div class="d-flex align-items-center">
                                                         <div class="form-check me-3">
-                                                            <input class="form-check-input" type="radio" name="filtroVentas" id="semanal">
-                                                            <label class="form-check-label fw-bold" for="semanal">Semanal</label>
+                                                            <input class="form-check-input" type="radio"
+                                                                name="filtroVentas" id="semanal">
+                                                            <label class="form-check-label fw-bold"
+                                                                for="semanal">Semanal</label>
                                                         </div>
                                                         <div class="flex-grow-1 d-none" id="fechaSemanal">
-                                                            <input type="week" class="form-control" id="fechaSemanalInput">
+                                                            <input type="week" class="form-control"
+                                                                id="fechaSemanalInput">
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Filtro Mensual -->
                                                 <div class="list-group-item">
                                                     <div class="d-flex align-items-center">
                                                         <div class="form-check me-3">
-                                                            <input class="form-check-input" type="radio" name="filtroVentas" id="mensual">
-                                                            <label class="form-check-label fw-bold" for="mensual">Mensual</label>
+                                                            <input class="form-check-input" type="radio"
+                                                                name="filtroVentas" id="mensual">
+                                                            <label class="form-check-label fw-bold"
+                                                                for="mensual">Mensual</label>
                                                         </div>
                                                         <div class="flex-grow-1 d-none" id="fechaMensual">
-                                                            <input type="month" class="form-control" id="fechaMensualInput">
+                                                            <input type="month" class="form-control"
+                                                                id="fechaMensualInput">
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Resumen estadístico -->
                                     <div class="row g-3 mb-4">
                                         <div class="col-md-6">
@@ -94,7 +103,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Pie de card con botón de exportación -->
                                 <div class="card-footer bg-transparent border-top border-primary py-3">
                                     <button id="exportarVentas" class="btn btn-primary w-100 py-2">
@@ -103,7 +112,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Columna secundaria con información adicional -->
                         <div class="col-md-4">
                             <div class="card h-100 border-secondary">
@@ -119,7 +128,7 @@
                                             <li>Haz clic en "Exportar Reporte"</li>
                                         </ol>
                                     </div>
-                                    
+
                                     <div class="alert alert-warning mt-3">
                                         <h5 class="alert-heading">Tipos de reporte:</h5>
                                         <ul class="mb-0">
@@ -248,46 +257,32 @@
                     const workbook = new ExcelJS.Workbook();
                     const worksheet = workbook.addWorksheet('Reporte Ventas');
 
-                    // Función para redondear a 2 decimales solo los campos numéricos necesarios
-                    const formatCurrency = (value) => {
-                        if (typeof value !== 'number') return value;
-                        return Math.round(value * 100) / 100; // Redondeo a 2 decimales
-                    };
-
-                    // Función para formatear la fecha
-                    const formatExcelDate = (dateString) => {
-                        if (!dateString) return null;
-                        if (dateString instanceof Date) return dateString;
-                        const date = new Date(dateString);
-                        return !isNaN(date.getTime()) ? date : null;
-                    };
-
-                    // Configuración de columnas (solo aplicamos formato numérico a los campos necesarios)
+                    // Configuración de columnas
                     worksheet.columns = [
-                        { header: 'Código Venta', key: 'Cod_Venta', width: 15 },
-                        { header: 'Código Producto', key: 'Cod_Producto', width: 15 },
-                        { header: 'Nombre Producto', key: 'Nombre_Producto', width: 30 },
+                        { header: 'Código Venta', key: 'cod_venta', width: 15 },
+                        { header: 'Código Producto', key: 'cod_producto', width: 15 },
+                        { header: 'Nombre Producto', key: 'nombre_producto', width: 30 },
                         {
                             header: 'Cantidad Vendida',
-                            key: 'Cantidad_Venta',
+                            key: 'cantidad_venta',
                             width: 18,
-                            style: { numFmt: '0.00' } // Formato con 2 decimales
+                            style: { numFmt: '0' }
                         },
                         {
                             header: 'Monto Total',
-                            key: 'Monto_Total',
+                            key: 'monto_total',
                             width: 15,
-                            style: { numFmt: 'C$#,##0.00' } // Formato monetario con 2 decimales
+                            style: { numFmt: '"C$"#,##0.00' }
                         },
                         {
                             header: 'Fecha Venta',
-                            key: 'Fecha_Venta',
+                            key: 'fecha_venta',
                             width: 15,
                             style: { numFmt: 'dd/mm/yyyy' }
                         }
                     ];
 
-                    // Estilo del encabezado (se mantiene igual)
+                    // Estilo del encabezado
                     const headerRow = worksheet.getRow(1);
                     headerRow.eachCell(cell => {
                         cell.fill = {
@@ -309,91 +304,132 @@
                         cell.alignment = { vertical: 'middle', horizontal: 'center' };
                     });
 
-                    // Agregar datos (solo aplicamos formato a los campos necesarios)
-                    data.forEach(item => {
-                        const rowData = {
-                            Cod_Venta: item.Cod_Venta,
-                            Cod_Producto: item.Cod_Producto,
-                            Nombre_Producto: item.Nombre_Producto,
-                            Cantidad_Venta: formatCurrency(item.Cantidad_Venta), // Solo este campo redondeado
-                            Monto_Total: formatCurrency(item.Monto_Total),      // Solo este campo redondeado
-                            Fecha_Venta: formatExcelDate(item.Fecha_Venta)      // Sin cambios
-                        };
+                    // Agregar datos
+                    if (data && data.length > 0) {
+                        data.forEach(item => {
+                            // Convertir la fecha string a objeto Date
+                            const fechaOriginal = item.fecha_venta || item.Fecha_Venta;
+                            let fechaDate = null;
 
-                        const row = worksheet.addRow(rowData);
+                            if (fechaOriginal) {
+                                // Manejar diferentes formatos de fecha
+                                if (typeof fechaOriginal === 'string') {
+                                    fechaDate = new Date(fechaOriginal);
+                                    // Si es una fecha inválida, usar null
+                                    if (isNaN(fechaDate.getTime())) {
+                                        fechaDate = null;
+                                    }
+                                } else if (fechaOriginal instanceof Date) {
+                                    fechaDate = fechaOriginal;
+                                }
+                            }
 
-                        // Asegurar formato de fecha
-                        if (row.getCell('Fecha_Venta').value) {
-                            row.getCell('Fecha_Venta').numFmt = 'dd/mm/yyyy';
-                        }
+                            // Mapear los datos
+                            const rowData = {
+                                cod_venta: item.cod_venta || item.Cod_Venta,
+                                cod_producto: item.cod_producto || item.Cod_Producto,
+                                nombre_producto: item.nombre_producto || item.Nombre_Producto,
+                                cantidad_venta: parseInt(item.cantidad_venta || item.Cantidad_Venta || 0), // Convertir a entero
+                                monto_total: parseFloat(item.monto_total || item.Monto_Total || 0),
+                                fecha_venta: fechaDate // Usar el objeto Date
+                            };
 
-                        // Estilos para todas las celdas
-                        row.eachCell(cell => {
+                            const row = worksheet.addRow(rowData);
+
+                            // Aplicar formatos específicos después de agregar la fila
+                            const cantidadCell = row.getCell('cantidad_venta');
+                            cantidadCell.numFmt = '0'; // Entero sin decimales
+
+                            const montoCell = row.getCell('monto_total');
+                            montoCell.numFmt = '"C$"#,##0.00'; // Formato monetario
+
+                            const fechaCell = row.getCell('fecha_venta');
+                            if (fechaDate) {
+                                fechaCell.numFmt = 'dd/mm/yyyy'; // Formato día/mes/año
+                            }
+
+                            // Aplicar bordes a todas las celdas
+                            row.eachCell(cell => {
+                                cell.border = {
+                                    top: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    right: { style: 'thin' }
+                                };
+                            });
+                        });
+
+                        // Calcular totales
+                        const totalVentas = data.reduce((sum, item) => {
+                            const monto = item.monto_total || item.Monto_Total || 0;
+                            return sum + parseFloat(monto);
+                        }, 0);
+
+                        const totalCantidad = data.reduce((sum, item) => {
+                            const cantidad = item.cantidad_venta || item.Cantidad_Venta || 0;
+                            return sum + parseInt(cantidad);
+                        }, 0);
+
+                        // Agregar fila de totales
+                        const totalRow = worksheet.addRow([
+                            '',
+                            '',
+                            'Totales',
+                            totalCantidad,
+                            totalVentas,
+                            ''
+                        ]);
+
+                        // Estilo para fila de totales
+                        totalRow.eachCell((cell, colNumber) => {
+                            cell.font = { bold: true };
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FF4F81BD' }
+                            };
                             cell.border = {
                                 top: { style: 'thin' },
                                 left: { style: 'thin' },
                                 bottom: { style: 'thin' },
                                 right: { style: 'thin' }
                             };
+
+                            // Aplicar formato numérico
+                            if (colNumber === 4) {
+                                cell.numFmt = '0';
+                            } else if (colNumber === 5) {
+                                cell.numFmt = '"C$"#,##0.00';
+                            }
                         });
-                    });
+                    } else {
+                        worksheet.addRow(['No hay datos disponibles para el período seleccionado']);
+                    }
 
-                    // Calcular totales (solo redondeamos los campos necesarios)
-                    const totalVentas = formatCurrency(data.reduce((sum, item) => sum + item.Monto_Total, 0));
-                    const totalCantidad = formatCurrency(data.reduce((sum, item) => sum + item.Cantidad_Venta, 0));
-
-                    const totalRow = worksheet.addRow([
-                        '',
-                        '',
-                        'Totales',
-                        totalCantidad,
-                        totalVentas,
-                        ''
-                    ]);
-
-                    // Estilo para fila de totales
-                    totalRow.eachCell((cell, colNumber) => {
-                        cell.font = { bold: true };
-                        cell.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'FF4F81BD' }
-                        };
-                        cell.border = {
-                            top: { style: 'thin' },
-                            left: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            right: { style: 'thin' }
-                        };
-
-                        // Aplicar formato numérico solo a las columnas 4 (Cantidad) y 5 (Monto)
-                        if (colNumber === 4) {
-                            cell.numFmt = '0.00';
-                        } else if (colNumber === 5) {
-                            cell.numFmt = 'C$#,##0.00';
-                        }
-                    });
-
-                    // Ajustar ancho de columnas (se mantiene igual)
+                    // Ajustar ancho de columnas
                     worksheet.columns.forEach(column => {
                         let maxLength = 0;
                         column.eachCell({ includeEmpty: true }, cell => {
-                            let columnLength = cell.value ? cell.value.toString().length : 0;
-                            if (columnLength > maxLength) {
-                                maxLength = columnLength;
+                            const cellValue = cell.value ? cell.value.toString() : '';
+                            if (cellValue.length > maxLength) {
+                                maxLength = cellValue.length;
                             }
                         });
-                        column.width = Math.min(Math.max(maxLength + 2, column.width), 30);
+                        column.width = Math.min(Math.max(maxLength + 2, 10), 30);
                     });
 
-                    // Generar y descargar archivo (se mantiene igual)
+                    // Generar y descargar archivo
                     const buffer = await workbook.xlsx.writeBuffer();
-                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const blob = new Blob([buffer], {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = fileName;
+                    document.body.appendChild(a);
                     a.click();
+                    document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
                 } catch (error) {
@@ -451,10 +487,16 @@
 
                     // Actualizar resumen estadístico
                     const totalVentas = data.length;
-                    const montoTotal = data.reduce((sum, item) => sum + item.Monto_Total, 0);
-                    
-                    document.getElementById('totalVentas').textContent = totalVentas;
-                    document.getElementById('montoTotal').textContent = `C$${montoTotal.toFixed(2)}`;
+                    const montoTotal = data.reduce((sum, item) => {
+                        const monto = item.monto_total || item.Monto_Total || 0;
+                        return sum + parseFloat(monto);
+                    }, 0);
+
+                    document.getElementById('totalVentas').textContent = totalVentas.toLocaleString('es-NI');
+                    document.getElementById('montoTotal').textContent = `C$${montoTotal.toLocaleString('es-NI', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}`;
 
                     // Generar nombre de archivo seguro
                     const nombreSeguro = (str) => {
@@ -497,21 +539,26 @@
             });
 
             const data = await response.json();
-            console.log("Datos recibidos del empleado:", data); // ← Añade esto para depuración
+            console.log("Datos recibidos del empleado:", data);
 
             if (!response.ok) {
                 throw new Error(data.message || 'Error al obtener datos del empleado');
             }
 
-            // Versión más flexible para manejar diferentes estructuras de respuesta
+            // Extraer el ID del empleado - busca en diferentes formatos
+            const empleadoId = data.cod_empleado || data.Cod_Empleado || data.id || data.empleadoId || null;
+
+            // Extraer nombre y apellido
             const nombre = data.Nombre || data.nombre || data.Nombre_Empleado || data.nombre_empleado || 'Nombre';
             const apellido = data.Apellido || data.apellido || data.Apellido_Empleado || data.apellido_empleado || 'Apellido';
 
             // Actualizar el nombre en el header
             document.getElementById('nombreEmpleado').textContent = `${nombre} ${apellido}`;
 
+            console.log("Información del empleado procesada:", { id: empleadoId, nombre, apellido });
+
             return {
-                id: data.Cod_Empleado || data.id || data.empleadoId || null,
+                id: empleadoId,
                 nombre: nombre.split(' ')[0], // Tomar solo el primer nombre
                 apellido: apellido.split(' ')[0] // Tomar solo el primer apellido
             };
@@ -530,7 +577,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Obtener y mostrar información del empleado al cargar
         obtenerEmpleadoInfo();
-        
+
         // Asignar eventos
         document.getElementById('exportarVentas').addEventListener('click', reportHandlers.ventas.generateReport);
 
@@ -553,7 +600,7 @@
 
         // Inicializar con el filtro diario visible
         document.getElementById('fechaDiario').classList.remove('d-none');
-        
+
         // Establecer fecha actual por defecto
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('fechaDiarioInput').value = today;

@@ -36,32 +36,24 @@ router.post('/ventas', asyncHandler(async (req, res) => {
         });
     }
 
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
+        client = await pool.connect();
         
-        // Procesar la fecha según el filtro
-        let fechaParam = fecha;
-        if (filtro === 'semanal') {
-            // Extraer año y semana del formato YYYY-WWW
-            const [year, week] = fecha.split('-W');
-            fechaParam = `${year}-${week}`; // Formato: YYYY-WW (sin la W)
-        }
-
         // Usar transacción para mayor seguridad
-        await connection.beginTransaction();
+        await client.query('BEGIN');
         
-        // Llamar al procedimiento almacenado con ambos parámetros
-        const [results] = await connection.query('CALL sp_reporte_ventas(?, ?)', [filtro, fechaParam]);
-        await connection.commit();
+        // Llamar al procedimiento almacenado
+        const result = await client.query('SELECT * FROM sp_reporte_ventas($1, $2)', [filtro, fecha]);
+        await client.query('COMMIT');
         
         // Devolver directamente el array de resultados
-        const data = Array.isArray(results[0]) ? results[0] : [];
+        const data = Array.isArray(result.rows) ? result.rows : [];
         res.json(data);
         
     } catch (error) {
-        if (connection) {
-            await connection.rollback();
+        if (client) {
+            await client.query('ROLLBACK');
         }
         console.error('Error en /reportes/ventas:', error);
         res.status(500).json({ 
@@ -70,28 +62,31 @@ router.post('/ventas', asyncHandler(async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
 // Ruta para el reporte de productos
 router.get('/productos', asyncHandler(async (req, res) => {
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
-        await connection.beginTransaction();
+        client = await pool.connect();
         
-        const [results] = await connection.query('CALL ReporteProductosVendidos()');
-        await connection.commit();
+        const result = await client.query('SELECT * FROM reporteproductosvendidos()');
         
-        // Los resultados vienen en un solo array con el tipo incluido
-        const allProducts = Array.isArray(results[0]) ? results[0] : [];
+        // Convertir nombres de columnas a minúsculas
+        const allProducts = result.rows.map(item => ({
+            producto_codigo: item.cod_producto, // nota: minúscula
+            producto_nombre: item.nombre, // nota: minúscula
+            cantidad_vendida: item.cantidadvendida, // nota: minúscula
+            producto_tipo: item.tipo // nota: minúscula
+        }));
         
-        // Separar por tipo según lo que indica el procedimiento almacenado
+        // Separar por tipo
         const responseData = {
-            topProducts: allProducts.filter(p => p.Tipo === 'Más Vendido'),
-            worstProducts: allProducts.filter(p => p.Tipo === 'Menos Vendido'),
-            notSoldProducts: allProducts.filter(p => p.Tipo === 'No Vendido')
+            topProducts: allProducts.filter(p => p.producto_tipo === 'Más Vendido'),
+            worstProducts: allProducts.filter(p => p.producto_tipo === 'Menos Vendido'),
+            notSoldProducts: allProducts.filter(p => p.producto_tipo === 'No Vendido')
         };
 
         res.json({
@@ -107,49 +102,46 @@ router.get('/productos', asyncHandler(async (req, res) => {
             }
         });
     } catch (error) {
-        if (connection) {
-            await connection.rollback();
-        }
         console.error('Error en /reportes/productos:', error);
         res.status(500).json({ 
             success: false, 
-            message: DEFAULT_ERROR_MESSAGE,
+            message: 'Error al obtener el reporte de productos',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
 // Ruta para el reporte de productos detallado
 router.get('/productos-detallado', asyncHandler(async (req, res) => {
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
-        const [results] = await connection.query(`
+        client = await pool.connect();
+        const result = await client.query(`
             SELECT 
-                p.Cod_Producto,
-                p.Nombre,
-                p.Marca,
-                CONCAT(pr.Nombre, ' ', pr.Apellido) AS NombreProveedor,
-                p.Sector,
-                pp.Fecha_Entrada,
-                pp.Cantidad,
-                pp.Precio,
-                p.FechaVencimiento
-            FROM Producto p
-            JOIN ProveProduct pp ON p.Cod_Producto = pp.Cod_Producto
-            JOIN Proveedor pr ON pp.Cod_Proveedor = pr.Cod_Proveedor
-            WHERE pr.Estado = 'Activo'
-            ORDER BY p.Nombre, pp.Fecha_Entrada
+                p.cod_producto AS "Cod_Producto",
+                p.nombre AS "Nombre",
+                p.marca AS "Marca",
+                CONCAT(pr.nombre, ' ', pr.apellido) AS "NombreProveedor",
+                p.sector AS "Sector",
+                pp.fecha_entrada AS "Fecha_Entrada",
+                pp.cantidad AS "Cantidad",
+                pp.precio AS "Precio",
+                p.fechavencimiento AS "FechaVencimiento"
+            FROM producto p
+            JOIN proveproduct pp ON p.cod_producto = pp.cod_producto
+            JOIN proveedor pr ON pp.cod_proveedor = pr.cod_proveedor
+            WHERE pr.estado = 'Activo'
+            ORDER BY p.nombre, pp.fecha_entrada
         `);
         
         res.json({
             success: true,
-            data: results,
+            data: result.rows,
             metadata: {
                 generatedAt: new Date().toISOString(),
-                count: results.length
+                count: result.rows.length
             }
         });
     } catch (error) {
@@ -159,42 +151,42 @@ router.get('/productos-detallado', asyncHandler(async (req, res) => {
             message: 'Error al obtener el reporte detallado de productos'
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
 router.get('/ganancias', asyncHandler(async (req, res) => {
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
+        client = await pool.connect();
         
-        // Consulta SQL corregida para obtener datos de ganancias
-        const [results] = await connection.query(`
+        // Consulta SQL con alias en el formato correcto (con mayúsculas)
+        const result = await client.query(`
             SELECT 
-                pv.Cod_Venta,
-                p.Cod_Producto,
-                p.Nombre AS Nombre_Producto,
-                pv.Cantidad_Venta,
-                pp.Precio AS Costo_Unitario,
-                ROUND(pp.Precio * 1.25, 2) AS Precio_Venta_Unitario, -- Añadido 25% al costo
-                ROUND((pp.Precio * 1.25) - pp.Precio, 2) AS Margen_Unitario, -- Siempre positivo
-                ROUND(((pp.Precio * 1.25) - pp.Precio) * pv.Cantidad_Venta, 2) AS Margen_Total, -- Siempre positivo
-                ROUND((0.25 / pp.Precio * 100), 2) AS Porcentaje_Utilidad, -- Fijo 25%
-                DATE_FORMAT(pp.Fecha_Entrada, '%d/%m/%Y') AS Fecha_Compra, -- Formato DD/MM/YYYY
-                DATE_FORMAT(pv.Fecha_salida, '%d/%m/%Y') AS Fecha_Venta -- Formato DD/MM/YYYY
-            FROM ProductVenta pv
-            JOIN Producto p ON pv.Cod_Producto = p.Cod_Producto
-            JOIN ProveProduct pp ON pv.Cod_Producto = pp.Cod_Producto
-            WHERE p.Estado = 'Activo'
-            ORDER BY pv.Cod_Venta, p.Nombre
+                pv.cod_venta AS "Cod_Venta",
+                p.cod_producto AS "Cod_Producto",
+                p.nombre AS "Nombre_Producto",
+                pv.cantidad_venta AS "Cantidad_Venta",
+                pp.precio AS "Costo_Unitario",
+                ROUND(pp.precio * 1.25, 2) AS "Precio_Venta_Unitario",
+                ROUND((pp.precio * 1.25) - pp.precio, 2) AS "Margen_Unitario",
+                ROUND(((pp.precio * 1.25) - pp.precio) * pv.cantidad_venta, 2) AS "Margen_Total",
+                ROUND((0.25 / pp.precio * 100), 2) AS "Porcentaje_Utilidad",
+                TO_CHAR(pp.fecha_entrada, 'DD/MM/YYYY') AS "Fecha_Compra",
+                TO_CHAR(pv.fecha_salida, 'DD/MM/YYYY') AS "Fecha_Venta"
+            FROM productventa pv
+            JOIN producto p ON pv.cod_producto = p.cod_producto
+            JOIN proveproduct pp ON pv.cod_producto = pp.cod_producto
+            WHERE p.estado = 'Activo'
+            ORDER BY pv.cod_venta, p.nombre
         `);
         
         res.json({
             success: true,
-            data: results,
+            data: result.rows,
             metadata: {
                 generatedAt: new Date().toISOString(),
-                count: results.length
+                count: result.rows.length
             }
         });
     } catch (error) {
@@ -205,25 +197,28 @@ router.get('/ganancias', asyncHandler(async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
 // Ruta para obtener lista de empleados
 router.get('/empleados', asyncHandler(async (req, res) => {
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
-        const [results] = await connection.query(`
-            SELECT Cod_Empleado, Nombre, Apellido 
-            FROM Empleado 
-            WHERE Estado = 'Activo'
-            ORDER BY Nombre, Apellido
+        client = await pool.connect();
+        const result = await client.query(`
+            SELECT 
+                cod_empleado AS "Cod_Empleado", 
+                nombre AS "Nombre", 
+                apellido AS "Apellido"
+            FROM empleado 
+            WHERE estado = 'Activo'
+            ORDER BY nombre, apellido
         `);
         
         res.json({
             success: true,
-            data: results
+            data: result.rows
         });
     } catch (error) {
         console.error('Error en /reportes/empleados:', error);
@@ -232,7 +227,7 @@ router.get('/empleados', asyncHandler(async (req, res) => {
             message: 'Error al obtener la lista de empleados'
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
@@ -254,19 +249,20 @@ router.post('/ventas-empleado', asyncHandler(async (req, res) => {
         });
     }
 
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
-        await connection.beginTransaction();
+        client = await pool.connect();
+        await client.query('BEGIN');
         
-        const [results] = await connection.query('CALL sp_reporte_ventas_empleado(?, ?, ?)', [filtro, fecha, empleado_id]);
-        await connection.commit();
+        // Llamar a la función en lugar del procedimiento
+        const result = await client.query('SELECT * FROM sp_reporte_ventas_empleado($1, $2, $3)', [filtro, fecha, empleado_id]);
+        await client.query('COMMIT');
         
-        const data = Array.isArray(results[0]) ? results[0] : [];
+        const data = Array.isArray(result.rows) ? result.rows : [];
         res.json(data);
         
     } catch (error) {
-        if (connection) await connection.rollback();
+        if (client) await client.query('ROLLBACK');
         console.error('Error en /reportes/ventas-empleado:', error);
         res.status(500).json({ 
             success: false, 
@@ -274,7 +270,7 @@ router.post('/ventas-empleado', asyncHandler(async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
@@ -282,46 +278,46 @@ router.post('/ventas-empleado', asyncHandler(async (req, res) => {
 router.post('/bajas', asyncHandler(async (req, res) => {
     const { filtro, fecha } = req.body;
     
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
+        client = await pool.connect();
         
         let query = `
             SELECT 
-                b.Id_Baja,
-                b.Cod_Producto,
-                p.Nombre AS Nombre_Producto,
-                pr.Nombre AS Nombre_Proveedor,
-                b.Fecha_Baja,
-                b.Fecha_Salida_Baja,
-                b.Cantidad,
-                pp.Precio AS Precio_Compra,
-                (b.Cantidad * pp.Precio) AS Subtotal,
-                b.Motivo
-            FROM BajasProductos b
-            JOIN Producto p ON b.Cod_Producto = p.Cod_Producto
-            JOIN Proveedor pr ON b.Cod_Proveedor = pr.Cod_Proveedor
-            JOIN ProveProduct pp ON b.Cod_Producto = pp.Cod_Producto AND b.Cod_Proveedor = pp.Cod_Proveedor
+                b.id_baja AS "Id_Baja",
+                b.cod_producto AS "Cod_Producto",
+                p.nombre AS "Nombre_Producto",
+                pr.nombre AS "Nombre_Proveedor",
+                b.fecha_baja AS "Fecha_Baja",
+                b.fecha_salida_baja AS "Fecha_Salida_Baja",
+                b.cantidad AS "Cantidad",
+                pp.precio AS "Precio_Compra",
+                (b.cantidad * pp.precio) AS "Subtotal",
+                b.motivo AS "Motivo"
+            FROM bajasproductos b
+            JOIN producto p ON b.cod_producto = p.cod_producto
+            JOIN proveedor pr ON b.cod_proveedor = pr.cod_proveedor
+            JOIN proveproduct pp ON b.cod_producto = pp.cod_producto AND b.cod_proveedor = pp.cod_proveedor
         `;
         
         // Aplicar filtros
         if (filtro === 'mes' && fecha) {
             const [year, month] = fecha.split('-');
-            query += ` WHERE YEAR(b.Fecha_Baja) = ${year} AND MONTH(b.Fecha_Baja) = ${month}`;
+            query += ` WHERE EXTRACT(YEAR FROM b.fecha_baja) = ${year} AND EXTRACT(MONTH FROM b.fecha_baja) = ${month}`;
         } else if (filtro === 'anio' && fecha) {
-            query += ` WHERE YEAR(b.Fecha_Baja) = ${fecha}`;
+            query += ` WHERE EXTRACT(YEAR FROM b.fecha_baja) = ${fecha}`;
         }
         
-        query += ' ORDER BY b.Fecha_Baja DESC';
+        query += ' ORDER BY b.fecha_baja DESC';
         
-        const [results] = await connection.query(query);
+        const result = await client.query(query);
         
         res.json({
             success: true,
-            data: results,
+            data: result.rows,
             metadata: {
                 generatedAt: new Date().toISOString(),
-                count: results.length
+                count: result.rows.length
             }
         });
         
@@ -333,10 +329,41 @@ router.post('/bajas', asyncHandler(async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
+// Ruta para reporte de bodega (basado en tu procedimiento sp_reporte_bodega)
+router.post('/bodega', asyncHandler(async (req, res) => {
+    const { sector, periodo = 'todos', search } = req.query;
+    
+    let client;
+    try {
+        client = await pool.connect();
+        
+        // Llamar al procedimiento almacenado de bodega
+        const result = await client.query('SELECT * FROM sp_reporte_bodega($1, $2, $3)', [sector, periodo, search]);
+        
+        res.json({
+            success: true,
+            data: result.rows,
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                count: result.rows.length
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error en /reportes/bodega:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener el reporte de bodega',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    } finally {
+        if (client) client.release();
+    }
+}));
 
 // Middleware para manejo de errores no capturados
 router.use((err, req, res, next) => {

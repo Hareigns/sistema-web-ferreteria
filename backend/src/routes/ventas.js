@@ -37,12 +37,12 @@ router.get("/add", isLoggedIn, (req, res) => {
 // Mostrar lista de ventas
 router.get("/list", isLoggedIn, async (req, res) => {
   try {
-    const [ventas] = await pool.query(`
-      SELECT v.Cod_Venta, pv.Fecha_salida, pv.Cod_Producto, pv.Precio_Venta, 
-             pv.Cantidad_Venta, pv.Metodo_Pago, pv.Sector
-      FROM Venta v
-      JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-      ORDER BY pv.Fecha_salida ASC
+    const { rows: ventas } = await pool.query(`
+      SELECT v.cod_venta, pv.fecha_salida, pv.cod_producto, pv.precio_venta, 
+             pv.cantidad_venta, pv.metodo_pago, pv.sector
+      FROM venta v
+      JOIN productventa pv ON v.cod_venta = pv.cod_venta
+      ORDER BY pv.fecha_salida ASC
     `);
 
     res.render("ventas/list", {
@@ -64,7 +64,7 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
   } = req.body;
 
   // Obtener el código del empleado directamente de la sesión
-  const codigo_empleado = req.user.Cod_Empleado;
+  const codigo_empleado = req.user.cod_empleado;
 
   if (!codigo_empleado || isNaN(codigo_empleado) || !detalles_venta) {
       return res.status(400).json({ 
@@ -75,16 +75,16 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
 
   console.log(`Insertando venta para empleado autenticado: ${codigo_empleado}`);
 
-  let connection;
-   try {
-        connection = await pool.getConnection();
-        await connection.beginTransaction();
+  let client;
+  try {
+        client = await pool.connect();
+        await client.query('BEGIN');
 
-        const [resultVenta] = await connection.query(
-            `INSERT INTO Venta (Cod_Empleado, Estado_Venta) VALUES (?, ?)`,
+        const ventaResult = await client.query(
+            `INSERT INTO venta (cod_empleado, estado_venta) VALUES ($1, $2) RETURNING cod_venta`,
             [codigo_empleado, estado_venta]
         );
-        const codigo_venta = resultVenta.insertId;
+        const codigo_venta = ventaResult.rows[0].cod_venta;
 
         // Obtener fecha actual en formato YYYY-MM-DD para Nicaragua (UTC-6)
         const now = new Date();
@@ -97,7 +97,7 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
           
           // Validaciones básicas
           if (!codigo_producto || !cantidad || !precio_unitario || !metodo_pago || !sector) {
-              await connection.rollback();
+              await client.query('ROLLBACK');
               return res.status(400).json({
                   success: false,
                   message: "Datos de detalles incompletos"
@@ -105,18 +105,18 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
           }
 
           // Verificar si el producto está vencido
-          const [productoInfo] = await connection.query(
-              `SELECT FechaVencimiento, Nombre FROM Producto WHERE Cod_Producto = ?`,
+          const productoInfoResult = await client.query(
+              `SELECT fechavencimiento, nombre FROM producto WHERE cod_producto = $1`,
               [codigo_producto]
           );
 
-          if (productoInfo.length > 0 && productoInfo[0].FechaVencimiento) {
-              const fechaVencimiento = new Date(productoInfo[0].FechaVencimiento);
+          if (productoInfoResult.rows.length > 0 && productoInfoResult.rows[0].fechavencimiento) {
+              const fechaVencimiento = new Date(productoInfoResult.rows[0].fechavencimiento);
               const hoy = new Date();
-              const nombre = productoInfo[0].Nombre_Producto || 'el producto';
+              const nombre = productoInfoResult.rows[0].nombre || 'el producto';
               
               if (fechaVencimiento < hoy) {
-                  await connection.rollback();
+                  await client.query('ROLLBACK');
                   return res.status(400).json({
                       success: false,
                       message: `ADVERTENCIA: El producto "${nombre}" está vencido (Fecha de vencimiento: ${fechaVencimiento.toLocaleDateString()})`,
@@ -126,40 +126,40 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
           }
 
           // Insertar detalle de venta
-           await connection.query(
-              `INSERT INTO ProductVenta (Cod_Venta, Cod_Producto, Precio_Venta, Cantidad_Venta, Metodo_Pago, Sector, Fecha_salida)
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          await client.query(
+              `INSERT INTO productventa (cod_venta, cod_producto, precio_venta, cantidad_venta, metodo_pago, sector, fecha_salida)
+              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
               [codigo_venta, codigo_producto, precio_unitario, cantidad, metodo_pago, sector, fechaVenta]
           );
 
           // Descontar del inventario (método FIFO)
           let cantidadRestante = cantidad;
-          const [lotes] = await connection.query(
-              `SELECT Cod_Proveedor, Cantidad 
-              FROM ProveProduct 
-              WHERE Cod_Producto = ? AND Cantidad > 0
-              ORDER BY Fecha_Entrada ASC
+          const lotesResult = await client.query(
+              `SELECT cod_proveedor, cantidad 
+              FROM proveproduct 
+              WHERE cod_producto = $1 AND cantidad > 0
+              ORDER BY fecha_entrada ASC
               FOR UPDATE`,
               [codigo_producto]
           );
 
-          for (const lote of lotes) {
+          for (const lote of lotesResult.rows) {
               if (cantidadRestante <= 0) break;
 
-              const cantidadADescontar = Math.min(lote.Cantidad, cantidadRestante);
+              const cantidadADescontar = Math.min(lote.cantidad, cantidadRestante);
               
-              await connection.query(
-                  `UPDATE ProveProduct 
-                  SET Cantidad = Cantidad - ? 
-                  WHERE Cod_Proveedor = ? AND Cod_Producto = ?`,
-                  [cantidadADescontar, lote.Cod_Proveedor, codigo_producto]
+              await client.query(
+                  `UPDATE proveproduct 
+                  SET cantidad = cantidad - $1 
+                  WHERE cod_proveedor = $2 AND cod_producto = $3`,
+                  [cantidadADescontar, lote.cod_proveedor, codigo_producto]
               );
 
               cantidadRestante -= cantidadADescontar;
           }
       }
 
-      await connection.commit();
+      await client.query('COMMIT');
       return res.json({ 
           success: true, 
           message: 'Venta registrada correctamente',
@@ -167,7 +167,13 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
       });
 
   } catch (error) {
-      await connection?.rollback();
+      if (client) {
+          try {
+              await client.query('ROLLBACK');
+          } catch (rollbackError) {
+              console.error('Error en rollback:', rollbackError);
+          }
+      }
       console.error("Error al registrar la venta:", error);
       return res.status(500).json({ 
           success: false, 
@@ -179,23 +185,30 @@ router.post("/api/ventas", isLoggedIn, async (req, res) => {
           }
       });
   } finally {
-      connection?.release();
+      if (client) {
+          try {
+              client.release();
+          } catch (releaseError) {
+              console.error('Error al liberar cliente:', releaseError);
+          }
+      }
   }
 });
 
-
 // API para obtener ventas (JSON)
 router.get('/api/ventas', isLoggedIn, async (req, res) => {
+    let client;
     try {
-        const [ventas] = await pool.query(`
-            SELECT v.Cod_Venta, pv.Fecha_salida, pv.Cod_Producto, pv.Precio_Venta, 
-                   pv.Cantidad_Venta, pv.Metodo_Pago, pv.Sector
-            FROM Venta v
-            JOIN ProductVenta pv ON v.Cod_Venta = pv.Cod_Venta
-            ORDER BY pv.Fecha_salida ASC  -- Orden ascendente (mas antiguas primero)
+        client = await pool.connect();
+        const result = await client.query(`
+            SELECT v.cod_venta, pv.fecha_salida, pv.cod_producto, pv.precio_venta, 
+                   pv.cantidad_venta, pv.metodo_pago, pv.sector
+            FROM venta v
+            JOIN productventa pv ON v.cod_venta = pv.cod_venta
+            ORDER BY pv.fecha_salida ASC
         `);
         
-        res.json({ success: true, data: ventas });
+        res.json({ success: true, data: result.rows });
     } catch (error) {
         console.error("Error al obtener ventas:", error);
         res.status(500).json({ 
@@ -203,6 +216,14 @@ router.get('/api/ventas', isLoggedIn, async (req, res) => {
             message: 'Error al obtener ventas',
             error: error.message 
         });
+    } finally {
+        if (client) {
+            try {
+                client.release();
+            } catch (releaseError) {
+                console.error('Error al liberar cliente:', releaseError);
+            }
+        }
     }
 });
 
@@ -212,7 +233,7 @@ router.get('/empleados/api/empleados', isLoggedIn, async (req, res) => {
         const empleado = req.user;  // El empleado que está autenticado
         
         // Verificar que el empleado tenga el código necesario
-        if (!empleado || !empleado.Cod_Empleado) {
+        if (!empleado || !empleado.cod_empleado) {
             return res.status(400).json({ 
                 success: false, 
                 message: "No se pudo obtener el código del empleado" 
@@ -222,9 +243,9 @@ router.get('/empleados/api/empleados', isLoggedIn, async (req, res) => {
         res.json({
             success: true,
             data: [{
-                Cod_Empleado: empleado.Cod_Empleado,
-                Nombre: empleado.Nombre,
-                Apellido: empleado.Apellido
+                cod_empleado: empleado.cod_empleado,
+                nombre: empleado.nombre,
+                apellido: empleado.apellido
             }]
         });
     } catch (error) {
@@ -237,27 +258,36 @@ router.get('/empleados/api/empleados', isLoggedIn, async (req, res) => {
     }
 });
 
-
 // Ruta para obtener productos filtrados por sector
 router.get("/api/productos", isLoggedIn, async (req, res) => {
+  let client;
   try {
-    const [productos] = await pool.query(`
+    client = await pool.connect();
+    const result = await client.query(`
       SELECT 
-        p.Cod_Producto, 
-        p.Nombre, 
-        p.Marca, 
-        p.FechaVencimiento, 
-        p.Precio_Compra, 
-        p.Cantidad,
-        p.Sector
-      FROM Producto p
-      WHERE p.FechaVencimiento IS NULL OR p.FechaVencimiento >= CURDATE()
+        p.cod_producto, 
+        p.nombre, 
+        p.marca, 
+        p.fechavencimiento, 
+        p.precio_compra, 
+        p.cantidad,
+        p.sector
+      FROM producto p
+      WHERE p.fechavencimiento IS NULL OR p.fechavencimiento >= CURRENT_DATE
     `);
 
-    res.json({ success: true, data: productos });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error("Error al obtener productos:", error);
     res.status(500).json({ success: false, message: "Error al obtener productos" });
+  } finally {
+    if (client) {
+        try {
+            client.release();
+        } catch (releaseError) {
+            console.error('Error al liberar cliente:', releaseError);
+        }
+    }
   }
 });
 

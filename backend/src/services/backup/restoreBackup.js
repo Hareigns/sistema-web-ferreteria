@@ -1,11 +1,10 @@
-import { database } from '../../keys.js';
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BACKUP_DIR = path.join(process.cwd(), 'backups');
+const BACKUP_DIR = path.join(__dirname, '../../../backups');
 
 function listBackups() {
     if (!fs.existsSync(BACKUP_DIR)) {
@@ -14,14 +13,15 @@ function listBackups() {
     }
 
     return fs.readdirSync(BACKUP_DIR)
-        .filter(file => file.match(/backup_completo_.*\.sql(\.gz|\.zip)?$/))
+        .filter(file => file.match(/backup_supabase_.*\.sql\.zip$/))
         .sort()
         .reverse();
 }
 
 function restoreBackup(backupFile) {
     const backupPath = path.join(BACKUP_DIR, backupFile);
-    const tempFile = path.join(BACKUP_DIR, `temp_restore_${Date.now()}.sql`);
+    const tempDir = path.join(BACKUP_DIR, `temp_restore_${Date.now()}`);
+    const extractedFile = path.join(tempDir, backupFile.replace('.zip', ''));
 
     try {
         if (!fs.existsSync(backupPath)) {
@@ -30,40 +30,46 @@ function restoreBackup(backupFile) {
 
         console.log(`\n🔍 Procesando ${backupFile}...`);
         
-        // Manejo para .zip y .gz
-        if (backupFile.endsWith('.zip')) {
-    execSync(`powershell -Command "Expand-Archive -Path '${backupPath}' -DestinationPath '${BACKUP_DIR}' -Force"`);
-    const uncompressedFile = backupPath.replace('.zip', '');
-    fs.renameSync(uncompressedFile, tempFile);
-}
- else if (backupFile.endsWith('.gz')) {
-            execSync(`gzip -dc "${backupPath}" > "${tempFile}"`);
-        } else {
-            fs.copyFileSync(backupPath, tempFile);
+        // Crear directorio temporal
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
         }
 
-        const stats = fs.statSync(tempFile);
-        if (stats.size < 1024) {
-            throw new Error('Archivo de backup parece estar vacío o corrupto');
+        // Descomprimir
+        exec(`powershell -Command "Expand-Archive -Path '${backupPath}' -DestinationPath '${tempDir}' -Force"`);
+
+        // Configuración de Supabase
+        const config = {
+            host: process.env.DB_HOST || 'db.xxx.supabase.co',
+            port: process.env.DB_PORT || 5432,
+            database: process.env.DB_NAME || 'postgres',
+            user: process.env.DB_USER || 'postgres',
+            password: process.env.DB_PASSWORD
+        };
+
+        // Verificar que el archivo existe
+        if (!fs.existsSync(extractedFile)) {
+            throw new Error('Archivo extraído no encontrado');
         }
 
-        console.log('🔄 Restaurando base de datos...');
-        const command = `"C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql" \
-            --host=${database.host} \
-            --port=${database.port} \
-            --user=${database.user} \
-            --password=${database.password} \
-            ${database.database} < "${tempFile}"`;
+        console.log('🔄 Restaurando base de datos Supabase...');
+        
+        // Comando para restaurar
+        const command = `pg_restore -h ${config.host} -p ${config.port} -U ${config.user} -d ${config.database} -v "${extractedFile}"`;
+        const env = { ...process.env, PGPASSWORD: config.password };
 
-        execSync(command, { stdio: 'inherit' });
+        execSync(command, { env, stdio: 'inherit' });
+        
         console.log('✅ Restauración completada con éxito');
         return true;
+
     } catch (error) {
         console.error('❌ Error durante la restauración:', error.message);
         return false;
     } finally {
-        if (fs.existsSync(tempFile)) {
-            fs.unlinkSync(tempFile);
+        // Limpiar archivos temporales
+        if (fs.existsSync(tempDir)) {
+            fs.rmSync(tempDir, { recursive: true, force: true });
         }
     }
 }
@@ -72,22 +78,26 @@ function main() {
     const backups = listBackups();
 
     if (backups.length === 0) {
-        console.log('No hay backups disponibles');
-        console.log('Ejecuta primero: node src/services/backup/backupDiario.js');
+        console.log('No hay backups disponibles de Supabase');
         return;
     }
 
-    // Restaurar automáticamente el backup más reciente
+    // Restaurar el backup más reciente
     const latestBackup = backups[0];
-    console.log(`🔄 Restaurando automáticamente el backup más reciente: ${latestBackup}`);
+    console.log(`🔄 Restaurando backup: ${latestBackup}`);
     
     const success = restoreBackup(latestBackup);
     
     if (success) {
         console.log('✅ Proceso de restauración completado exitosamente');
     } else {
-        console.log('❌ Hubo un error durante la restauración automática');
+        console.log('❌ Hubo un error durante la restauración');
     }
 }
 
-main();
+// Ejecutar solo si se llama directamente
+if (import.meta.url === `file://${process.argv[1]}`) {
+    main();
+}
+
+export { restoreBackup, listBackups };

@@ -2,17 +2,6 @@ CREATE DATABASE ferreteria;
 
 USE ferreteria;
 
-CREATE TABLE users (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(16) NOT NULL,
-    password VARCHAR(60) NOT NULL,
-    fullname VARCHAR(100) NOT NULL
-);
-
-SELECT * FROM users;
-
--- DELETE FROM users;
-
 -- ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- eliminar la tabla si existe
 DROP TABLE IF EXISTS Producto;  

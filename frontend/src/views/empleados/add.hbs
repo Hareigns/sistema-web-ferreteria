@@ -1,901 +1,741 @@
 <title>Registro de Empleado</title>
+<link rel="stylesheet" href="/styles/empleados.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<nav class="navbar navbar-expand-lg navbar-dark">
-  <div class="container">
-    <a class="navbar-brand" href="#">
-      <i class="fas fa-users-cog me-2"></i>Gestor de Empleados
-    </a>
-  </div>
-</nav>
-
-<div class="container mb-5">
-  <div class="card">
-    <div class="card-header">
-      <h3 class="text-center mb-0"><i class="fas fa-users me-2"></i>Lista de Empleados</h3>
-    </div>
-    <div class="card-body p-4">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 display" id="empleadosTable" style="width:100%">
-          <thead>
-            <tr>
-              <th><i class="fas fa-id-card me-1"></i> Código</th>
-              <th><i class="fas fa-user me-1"></i> Nombre</th>
-              <th><i class="fas fa-user-tag me-1"></i> Apellido</th>
-              <th><i class="fas fa-id-badge me-1"></i> Cédula</th>
-              <th><i class="fas fa-map-marker-alt me-1"></i> Dirección</th>
-              <th><i class="fas fa-circle me-1"></i> Estado</th>
-              <th><i class="fas fa-calendar-alt me-1"></i> F. Ingreso</th>
-              <th><i class="fas fa-phone-alt me-1"></i> Teléfono</th>
-              <th><i class="fas fa-mobile-alt me-1"></i> Compañía</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-center mb-0"><i class="fas fa-user-edit me-2"></i>Registro de Empleados</h3>
+ <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-users-cog me-2"></i>Gestor de Empleados
+            </a>
         </div>
-        <div class="card-body p-4">
-          <form id="empleadoForm">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="nombre">Nombre</label>
-                  <input type="text" id="nombre" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}"
-                    title="Solo letras (mínimo 3 caracteres)" required>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Pestañas -->
+        <ul class="nav nav-tabs" id="empleadoTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab"
+                    aria-controls="list" aria-selected="true">
+                    <i class="fas fa-list me-2"></i>Lista de Empleados
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button"
+                    role="tab" aria-controls="register" aria-selected="false">
+                    <i class="fas fa-user-plus me-2"></i>Registrar Empleados
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="modify-tab" data-bs-toggle="tab" data-bs-target="#modify" type="button" role="tab"
+                    aria-controls="modify" aria-selected="false">
+                    <i class="fas fa-user-edit me-2"></i>Actualizar Empleados
+                </button>
+            </li>
+        </ul>
+
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content" id="empleadoTabsContent">
+            <!-- Pestaña de Lista de Empleados -->
+            <div class="tab-pane fade show active" id="list" role="tabpanel" aria-labelledby="list-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center mb-0"><i class="fas fa-list me-2"></i>Lista de Empleados</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 display" id="empleadosTable" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-id-card me-1"></i> Código</th>
+                                        <th><i class="fas fa-user me-1"></i> Nombre</th>
+                                        <th><i class="fas fa-user-tag me-1"></i> Apellido</th>
+                                        <th><i class="fas fa-id-badge me-1"></i> Cédula</th>
+                                        <th><i class="fas fa-map-marker-alt me-1"></i> Dirección</th>
+                                        <th><i class="fas fa-circle me-1"></i> Estado</th>
+                                        <th><i class="fas fa-calendar-alt me-1"></i> F. Ingreso</th>
+                                        <th><i class="fas fa-phone-alt me-1"></i> Teléfono</th>
+                                        <th><i class="fas fa-mobile-alt me-1"></i> Compañía</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Los datos se cargarán dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="apellido">Apellido</label>
-                  <input type="text" id="apellido" class="form-control" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}"
-                    title="Solo letras (mínimo 3 caracteres)" required>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="direccion">Dirección</label>
-                  <input type="text" id="direccion" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="cedula">Cédula (13 dígitos + 1 letra)</label>
-                  <input type="text" id="cedula" class="form-control" pattern="[0-9]{13}[A-Za-z]{1}"
-                    title="13 dígitos seguidos de 1 letra" required>
-                </div>
-              </div>
-              <div id="estado-container" class="col-md-6">
-                <div class="floating-label modern-select">
-                  <label for="estado">Estado</label>
-                  <select id="estado" class="form-select" required>
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label">
-                  <label for="telefono">Teléfono</label>
-                  <input type="tel" id="telefono" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="floating-label modern-select">
-                  <label for="compania_telefonica">Compañía Telefónica</label>
-                  <select id="compania_telefonica" class="form-select" required>
-                    <option value="Tigo">Tigo</option>
-                    <option value="Claro">Claro</option>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-6 d-flex align-items-center">
-                <div class="form-check form-switch ps-0">
-                  <input class="form-check-input ms-0" type="checkbox" id="contrasena_temporal">
-                  <label class="form-check-label ms-3" for="contrasena_temporal">
-                    Resetear a contraseña temporal
-                  </label>
-                </div>
-              </div>
             </div>
 
-            <div class="action-buttons">
-              <button class="btn btn-primary" type="button" id="ingresarButton" onclick="ingresarEmpleado()">
-                <i class="fas fa-user-plus me-2"></i>Ingresar
-              </button>
-              <button class="btn btn-danger" type="button" onclick="limpiarCampos()">
-                <i class="fas fa-broom me-2"></i>Limpiar
-              </button>
+            <!-- Pestaña de Registro -->
+            <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center mb-0"><i class="fas fa-user-plus me-2"></i>Registro de Empleados</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="empleadoForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="floating-label">
+                                        <label for="nombre">Nombre</label>
+                                        <input type="text" id="nombre" name="nombre" class="form-control"
+                                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" title="Solo letras (mínimo 3 caracteres)" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="floating-label">
+                                        <label for="apellido">Apellido</label>
+                                        <input type="text" id="apellido" name="apellido" class="form-control"
+                                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}" title="Solo letras (mínimo 3 caracteres)" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="floating-label">
+                                        <label for="cedula">Cédula (13 dígitos + 1 letra)</label>
+                                        <input type="text" id="cedula" name="cedula" class="form-control" pattern="[0-9]{13}[A-Za-z]{1}"
+                                            title="13 dígitos seguidos de 1 letra" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="floating-label">
+                                        <label for="direccion">Dirección</label>
+                                        <input type="text" id="direccion" name="direccion" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="floating-label">
+                                        <label for="telefono">Teléfono</label>
+                                        <input type="tel" id="telefono" name="telefono" class="form-control" pattern="[0-9]{8}"
+                                            title="Debe contener 8 dígitos" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="floating-label">
+                                        <label for="compania_telefonica">Compañía Telefónica</label>
+                                        <select id="compania_telefonica" name="compania_telefonica" class="form-select" required>
+                                            <option value="Tigo">Tigo</option>
+                                            <option value="Claro">Claro</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="action-buttons mt-4">
+                                <button class="btn btn-primary" type="button" id="ingresarButton">
+                                    <i class="fas fa-user-plus me-2"></i>Ingresar
+                                </button>
+                                <button class="btn btn-danger" type="button" onclick="limpiarFormulario()">
+                                    <i class="fas fa-broom me-2"></i>Limpiar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
-            <div class="mt-5">
-              <h5 class="section-title"><i class="fas fa-user-cog me-2"></i>Modificar Empleados</h5>
-              <div class="modern-select mb-3">
-                <select name="codigo_empleado" class="form-select" id="codigo_empleado" required
-                  onchange="habilitarDeshabilitarBotones()">
-                  <option value="" disabled selected>Seleccione un empleado</option>
-                </select>
-              </div>
-              <button class="btn btn-success w-100" type="button" id="modificarButton" onclick="modificarEmpleado()"
-                disabled>
-                <i class="fas fa-user-edit me-2"></i>Modificar
-              </button>
+            <!-- Pestaña de Modificación -->
+            <div class="tab-pane fade" id="modify" role="tabpanel" aria-labelledby="modify-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center mb-0"><i class="fas fa-user-edit me-2"></i>Actualizar Empleados</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Seleccione un empleado para modificar sus datos.
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="floating-label">
+                                    <label for="select_empleado_modificar">Buscar empleado a modificar</label>
+                                    <select id="select_empleado_modificar" class="form-select">
+                                        <option value="" disabled selected>Seleccione un empleado...</option>
+                                        <!-- Los empleados se cargarán dinámicamente -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="formulario-modificacion" style="display: none;">
+                            <form id="modificarEmpleadoForm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_codigo">Código</label>
+                                            <input type="text" id="mod_codigo" class="form-control" readonly style="background-color: #f8f9fa;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_nombre">Nombre</label>
+                                            <input type="text" id="mod_nombre" class="form-control" readonly style="background-color: #f8f9fa;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_apellido">Apellido</label>
+                                            <input type="text" id="mod_apellido" class="form-control" readonly
+                                                style="background-color: #f8f9fa;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_cedula">Cédula</label>
+                                            <input type="text" id="mod_cedula" class="form-control" readonly style="background-color: #f8f9fa;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_direccion">Dirección</label>
+                                            <input type="text" id="mod_direccion" class="form-control" readonly
+                                                style="background-color: #f8f9fa;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_telefono">Teléfono</label>
+                                            <input type="tel" id="mod_telefono" class="form-control" pattern="[0-9]{8}"
+                                                title="Debe contener 8 dígitos" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_compania_telefonica">Compañía Telefónica</label>
+                                            <select id="mod_compania_telefonica" class="form-select" required>
+                                                <option value="Tigo">Tigo</option>
+                                                <option value="Claro">Claro</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="floating-label">
+                                            <label for="mod_estado">Estado</label>
+                                            <select id="mod_estado" class="form-select" required>
+                                                <option value="Activo">Activo</option>
+                                                <option value="Inactivo">Inactivo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="mod_contrasena_temporal">
+                                            <label class="form-check-label" for="mod_contrasena_temporal">
+                                                Resetear a contraseña temporal
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 mt-4">
+                                    <button class="btn btn-success" type="button" id="modificarButton">
+                                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </form>
         </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- Scripts (mantenidos igual que en tu versión original) -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-  // Función para cargar datos del empleado seleccionado (actualizada)
-  async function cargarDatosEmpleado() {
-    const select = document.getElementById("codigo_empleado");
-    const selectedOption = select.options[select.selectedIndex];
-    const editFields = document.getElementById("editFields");
+    <script>
+        let empleadosTable;
 
-    if (!selectedOption.value) {
-      editFields.style.display = "none";
-      return;
-    }
-
-    try {
-      // Mostrar loader
-      editFields.style.display = "none";
-      document.getElementById("modificarButton").disabled = true;
-
-      // Obtener datos del option seleccionado
-      const empleado = {
-        nombre: selectedOption.dataset.nombre,
-        apellido: selectedOption.dataset.apellido,
-        direccion: selectedOption.dataset.direccion,
-        estado: selectedOption.dataset.estado || "Activo",
-        cedula: selectedOption.dataset.cedula,
-        telefono: selectedOption.dataset.telefono,
-        compania: selectedOption.dataset.compania || "Tigo"
-      };
-
-      // Llenar campos del formulario
-      document.getElementById("edit_nombre").value = empleado.nombre;
-      document.getElementById("edit_apellido").value = empleado.apellido;
-      document.getElementById("edit_cedula").value = empleado.cedula;
-      document.getElementById("edit_direccion").value = empleado.direccion;
-      document.getElementById("edit_telefono").value = empleado.telefono;
-      document.getElementById("edit_compania").value = empleado.compania;
-      document.getElementById("edit_estado").value = empleado.estado;
-
-      // Bloquear campos que no deben editarse
-      ['edit_nombre', 'edit_apellido', 'edit_cedula'].forEach(id => {
-        const field = document.getElementById(id);
-        if (field) field.disabled = true;
-      });
-
-      // Bloquear/desbloquear estado según el código del empleado
-      const codigoEmpleado = parseInt(selectedOption.value);
-      const estadoSelect = document.getElementById("edit_estado");
-      if (codigoEmpleado === 1 || codigoEmpleado === 2) {
-        estadoSelect.disabled = true;
-        estadoSelect.value = "Activo";
-      } else {
-        estadoSelect.disabled = false;
-      }
-
-      // Mostrar campos de edición
-      editFields.style.display = "block";
-      document.getElementById("modificarButton").disabled = false;
-
-    } catch (error) {
-      console.error("Error al cargar datos del empleado:", error);
-      Swal.fire("Error", "No se pudieron cargar los datos del empleado", "error");
-    }
-  }
-
-  // Función para limpiar campos de edición
-  function limpiarEdicion() {
-    document.getElementById("codigo_empleado").value = "";
-    document.getElementById("editFields").style.display = "none";
-    // Cambiar a la pestaña de nuevo empleado
-    const tab = new bootstrap.Tab(document.getElementById('nuevo-tab'));
-    tab.show();
-  }
-
-
-  // Validación en tiempo real para nombre y apellido
-  document.getElementById('nombre').addEventListener('input', function (e) {
-    const value = e.target.value;
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
-      e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-    }
-  });
-
-  document.getElementById('apellido').addEventListener('input', function (e) {
-    const value = e.target.value;
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
-      e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-    }
-  });
-
-  // Función de validación
-  function validarNombreApellido(valor) {
-    // Permite letras, espacios y acentos (mínimo 3 caracteres)
-    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}$/.test(valor);
-  }
-
-  // Asegurar compatibilidad
-  $(document).ready(function () {
-    // Inicializar dropdowns manualmente si es necesario
-    if (typeof bootstrap !== 'undefined') {
-      var dropdowns = document.querySelectorAll('.dropdown-toggle');
-      dropdowns.forEach(function (dropdown) {
-        new bootstrap.Dropdown(dropdown);
-      });
-    } else {
-      console.warn('Bootstrap no está cargado correctamente');
-    }
-
-    // Manejar clics en el dropdown de usuario
-    $('.navbar .dropdown').on('show.bs.dropdown', function () {
-      $(this).find('.dropdown-menu').addClass('show');
-    }).on('hide.bs.dropdown', function () {
-      $(this).find('.dropdown-menu').removeClass('show');
-    });
-  });
-</script>
-
-<script>
-
-  // Función para habilitar/deshabilitar botones según la selección
-  function habilitarDeshabilitarBotones() {
-    const selectEmpleado = document.getElementById('codigo_empleado');
-    const ingresarButton = document.getElementById('ingresarButton');
-    const modificarButton = document.getElementById('modificarButton');
-
-    if (selectEmpleado.value && selectEmpleado.value !== "") {
-      ingresarButton.disabled = true;
-      modificarButton.disabled = false;
-    } else {
-      ingresarButton.disabled = false;
-      modificarButton.disabled = true;
-    }
-  }
-
-
-  // Llamar a la función cuando la página cargue para establecer el estado inicial
-  window.onload = function () {
-    habilitarDeshabilitarBotones();
-  };
-
-  async function cargarEmpleadosEnSelect() {
-    const select = document.getElementById("codigo_empleado");
-
-    try {
-      // Mostrar estado de carga
-      select.disabled = true;
-      select.innerHTML = '<option value="">Cargando empleados...</option>';
-
-      const response = await fetch('/empleados/api/empleados');
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      // Verificar estructura de respuesta
-      if (!result.success || !Array.isArray(result.data)) {
-        throw new Error('Formato de respuesta inválido');
-      }
-
-      const empleados = result.data;
-
-      // Limpiar y preparar el select
-      select.innerHTML = '<option value="" disabled selected>Seleccione un empleado</option>';
-
-      if (empleados.length === 0) {
-        select.innerHTML = '<option value="" disabled>No hay empleados activos</option>';
-        return;
-      }
-
-      // Ordenar empleados por código numérico (ascendente)
-      empleados.sort((a, b) => {
-        const codigoA = parseInt(a.Cod_Empleado) || 0;
-        const codigoB = parseInt(b.Cod_Empleado) || 0;
-        return codigoA - codigoB;
-      });
-
-      // Llenar el select
-      empleados.forEach(empleado => {
-        const option = document.createElement("option");
-        option.value = empleado.Cod_Empleado;
-        option.textContent = `${empleado.Cod_Empleado} - ${empleado.Nombre} ${empleado.Apellido || ''}`;
-
-        // Mapear campos según la estructura de tu API
-        option.dataset.nombre = empleado.Nombre || '';
-        option.dataset.apellido = empleado.Apellido || '';
-        option.dataset.direccion = empleado.Direccion || '';
-        option.dataset.estado = empleado.Estado || 'Activo';
-        option.dataset.cedula = empleado.Cedula || '';
-        option.dataset.telefono = empleado.Telefono || '';
-        option.dataset.compania = empleado.Compania || 'Tigo';
-        option.dataset.fechaIngreso = empleado.FechaIngresoFormateada || formatDate(empleado.FechaIngreso) || 'No definida';
-
-        select.appendChild(option);
-      });
-
-      select.disabled = false;
-      habilitarDeshabilitarBotones();
-
-    } catch (error) {
-      console.error('Error al cargar empleados:', error);
-      select.innerHTML = '<option value="" disabled>Error al cargar empleados</option>';
-
-      Swal.fire({
-        title: 'Error',
-        html: `<p>No se pudieron cargar los empleados.</p>
-            <small>${error.message || 'Error desconocido'}</small>`,
-        icon: 'error',
-        confirmButtonText: 'Reintentar',
-        showDenyButton: true,
-        denyButtonText: 'Cerrar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          cargarEmpleadosEnSelect();
-        }
-      });
-    }
-  }
-
-  // Función auxiliar para formatear fechas
-  function formatDate(dateString) {
-    if (!dateString) return '';
-
-    try {
-      // Si es un string ISO (YYYY-MM-DD)
-      if (dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
-        const [year, month, day] = dateString.split('T')[0].split('-');
-        return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-      }
-
-      // Si ya está formateada (dd/mm/yyyy)
-      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        return dateString;
-      }
-
-      return '';
-    } catch (e) {
-      console.error('Error formateando fecha:', e);
-      return '';
-    }
-  }
-
-  let empleadosTable;
-
-  async function cargarEmpleadosEnTabla() {
-    try {
-      const response = await fetch("/empleados/api/empleados");
-      const data = await response.json();
-
-      if (data.success && Array.isArray(data.data)) {
-        const empleadosOrdenados = [...data.data].sort((a, b) => a.Cod_Empleado - b.Cod_Empleado);
-
-        // Verificar si DataTable ya está inicializado
-        if ($.fn.DataTable.isDataTable('#empleadosTable')) {
-          empleadosTable.destroy();
-          $('#empleadosTable').empty();
+        // Función para validar nombre y apellido
+        function validarNombreApellido(valor) {
+            return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}$/.test(valor);
         }
 
-        inicializarDataTableEmpleados(empleadosOrdenados);
-      }
-    } catch (error) {
-      console.error("Error al obtener empleados:", error);
-      Swal.fire("Error", "Hubo un problema al obtener la lista de empleados.", "error");
-    }
-  }
-
-  function inicializarDataTableEmpleados(data) {
-    // Verificar si jQuery está disponible
-    if (typeof $ === 'undefined') {
-      console.error('Error: jQuery no está cargado. DataTables requiere jQuery.');
-      Swal.fire({
-        title: 'Error de configuración',
-        text: 'La tabla no puede inicializarse porque falta jQuery',
-        icon: 'error'
-      });
-      return;
-    }
-
-    empleadosTable = $('#empleadosTable').DataTable({
-      paging: true,
-      searching: true,
-      ordering: true,
-      pageLength: 10,
-      lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
-      language: {
-        "decimal": "",
-        "emptyTable": "No hay empleados registrados",
-        "info": "Mostrando _START_ a _END_ de _TOTAL_ empleados",
-        "infoEmpty": "Mostrando 0 a 0 de 0 empleados",
-        "infoFiltered": "(filtrado de _MAX_ empleados totales)",
-        "infoPostFix": "",
-        "thousands": ",",
-        "lengthMenu": "Mostrar _MENU_ empleados",
-        "loadingRecords": "Cargando...",
-        "processing": "Procesando...",
-        "search": "Buscar:",
-        "zeroRecords": "No se encontraron empleados coincidentes",
-        "paginate": {
-          "first": "Primero",
-          "last": "Último",
-          "next": "Siguiente",
-          "previous": "Anterior"
-        }
-      },
-      data: data,
-      columns: [
-        { data: 'Cod_Empleado' },
-        { data: 'Nombre' },
-        { data: 'Apellido' },
-        {
-          data: 'Cedula',
-          render: function (data) {
-            return data || 'No definida';
-          }
-        },
-        { data: 'Direccion' },
-        {
-          data: 'Estado',
-          render: function (data) {
-            return `<span class="badge ${data === 'Activo' ? 'bg-success' : 'bg-danger'}">${data || 'No definido'}</span>`;
-          }
-        },
-        {
-          data: 'FechaIngreso',
-          render: function (data, type, row) {
-            return row.FechaIngresoFormateada || formatDate(data) || 'No definida';
-          }
-        },
-        {
-          data: 'Telefono',
-          render: function (data) {
-            return data || 'No disponible';
-          }
-        },
-        {
-          data: 'Compania',
-          render: function (data) {
-            const companiaClass = data === 'Tigo' ? 'text-primary fw-bold' :
-              data === 'Claro' ? 'text-danger fw-bold' : 'fw-bold';
-            return `<span class="${companiaClass}">${data || 'No disponible'}</span>`;
-          }
-        }
-      ]
-    });
-  }
-
-  // Llamar la función cuando la página cargue
-  document.addEventListener("DOMContentLoaded", function () {
-    cargarEmpleadosEnSelect();
-    cargarEmpleadosEnTabla();
-  });
-
-  // Función para verificar si un teléfono ya existe (Frontend)
-  async function verificarTelefonoExistente(telefono, codEmpleado = null) {
-    try {
-      // Validación básica del teléfono primero
-      if (!telefono || !/^\d{8}$/.test(telefono)) {
-        await Swal.fire({
-          title: 'Teléfono inválido',
-          text: 'El teléfono debe tener 8 dígitos',
-          icon: 'error'
-        });
-        return true; // Consideramos que existe para bloquear el envío
-      }
-
-      let url = `/empleados/api/telefono/existe/${telefono}`;
-      if (codEmpleado) {
-        url += `?excluirEmpleado=${codEmpleado}`;
-      }
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Error al verificar teléfono');
-      }
-
-      if (data.existe) {
-        await Swal.fire({
-          title: 'Teléfono existente',
-          text: 'Este número de teléfono ya está registrado para otro empleado o proveedor',
-          icon: 'error',
-          confirmButtonText: 'Entendido'
-        });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error al verificar teléfono:', error);
-      await Swal.fire({
-        title: 'Error',
-        text: 'No se pudo verificar el número de teléfono',
-        icon: 'error'
-      });
-      return true; // Asumir que existe para prevenir problemas
-    }
-  }
-
-  // Función modificarEmpleado actualizada
-  async function modificarEmpleado() {
-    const codigoEmpleado = document.getElementById("codigo_empleado").value;
-    const resetPassword = document.getElementById("edit_reset_pass").checked;
-
-    // Obtener valores de los campos de edición
-    const direccion = document.getElementById("edit_direccion").value.trim();
-    const estado = document.getElementById("edit_estado").value;
-    const telefono = document.getElementById("edit_telefono").value.trim();
-    const compania = document.getElementById("edit_compania").value;
-    const nombre = document.getElementById("edit_nombre").value.trim();
-    const apellido = document.getElementById("edit_apellido").value.trim();
-
-    if (!codigoEmpleado) {
-      await Swal.fire("Error", "Debe seleccionar un empleado", "error");
-      return;
-    }
-
-    try {
-      // Confirmación
-      const confirmacion = await Swal.fire({
-        title: `¿Actualizar empleado?`,
-        html: `¿Confirmas la modificación de ${nombre} ${apellido}?<br>${resetPassword ? '<b>⚠️ Se restablecerá la contraseña a temporal</b>' : ''}`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: 'Confirmar',
-        cancelButtonText: 'Cancelar'
-      });
-
-      if (!confirmacion.isConfirmed) return;
-
-      // Preparar datos para enviar
-      const payload = {
-        direccion,
-        estado,
-        telefono,
-        compania,
-        resetPassword
-      };
-
-      // Enviar datos
-      const response = await fetch(`/empleados/api/empleados/${codigoEmpleado}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      // Manejar respuesta
-      if (!response.ok) {
-        const errorMsg = data.errors ? data.errors.join('<br>') : data.message;
-        throw new Error(errorMsg || "Error al actualizar");
-      }
-
-      // Éxito
-      await Swal.fire({
-        title: "¡Actualizado!",
-        text: `Empleado ${nombre} ${apellido} modificado correctamente${resetPassword ? ' (Contraseña restablecida)' : ''}`,
-        icon: "success"
-      });
-
-      // Actualizar UI
-      cargarEmpleadosEnTabla();
-      cargarEmpleadosEnSelect();
-      if (estado === 'Inactivo') limpiarEdicion();
-
-    } catch (error) {
-      console.error("Error:", error);
-      await Swal.fire({
-        title: "Error",
-        html: `<b>No se pudo modificar el empleado</b><br><small>${error.message}</small>`,
-        icon: "error"
-      });
-    }
-  }
-
-  // Función para ingresar empleado (actualizada)
-  async function ingresarEmpleado() {
-    const nombre = document.getElementById("nombre").value.trim();
-    const apellido = document.getElementById("apellido").value.trim();
-    const direccion = document.getElementById("direccion").value.trim();
-    const estado = "Activo";
-    const telefono = document.getElementById("telefono").value.trim();
-    const compania = document.getElementById("compania_telefonica").value;
-    const cedula = document.getElementById("cedula").value.trim();
-
-    // Validación básica
-    if (!nombre || !apellido || !direccion || !telefono || !compania || !cedula) {
-      Swal.fire("Advertencia", "Todos los campos son obligatorios.", "warning");
-      return;
-    }
-
-    // Validación de nombre y apellido
-    if (!validarNombreApellido(nombre)) {
-      await Swal.fire("Error", "El nombre debe contener solo letras y tener al menos 3 caracteres", "error");
-      return;
-    }
-
-    if (!validarNombreApellido(apellido)) {
-      await Swal.fire("Error", "El apellido debe contener solo letras y tener al menos 3 caracteres", "error");
-      return;
-    }
-
-    // Validar formato de cédula
-    if (!/^[0-9]{13}[A-Za-z]{1}$/.test(cedula)) {
-      Swal.fire("Error", "La cédula debe tener 13 dígitos seguidos de 1 letra", "error");
-      return;
-    }
-
-    // Verificar si la cédula ya existe
-    if (await verificarCedulaExistente(cedula)) {
-      return;
-    }
-
-    // Verificar si el teléfono ya existe
-    if (await verificarTelefonoExistente(telefono)) {
-      return;
-    }
-
-    const confirmacion = await Swal.fire({
-      title: "¿Confirmar ingreso?",
-      text: `¿Está seguro que desea ingresar a ${nombre} ${apellido}?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, ingresar",
-      cancelButtonText: "Cancelar"
-    });
-
-    if (!confirmacion.isConfirmed) return;
-
-    try {
-      const response = await fetch("/empleados/api/empleados", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre,
-          apellido,
-          direccion,
-          estado,
-          telefono,
-          compania,
-          cedula
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        await Swal.fire({
-          title: "¡Éxito!",
-          html: `Empleado ingresado correctamente<br>`,
-          icon: "success",
-          timer: 2000,
-          showConfirmButton: false
+        // Validación en tiempo real para nombre y apellido
+        document.getElementById('nombre').addEventListener('input', function (e) {
+            const value = e.target.value;
+            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
+                e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+            }
         });
 
-        cargarEmpleadosEnTabla();
-        cargarEmpleadosEnSelect();
-        limpiarCampos();
-      } else {
-        Swal.fire("Error", data.message || "No se pudo ingresar el empleado", "error");
-      }
-    } catch (error) {
-      console.error("Error al ingresar empleado:", error);
-      Swal.fire("Error", "Hubo un problema al ingresar el empleado", "error");
-    }
-  }
-
-  function limpiarCampos() {
-    // Limpiar campos de texto
-    const campos = ["nombre", "apellido", "direccion", "telefono", "cedula"];
-    campos.forEach(id => {
-      const element = document.getElementById(id);
-      if (element) {
-        element.value = "";
-        element.defaultValue = ""; // Asegurar reset de valores por defecto
-        element.disabled = false; // Habilitar campo al limpiar
-      }
-    });
-
-    // Resetear selects y habilitar estado
-    document.getElementById("compania_telefonica").value = "Tigo";
-
-    // Resetear select de empleados y checkbox
-    const selectEmpleado = document.getElementById("codigo_empleado");
-    selectEmpleado.value = "";
-    selectEmpleado.selectedIndex = 0;
-
-    // Ocultar ambos campos
-    document.getElementById("estado-container").classList.remove("visible");
-    document.querySelector(".form-check").classList.remove("visible");
-
-    // Manejar estados de botones
-    document.getElementById("ingresarButton").disabled = false;
-    document.getElementById("modificarButton").disabled = true;
-
-    // Resetear formulario completamente
-    document.getElementById("empleadoForm").reset();
-  }
-
-  // Función para cargar datos del empleado seleccionado (actualizada)
-  document.getElementById("codigo_empleado").addEventListener("change", async function () {
-    try {
-      const selectedOption = this.options[this.selectedIndex];
-      const estadoSelect = document.getElementById("estado"); // Cambiado de edit_estado a estado
-
-      if (!selectedOption?.value) {
-        limpiarCampos();
-        // Habilitar campos al limpiar
-        ['nombre', 'apellido', 'cedula'].forEach(id => {
-          const field = document.getElementById(id);
-          if (field) field.disabled = false;
+        document.getElementById('apellido').addEventListener('input', function (e) {
+            const value = e.target.value;
+            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(value)) {
+                e.target.value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+            }
         });
-        // Habilitar estado cuando no hay empleado seleccionado
-        if (estadoSelect) estadoSelect.disabled = false;
-        return;
-      }
 
-      // Verificar datos del empleado seleccionado
-      if (!selectedOption.dataset.nombre) {
-        throw new Error('Datos del empleado no cargados correctamente');
-      }
+        // Función para cargar empleados en el select y la tabla
+        async function cargarEmpleados() {
+            try {
+                const response = await fetch('/empleados/api/empleados');
+                const data = await response.json();
 
-      // Bloquear/desbloquear estado según el código del empleado
-      const codigoEmpleado = parseInt(selectedOption.value);
-      if (codigoEmpleado === 1 || codigoEmpleado === 2) {
-        if (estadoSelect) {
-          estadoSelect.disabled = true;
-          estadoSelect.value = "Activo";
-        }
-      } else if (estadoSelect) {
-        estadoSelect.disabled = false;
-      }
+                if (data.success) {
+                    // Cargar en el select de modificación
+                    const selectModificar = document.getElementById('select_empleado_modificar');
+                    if (selectModificar) {
+                        selectModificar.innerHTML = '<option value="" disabled selected>Seleccione un empleado...</option>';
 
-      // Llenar campos del formulario
-      const fieldsToUpdate = [
-        { id: 'nombre', dataset: 'nombre' },
-        { id: 'apellido', dataset: 'apellido' },
-        { id: 'direccion', dataset: 'direccion' },
-        { id: 'cedula', dataset: 'cedula' },
-        { id: 'telefono', dataset: 'telefono' },
-        { id: 'estado', dataset: 'estado', type: 'select' },
-        { id: 'compania_telefonica', dataset: 'compania', type: 'select' }
-      ];
+                        // Ordenar los empleados por cod_empleado (ascendente)
+                        const empleadosOrdenados = [...data.data].sort((a, b) => a.cod_empleado - b.cod_empleado);
 
-      fieldsToUpdate.forEach(field => {
-        const element = document.getElementById(field.id);
-        if (!element) {
-          console.error(`Elemento no encontrado: ${field.id}`);
-          return;
+                        // Llenar el select de modificación con empleados ordenados
+                        empleadosOrdenados.forEach(empleado => {
+                            const option = document.createElement('option');
+                            option.value = empleado.cod_empleado;
+                            option.textContent = `${empleado.cod_empleado} - ${empleado.nombre} ${empleado.apellido}`;
+                            // Agregar datos adicionales como atributos data
+                            option.dataset.nombre = empleado.nombre;
+                            option.dataset.apellido = empleado.apellido;
+                            option.dataset.cedula = empleado.cedula;
+                            option.dataset.direccion = empleado.direccion;
+                            option.dataset.telefono = empleado.telefono;
+                            option.dataset.compania = empleado.compania;
+                            option.dataset.estado = empleado.estado;
+                            selectModificar.appendChild(option);
+                        });
+
+                        // Agregar evento para cargar datos cuando se seleccione un empleado
+                        selectModificar.addEventListener('change', function () {
+                            const selectedOption = this.options[this.selectedIndex];
+                            if (selectedOption && selectedOption.value) {
+                                cargarDatosEmpleadoModificar(selectedOption.value);
+                            } else {
+                                document.getElementById('formulario-modificacion').style.display = 'none';
+                            }
+                        });
+                    }
+
+                    // Llenar DataTable con empleados ordenados
+                    const empleadosOrdenados = [...data.data].sort((a, b) => a.cod_empleado - b.cod_empleado);
+                    if (empleadosTable) {
+                        empleadosTable.clear();
+                        empleadosTable.rows.add(empleadosOrdenados).draw();
+                    } else {
+                        inicializarDataTable(empleadosOrdenados);
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar empleados:', error);
+                Swal.fire('Error', 'No se pudieron cargar los empleados', 'error');
+            }
         }
 
-        const value = selectedOption.dataset[field.dataset] || '';
+        // Función para cargar datos del empleado en el formulario de modificación
+        function cargarDatosEmpleadoModificar(codEmpleado) {
+            const select = document.getElementById('select_empleado_modificar');
+            const selectedOption = select.options[select.selectedIndex];
 
-        if (field.type === 'select') {
-          const optionExists = [...element.options].some(opt => opt.value === value);
-          element.value = optionExists ? value : element.options[0]?.value || '';
-        } else {
-          element.value = value;
+            if (!selectedOption?.value) {
+                document.getElementById('formulario-modificacion').style.display = 'none';
+                return;
+            }
+
+            try {
+                // Mostrar formulario de modificación
+                document.getElementById('formulario-modificacion').style.display = 'block';
+
+                // Cargar datos del option seleccionado
+                document.getElementById('mod_codigo').value = selectedOption.value;
+                document.getElementById('mod_nombre').value = selectedOption.dataset.nombre || '';
+                document.getElementById('mod_apellido').value = selectedOption.dataset.apellido || '';
+                document.getElementById('mod_cedula').value = selectedOption.dataset.cedula || '';
+                document.getElementById('mod_direccion').value = selectedOption.dataset.direccion || '';
+                document.getElementById('mod_telefono').value = selectedOption.dataset.telefono || '';
+                document.getElementById('mod_compania_telefonica').value = selectedOption.dataset.compania || 'Tigo';
+                document.getElementById('mod_estado').value = selectedOption.dataset.estado || 'Activo';
+
+                // Resetear checkbox de contraseña temporal
+                document.getElementById('mod_contrasena_temporal').checked = false;
+
+            } catch (error) {
+                console.error('Error al cargar empleado para modificar:', error);
+                Swal.fire('Error', 'No se pudieron cargar los datos del empleado', 'error');
+            }
         }
-        element.defaultValue = element.value;
-      });
 
-      // Bloquear campos que no deben editarse
-      ['nombre', 'apellido', 'cedula'].forEach(id => {
-        const field = document.getElementById(id);
-        if (field) field.disabled = true;
-      });
+        function inicializarDataTable(data) {
+            empleadosTable = $('#empleadosTable').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                pageLength: 10,
+                lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay empleados registrados",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ empleados",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 empleados",
+                    "infoFiltered": "(filtrado de _MAX_ empleados totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ empleados",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron empleados coincidentes",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    }
+                },
+                data: data,
+                columns: [
+                    { data: 'cod_empleado' },
+                    { data: 'nombre' },
+                    { data: 'apellido' },
+                    {
+                        data: 'cedula',
+                        render: function (data) {
+                            return data || 'No definida';
+                        }
+                    },
+                    { data: 'direccion' },
+                    {
+                        data: 'estado',
+                        render: function (data) {
+                            return `<span class="badge ${data === 'Activo' ? 'bg-success' : 'bg-danger'}">${data || 'No definido'}</span>`;
+                        }
+                    },
+                    {
+                        data: 'fechaingreso',
+                        render: function (data, type, row) {
+                            return row.fechaingresoformateada || formatDate(data) || 'No definida';
+                        }
+                    },
+                    {
+                        data: 'telefono',
+                        render: function (data) {
+                            return data || 'No disponible';
+                        }
+                    },
+                    {
+                        data: 'compania',
+                        render: function (data) {
+                            const companiaClass = data === 'Tigo' ? 'text-primary fw-bold' :
+                                data === 'Claro' ? 'text-danger fw-bold' : 'fw-bold';
+                            return `<span class="${companiaClass}">${data || 'No disponible'}</span>`;
+                        }
+                    }
+                ]
+            });
+        }
 
-      // Mostrar campos relevantes
-      const estadoContainer = document.getElementById("estado-container");
-      const formCheck = document.querySelector(".form-check");
+        // Función auxiliar para formatear fechas
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                if (dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+                    const [year, month, day] = dateString.split('T')[0].split('-');
+                    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+                }
+                if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                    return dateString;
+                }
+                return '';
+            } catch (e) {
+                console.error('Error formateando fecha:', e);
+                return '';
+            }
+        }
 
-      if (estadoContainer) estadoContainer.classList.add("visible");
-      if (formCheck) formCheck.classList.add("visible");
+        // Función para limpiar el formulario de registro
+        function limpiarFormulario() {
+            document.getElementById('empleadoForm').reset();
+        }
 
-      document.getElementById("modificarButton").disabled = false;
+        // Función para verificar teléfono existente
+        async function verificarTelefonoExistente(telefono, codEmpleado = null) {
+            try {
+                if (!telefono || !/^\d{8}$/.test(telefono)) {
+                    await Swal.fire({
+                        title: 'Teléfono inválido',
+                        text: 'El teléfono debe tener 8 dígitos',
+                        icon: 'error'
+                    });
+                    return true;
+                }
 
-    } catch (error) {
-      console.error('Error al cargar datos del empleado:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los datos del empleado seleccionado',
-        icon: 'error'
-      });
-    }
-  });
+                let url = `/empleados/api/telefono/existe/${telefono}`;
+                if (codEmpleado) {
+                    url += `?excluirEmpleado=${codEmpleado}`;
+                }
 
-  // Función para verificar si una cédula ya existe (Frontend)
-  async function verificarCedulaExistente(cedula, codEmpleado = null) {
-    try {
-      let url = `/empleados/api/cedula/existe/${cedula}`;
-      if (codEmpleado) {
-        url += `?excluirEmpleado=${codEmpleado}`;
-      }
+                const response = await fetch(url);
+                const data = await response.json();
 
-      const response = await fetch(url);
-      const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Error en la verificación');
+                }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Error al verificar cédula');
-      }
+                if (data.existe) {
+                    await Swal.fire({
+                        title: 'Teléfono registrado',
+                        text: 'Este número ya está en uso por otro empleado/proveedor',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido'
+                    });
+                    return true;
+                }
+                return false;
 
-      if (data.existe) {
-        await Swal.fire({
-          title: 'Cédula existente',
-          text: 'Esta cédula ya está registrada para otro empleado',
-          icon: 'error',
-          confirmButtonText: 'Entendido'
+            } catch (error) {
+                console.error('Error verificando teléfono:', error);
+                await Swal.fire({
+                    title: 'Error de verificación',
+                    text: error.message || 'No se pudo verificar el teléfono',
+                    icon: 'error'
+                });
+                return true;
+            }
+        }
+
+        // Función para verificar cédula existente
+        async function verificarCedulaExistente(cedula, codEmpleado = null) {
+            try {
+                let url = `/empleados/api/cedula/existe/${cedula}`;
+                if (codEmpleado) {
+                    url += `?excluirEmpleado=${codEmpleado}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Error al verificar cédula');
+                }
+
+                if (data.existe) {
+                    await Swal.fire({
+                        title: 'Cédula existente',
+                        text: 'Esta cédula ya está registrada para otro empleado',
+                        icon: 'error',
+                        confirmButtonText: 'Entendido'
+                    });
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error al verificar cédula:', error);
+                await Swal.fire({
+                    title: 'Error',
+                    text: 'No se pudo verificar la cédula',
+                    icon: 'error'
+                });
+                return true;
+            }
+        }
+
+        // Función para manejar el envío del formulario (POST)
+        document.getElementById('ingresarButton').addEventListener('click', async function (e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('ingresarButton');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
+            try {
+                const nombre = document.getElementById('nombre').value.trim();
+                const apellido = document.getElementById('apellido').value.trim();
+                const cedula = document.getElementById('cedula').value.trim();
+                const direccion = document.getElementById('direccion').value.trim();
+                const telefono = document.getElementById('telefono').value.trim();
+                const compania = document.getElementById('compania_telefonica').value;
+
+                // Validación de nombre y apellido
+                if (!validarNombreApellido(nombre)) {
+                    await Swal.fire("Error", "El nombre debe contener solo letras y tener al menos 3 caracteres", "error");
+                    return;
+                }
+
+                if (!validarNombreApellido(apellido)) {
+                    await Swal.fire("Error", "El apellido debe contener solo letras y tener al menos 3 caracteres", "error");
+                    return;
+                }
+
+                // Validar formato de cédula
+                if (!/^[0-9]{13}[A-Za-z]{1}$/.test(cedula)) {
+                    await Swal.fire("Error", "La cédula debe tener 13 dígitos seguidos de 1 letra", "error");
+                    return;
+                }
+
+                const formData = {
+                    nombre,
+                    apellido,
+                    cedula,
+                    direccion,
+                    telefono,
+                    compania,
+                    estado: "Activo", // Estado por defecto
+                    resetPassword: false // No resetear contraseña en registro
+                };
+
+                // Validaciones básicas
+                if (!formData.nombre || !formData.apellido || !formData.cedula || !formData.direccion ||
+                    !formData.telefono || !formData.compania) {
+                    await Swal.fire('Error', 'Todos los campos son requeridos', 'error');
+                    return;
+                }
+
+                // Verificar cédula
+                const cedulaExiste = await verificarCedulaExistente(formData.cedula);
+                if (cedulaExiste) return;
+
+                // Verificar teléfono
+                const telefonoExiste = await verificarTelefonoExistente(formData.telefono);
+                if (telefonoExiste) return;
+
+                // Enviar datos al servidor
+                const response = await fetch('/empleados/api/empleados', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    await Swal.fire('Éxito', 'Empleado registrado correctamente', 'success');
+                    cargarEmpleados(); // Actualizar la lista
+                    limpiarFormulario(); // Limpiar el formulario
+                } else {
+                    await Swal.fire('Error', result.errors?.join(', ') || 'Error al registrar', 'error');
+                }
+            } catch (error) {
+                console.error('Error en submit:', error);
+                await Swal.fire('Error', 'Ocurrió un error inesperado', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Ingresar';
+            }
         });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error al verificar cédula:', error);
-      await Swal.fire({
-        title: 'Error',
-        text: 'No se pudo verificar la cédula',
-        icon: 'error'
-      });
-      return true; // Asumir que existe para prevenir problemas
-    }
-  }
-</script>
 
-<script>
-  // Solución definitiva para el dropdown del navbar
-  document.addEventListener('DOMContentLoaded', function () {
-    // Manejar clicks en el dropdown manualmente
-    document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
-      toggle.addEventListener('click', function (e) {
-        e.preventDefault();
-        var menu = this.nextElementSibling;
-        menu.classList.toggle('show');
-      });
-    });
+        // Función para modificar empleado (PUT)
+        document.getElementById('modificarButton').addEventListener('click', async function () {
+            const codEmpleado = document.getElementById('mod_codigo').value;
+            if (!codEmpleado) {
+                Swal.fire('Error', 'Debe seleccionar un empleado', 'error');
+                return;
+            }
 
-    // Cerrar dropdown al hacer click fuera
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('.dropdown')) {
-        document.querySelectorAll('.dropdown-menu.show').forEach(function (menu) {
-          menu.classList.remove('show');
+            // Obtener los datos originales del select
+            const select = document.getElementById('select_empleado_modificar');
+            const selectedOption = select.options[select.selectedIndex];
+
+            if (!selectedOption) {
+                Swal.fire('Error', 'No se pudieron obtener los datos del empleado', 'error');
+                return;
+            }
+
+            // Usar los datos originales del select (que no se pueden modificar)
+            const nombre = selectedOption.dataset.nombre || '';
+            const apellido = selectedOption.dataset.apellido || '';
+            const cedula = selectedOption.dataset.cedula || '';
+            const direccion = selectedOption.dataset.direccion || '';
+            
+            // Obtener el estado del formulario (ahora editable)
+            const estado = document.getElementById('mod_estado').value;
+
+            // Solo obtener los campos modificables
+            const telefono = document.getElementById('mod_telefono').value.trim();
+            const compania = document.getElementById('mod_compania_telefonica').value;
+            const resetPassword = document.getElementById('mod_contrasena_temporal').checked;
+
+            const formData = {
+                nombre,
+                apellido,
+                cedula,
+                direccion,
+                estado,
+                telefono,
+                compania,
+                resetPassword
+            };
+
+            // Validaciones solo para campos modificables
+            if (!telefono || !compania || !estado) {
+                Swal.fire('Advertencia', 'Teléfono, compañía y estado son obligatorios', 'warning');
+                return;
+            }
+
+            // Validar formato del teléfono
+            if (!/^\d{8}$/.test(telefono)) {
+                await Swal.fire("Error", "El teléfono debe contener exactamente 8 dígitos", "error");
+                return;
+            }
+
+            // Verificar si el teléfono ya existe (excluyendo el empleado actual)
+            if (await verificarTelefonoExistente(telefono, codEmpleado)) {
+                return;
+            }
+
+            const confirmacion = await Swal.fire({
+                title: '¿Actualizar empleado?',
+                text: `¿Desea actualizar los datos de ${nombre} ${apellido}?`,
+                html: `
+                <div class="text-start">
+                    <p><strong>Cambios:</strong></p>
+                    <ul>
+                        <li>Teléfono: ${selectedOption.dataset.telefono} → ${telefono}</li>
+                        <li>Compañía: ${selectedOption.dataset.compania} → ${compania}</li>
+                        <li>Estado: ${selectedOption.dataset.estado} → ${estado}</li>
+                        ${resetPassword ? '<li><b>⚠️ Se restablecerá la contraseña a temporal</b></li>' : ''}
+                    </ul>
+                </div>
+            `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, actualizar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!confirmacion.isConfirmed) return;
+
+            try {
+                const btnModificar = document.getElementById('modificarButton');
+                btnModificar.disabled = true;
+                btnModificar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
+                const response = await fetch(`/empleados/api/empleados/${codEmpleado}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    await Swal.fire('Éxito', 'Empleado actualizado correctamente', 'success');
+                    cargarEmpleados();
+                    // Limpiar formulario de modificación
+                    document.getElementById('select_empleado_modificar').value = '';
+                    document.getElementById('formulario-modificacion').style.display = 'none';
+                } else {
+                    Swal.fire('Error', result.errors?.join(', ') || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error al actualizar:', error);
+                Swal.fire('Error', 'Error al comunicarse con el servidor', 'error');
+            } finally {
+                const btnModificar = document.getElementById('modificarButton');
+                btnModificar.disabled = false;
+                btnModificar.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Cambios';
+            }
         });
-      }
-    });
 
-    // Reinicializar dropdowns después de DataTables
-    if ($.fn.DataTable.isDataTable('#empleadosTable')) {
-      $('#empleadosTable').on('init.dt', function () {
-        new bootstrap.Dropdown(document.querySelector('.dropdown-toggle'));
-      });
-    }
-  });
-</script>
+        // Cargar empleados al iniciar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarEmpleados();
+        });
+    </script>

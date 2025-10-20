@@ -20,8 +20,6 @@ router.get('/add', (req, res) => {
     });
 });
 
-
-
 // Ruta para manejar el reporte de ventas
 router.post('/ventas', asyncHandler(async (req, res) => {
     const { filtro, fecha, empleadoId } = req.body;
@@ -43,19 +41,19 @@ router.post('/ventas', asyncHandler(async (req, res) => {
 
     console.log(`Solicitud recibida - Filtro: ${filtro}, Fecha: ${fecha}, EmpleadoID: ${empleadoId}`);
 
-    let connection;
+    let client;
     try {
-        connection = await pool.getConnection();
+        client = await pool.connect();
         
-        // Pasar el ID del empleado al procedimiento almacenado
-        const [results] = await connection.query(
-            'CALL sp_reporte_ventas_empleado(?, ?, ?)', 
+        // Llamar a la función de PostgreSQL (no procedimiento almacenado)
+        const result = await client.query(
+            'SELECT * FROM sp_reporte_ventas_empleado($1, $2, $3)', 
             [filtro, fecha, empleadoId]
         );
         
-        console.log(`Resultados obtenidos: ${results[0]?.length || 0} registros`);
+        console.log(`Resultados obtenidos: ${result.rows?.length || 0} registros`);
         
-        const data = Array.isArray(results[0]) ? results[0] : [];
+        const data = Array.isArray(result.rows) ? result.rows : [];
         res.json(data);
         
     } catch (error) {
@@ -66,7 +64,7 @@ router.post('/ventas', asyncHandler(async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
-        if (connection) connection.release();
+        if (client) client.release();
     }
 }));
 
@@ -78,6 +76,5 @@ router.use((err, req, res, next) => {
         message: DEFAULT_ERROR_MESSAGE
     });
 });
-
 
 export { router };

@@ -39,12 +39,14 @@
         </a>
         {{/if}}
 
+        <!--
         {{#if esAdmin}}
         <a class="nav-link" href="/outlet/add">
           <img src="/images/outlet.webp" alt="Gestión de bajas">
           Gestión de bajas
         </a>
         {{/if}}
+        -->
 
         <a class="nav-link" href="/ventas/add">
           <img src="/images/iconshop.webp" alt="Ventas">
@@ -79,7 +81,7 @@
           <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown"
             aria-expanded="false">
             <i class="bi bi-person-circle fs-5 me-1"></i>
-            {{user.Apellido}} {{user.Nombre}}
+            {{user.apellido}} {{user.nombre}}
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item text-danger" href="/logout">Cerrar sesión</a></li>

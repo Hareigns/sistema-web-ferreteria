@@ -260,13 +260,16 @@
     // Tabla de ventas diarias
     const ventasTable = document.getElementById('tabla-ventas');
     if (data.ventasDiarias && data.ventasDiarias.length > 0) {
-      ventasTable.innerHTML = data.ventasDiarias.map(v => `
-        <tr>
-          <td>${formatDate(v.fecha)}</td>
-          <td>C$${v.total?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '0.00'}</td>
-          <td>${v.cantidad_ventas || 0}</td>
-        </tr>
-      `).join('');
+      ventasTable.innerHTML = data.ventasDiarias.map(v => {
+        const total = typeof v.total === 'number' ? v.total : parseFloat(v.total) || 0;
+        return `
+          <tr>
+            <td>${formatDate(v.fecha)}</td>
+            <td>C$${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+            <td>${v.cantidad_ventas || 0}</td>
+          </tr>
+        `;
+      }).join('');
     } else {
       ventasTable.innerHTML = '<tr><td colspan="3">No hay registros de ventas</td></tr>';
     }
@@ -274,29 +277,36 @@
     // Tabla de ventas por empleado
     const empleadosTable = document.getElementById('tabla-empleados');
     if (data.ventasEmpleados && data.ventasEmpleados.length > 0) {
-      empleadosTable.innerHTML = data.ventasEmpleados.map(e => `
-    <tr>
-      <td>${e.nombre || 'N/A'}</td>
-      <td>C$${(e.total || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
-      <td>${e.cantidad_ventas || 0}</td>
-    </tr>
-  `).join('');
+      empleadosTable.innerHTML = data.ventasEmpleados.map(e => {
+        const total = typeof e.total === 'number' ? e.total : parseFloat(e.total) || 0;
+        return `
+          <tr>
+            <td>${e.nombre || 'N/A'}</td>
+            <td>C$${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+            <td>${e.cantidad_ventas || 0}</td>
+          </tr>
+        `;
+      }).join('');
     } else {
       empleadosTable.innerHTML = '<tr><td colspan="3">No hay datos de empleados</td></tr>';
     }
 
     // Mostrar resumen
     if (data.resumen) {
+      const ventasTotales = typeof data.resumen.ventas_totales === 'number' ?
+        data.resumen.ventas_totales : parseFloat(data.resumen.ventas_totales) || 0;
+
       document.getElementById('ventas-totales').textContent =
-        `C$${data.resumen.ventas_totales?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '0.00'}`;
+        `C$${ventasTotales.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
       document.getElementById('total-ventas').textContent =
-        data.resumen.total_ventas?.toLocaleString() || '0';
+        data.resumen.total_ventas?.toString() || '0';
       document.getElementById('empleados-activos').textContent =
-        data.resumen.empleados_activos?.toLocaleString() || '0';
+        data.resumen.empleados_activos?.toString() || '0';
       document.getElementById('empleado-destacado').textContent =
         data.resumen.empleado_destacado || 'N/A';
     }
   }
+
 
   function formatDate(dateString) {
     if (!dateString) return 'N/A';

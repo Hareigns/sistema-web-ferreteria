@@ -1,6 +1,5 @@
 body {
-    background: url('/images/fondoinicio.webp') no-repeat center center fixed;
-    background-size: cover;
+    background: linear-gradient(135deg, #cdd0d3 0%, #d9dbdd 100%);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -11,83 +10,113 @@ body {
 
 /* Navbar ajustada - versión compacta */
 .navbar {
-    background: #2c3e50;
-    padding: 8px 15px; /* Reducción del padding vertical */
+    background: var(--dark-color);
+    padding: 8px 15px;
     width: 100%;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1000;
-    height: 56px; /* Altura fija */
-    box-sizing: border-box; /* Incluye padding en la altura */
+    height: 56px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
- /* Estilos personalizados para mejor alineación */
-    .reportes-container {
-        padding: 0 1rem; /* Padding lateral consistente */
-    }
-    
-    .card {
-        height: 100%; /* Asegura que todas las cards tengan la misma altura */
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .card-body {
-        flex-grow: 1; /* Hace que el cuerpo ocupe el espacio disponible */
-    }
-    
-    .card-header h2 {
-        font-size: 1.1rem; /* Tamaño uniforme para títulos */
-    }
-    
-    .btn {
-        padding: 0.375rem 0.75rem; /* Tamaño consistente para botones */
-        font-size: 0.875rem; /* Tamaño de fuente uniforme */
-    }
+/* Estilos personalizados para mejor alineación */
+.reportes-container {
+    padding: 0 1rem;
+}
+
+.card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    background: white;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-body {
+    flex-grow: 1;
+    padding: 20px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    background: var(--primary-color);
+    color: white;
+    border-bottom: none;
+    padding: 15px 20px;
+}
+
+.card-header h2 {
+    font-size: 1.1rem;
+    margin: 0;
+    color: white;
+}
+
+.btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+    border: none;
+}
 
 /* Nuevos estilos para el botón de empleado */
 .bg-purple {
-    background-color: #6f42c1 !important;
+    background-color: var(--secondary-color) !important;
 }
 
 .btn-outline-purple {
-    color: #6f42c1;
-    border-color: #6f42c1;
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
     transition: all 0.3s ease;
 }
 
 .btn-outline-purple:hover {
-    background-color: #6f42c1;
+    background-color: var(--secondary-color);
     color: white;
-    border-color: #6f42c1;
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
 .btn-outline-purple:active, 
 .btn-outline-purple:focus {
-    background-color: #5a32a3 !important;
-    border-color: #5a32a3 !important;
-    box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25) !important;
+    background-color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(63, 55, 201, 0.25) !important;
 }
 
 /* Añade estos estilos */
 .card-body.d-flex {
-    min-height: 120px; /* Altura mínima para mantener consistencia */
+    min-height: 120px;
 }
 
 .card-body .mt-auto {
-    margin-top: auto !important; /* Empuja el botón hacia abajo */
+    margin-top: auto !important;
 }
 
 .btn-outline-secondary {
     transition: all 0.3s ease;
+    border-color: #6c757d;
+    color: #6c757d;
 }
 
 .btn-outline-secondary:hover {
     background-color: #6c757d;
     color: white;
+    transform: translateY(-2px);
 }
 
 .btn-outline-secondary:active, 
@@ -99,13 +128,13 @@ body {
 
 /* Estilos para la tarjeta de productos adquiridos */
 .card-body.flex-column {
-    min-height: 140px; /* Altura mínima aumentada */
+    min-height: 140px;
 }
 
 .card-text {
-    font-size: 1rem !important; /* Tamaño de fuente aumentado */
+    font-size: 1rem !important;
     padding: 0.5rem;
-    color: #495057; /* Color de texto más oscuro */
+    color: var(--dark-color);
     line-height: 1.5;
 }
 
@@ -124,13 +153,16 @@ body {
 
 /* Ajustes para el select de empleados */
 #selectEmpleado {
-    border: 1px solid #6f42c1;
+    border: 1px solid var(--secondary-color);
+    border-radius: 8px;
     transition: all 0.3s ease;
+    padding: 10px 15px;
 }
 
 #selectEmpleado:focus {
-    border-color: #5a32a3;
-    box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    outline: none;
 }
 
 /* Centrado mejorado del contenedor */
@@ -140,7 +172,7 @@ body {
 
 /* Contenido principal pegado a la navbar */
 .main-content {
-    margin-top: 56px !important; /* Igual a la altura de la navbar */
+    margin-top: 56px !important;
     padding-top: 0 !important;
     width: 100%;
     flex: 1;
@@ -151,7 +183,8 @@ body {
     margin-top: 0;
     padding: 10px 15px;
     width: 100%;
-    background: rgba(255, 255, 255, 0.9);
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* Reset de márgenes para todos los contenedores principales */
@@ -159,25 +192,11 @@ body {
     margin-top: 0 !important;
 }
 
-/* Ajustes específicos para cards */
-.card {
-    border-radius: 15px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    background: rgba(255, 255, 255, 0.9);
-    margin-bottom: 20px;
-}
-
-/* Resto de estilos se mantienen igual */
-.card-header {
-    border-radius: 8px 8px 0 0 !important;
-    font-weight: 600;
-    background-color: rgba(44, 62, 80, 0.1);
-}
-
 .list-group-item {
     border-left: none;
     border-right: none;
     padding: 12px 20px;
+    border-color: #e0e0e0;
 }
 
 /* Footer ajustado */
@@ -185,24 +204,50 @@ body {
     width: 100%;
     text-align: center;
     padding: 15px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
+    background: var(--dark-color);
+    color: var(--light-color);
     flex-shrink: 0;
 }
 
 /* Nuevos estilos para el dropdown del navbar */
-        .navbar .dropdown-menu {
-            position: absolute !important;
-            right: 0 !important;
-            left: auto !important;
-            z-index: 1001 !important;
-            display: none;
-        }
-        
-        .navbar .dropdown-menu.show {
-            display: block !important;
-        }
-        
-        div.dataTables_wrapper {
-            z-index: 0 !important;
-        }
+.navbar .dropdown-menu {
+    position: absolute !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 1001 !important;
+    display: none;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    background: white;
+}
+
+.navbar .dropdown-menu.show {
+    display: block !important;
+}
+
+.navbar .dropdown-item {
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+    color: var(--dark-color);
+}
+
+.navbar .dropdown-item:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+div.dataTables_wrapper {
+    z-index: 0 !important;
+}
+
+/* Variables de color unificadas */
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --accent-color: #4895ef;
+    --dark-color: #2b2d42;
+    --light-color: #f8f9fa;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+}

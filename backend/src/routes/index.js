@@ -6,32 +6,42 @@ const router = express.Router();
 
 router.get('/', isNotLoggedIn, async (req, res) => {
     try {
-        // Llamar al procedimiento almacenado
-        const [results] = await pool.query('CALL TopProductosPorSectorConPrecio()');
+        // Llamar a la función de PostgreSQL
+        const result = await pool.query('SELECT * FROM topproductosporsectorconprecio()');
         
-        // Los procedimientos almacenados pueden devolver múltiples conjuntos de resultados
-        // Normalmente el primer array contiene los datos que necesitamos
-        const productosDestacados = Array.isArray(results[0]) ? results[0] : results;
+        const productosDestacados = result.rows;
     
-        
         // Agrupar productos por sector
         const productosPorSector = {};
         
         if (productosDestacados && productosDestacados.length > 0) {
             productosDestacados.forEach(producto => {
-                if (!productosPorSector[producto.Sector]) {
-                    productosPorSector[producto.Sector] = [];
+                // PostgreSQL devuelve los nombres en minúsculas
+                if (!productosPorSector[producto.sector]) {
+                    productosPorSector[producto.sector] = [];
                 }
-                productosPorSector[producto.Sector].push({
-                    ...producto,
-                    CantidadVendida: producto.CantidadVendida.toFixed(0) // Formatear a entero
+                
+                // Convertir cantidadvendida a número y formatear
+                const cantidadVendida = parseFloat(producto.cantidadvendida) || 0;
+                
+                // Mapear los campos de minúsculas a mayúsculas para mantener compatibilidad
+                productosPorSector[producto.sector].push({
+                    Sector: producto.sector,
+                    Cod_Producto: producto.cod_producto,
+                    Nombre_Producto: producto.nombre_producto,
+                    CantidadVendida: cantidadVendida,
+                    PrecioPromedio: producto.preciopromedio,
+                    TotalVendido: producto.totalvendido,
+                    Icono: producto.icono,
+                    // Propiedad formateada para la vista
+                    CantidadVendidaFormatted: cantidadVendida.toFixed(0)
                 });
             });
         }
 
         res.render('index', { 
             title: 'Inicio',
-            productosPorSector: productosPorSector || {} // Asegurar que siempre sea un objeto
+            productosPorSector: productosPorSector || {}
         });
     } catch (err) {
         console.error('Error al obtener productos destacados:', err);

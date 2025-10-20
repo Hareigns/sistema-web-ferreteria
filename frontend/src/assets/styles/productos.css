@@ -9,10 +9,14 @@
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding-top: 80px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #cdd0d3 0%, #d9dbdd 100%);
+        background-size: cover;
+        min-height: 100vh;
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
         }
         
         .navbar {
@@ -254,3 +258,309 @@
                 width: 100%;
             }
         }
+
+        /* Mejoras específicas para el buscador de modificación */
+.floating-label {
+  position: relative;
+  margin-bottom: 25px;
+}
+
+.floating-label label {
+  position: absolute;
+  top: -12px;
+  left: 15px;
+  background: white;
+  padding: 0 10px;
+  font-size: 14px;
+  color: #4361ee;
+  font-weight: 600;
+  z-index: 10;
+  border-radius: 4px;
+}
+
+.select2-container .select2-selection--single {
+  height: 50px !important;
+  border: 2px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 48px !important;
+  font-size: 14px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+  color: #6c757d !important;
+  font-size: 14px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 48px !important;
+}
+
+/* Estilos para el área de arrastrar y soltar */
+.drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
+  cursor: pointer;
+}
+
+.drop-zone:hover {
+  border-color: #80c7e0;
+  background-color: #f0f8ff;
+}
+
+.drop-zone.dragover {
+  border-color: #80c7e0;
+  background-color: #e6f7ff;
+  transform: scale(1.02);
+}
+
+.drop-zone i {
+  margin-bottom: 1rem;
+}
+
+.preview-image {
+  max-width: 300px;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+/* Estilos para móviles */
+@media (max-width: 768px) {
+  .drop-zone {
+    padding: 1.5rem;
+  }
+  
+  .preview-image {
+    max-width: 200px;
+    max-height: 200px;
+  }
+  
+  .drop-zone h5 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Estilos para imágenes en la tabla */
+.table-image {
+  border-radius: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid #e9ecef;
+}
+
+.table-image:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+/* Estilos para la tabla */
+#productosTable th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+}
+
+#productosTable td {
+  vertical-align: middle;
+}
+
+/* Resaltar filas con stock bajo */
+.table-warning {
+  background-color: #fff3cd !important;
+}
+
+.table-danger {
+  background-color: #f8d7da !important;
+}
+
+/* Badges personalizados */
+.badge {
+  font-size: 0.75em;
+  padding: 0.4em 0.6em;
+}
+
+/* Responsive para la tabla */
+@media (max-width: 768px) {
+  .table-image {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  #productosTable th:nth-child(3),
+  #productosTable td:nth-child(3) {
+    min-width: 150px;
+  }
+}
+
+/* Estilos para la sección de imagen en modificación */
+#mod_imagen_actual_container {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#mod_imagen_actual {
+  border: 3px solid #e9ecef;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+}
+
+#mod_imagen_actual:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+#mod_sin_imagen {
+  padding: 20px;
+  border: 2px dashed #dee2e6;
+  border-radius: 10px;
+  background-color: #f8f9fa;
+}
+
+#mod_preview_nueva_imagen {
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  padding: 10px;
+  background-color: #f8f9ff;
+}
+
+/* Botones de acción */
+#actualizarImagenButton {
+  transition: all 0.3s ease;
+}
+
+#actualizarImagenButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+}
+
+/* Estilos para las secciones de imagen */
+.drop-zone {
+  border: 2px dashed #007bff;
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.drop-zone:hover {
+  background-color: #e9ecef;
+  border-color: #0056b3;
+}
+
+.drop-zone.dragover {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  border: 3px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.table-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e9ecef;
+  transition: transform 0.3s ease;
+}
+
+.table-image:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+/* Estilos para la sección de imagen en modificación */
+#mod_imagen_actual_container {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #dee2e6;
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+#mod_imagen_actual {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+#mod_imagen_actual:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+#mod_sin_imagen {
+  padding: 20px;
+  color: #6c757d;
+}
+
+#mod_preview_nueva_imagen {
+  border: 2px solid #28a745;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #f8fff9;
+  margin-top: 15px;
+}
+
+/* Botones de acción */
+#actualizarImagenButton {
+  transition: all 0.3s ease;
+}
+
+#actualizarImagenButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Asegurar que las pestañas se muestren correctamente */
+.tab-pane {
+  padding-top: 20px;
+}
+
+.card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.floating-label {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.floating-label label {
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  background: white;
+  padding: 0 8px;
+  font-size: 12px;
+  color: #495057;
+  z-index: 10;
+}
+
+.floating-label .form-control,
+.floating-label .form-select {
+  padding-top: 12px;
+  height: calc(3.5rem + 2px);
+}

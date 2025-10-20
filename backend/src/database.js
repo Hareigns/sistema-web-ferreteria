@@ -1,28 +1,23 @@
-import mysql from "mysql2/promise";
-import dotenv from "dotenv";
-import { database } from "./keys.js";
+// database.js - Para PostgreSQL
+import { pool } from './keys.js';
 
-// Cargar variables de entorno desde .env
-dotenv.config();
-
-// Crear el pool de conexiones
-const pool = mysql.createPool(database);
-
-// Verificar la conexión
+// Función para verificar la conexión
 const verifyConnection = async () => {
   try {
-    const connection = await pool.getConnection();
-    console.log('➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦  La base de datos está conectada\n➤\n➤');
-    connection.release();
+    const client = await pool.connect();
+    console.log('➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦');
+    console.log('✅ La base de datos PostgreSQL está conectada');
+    console.log('➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦➦');
+    client.release();
   } catch (err) {
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-      console.error('Se perdió la conexión a la base de datos');
-    } else if (err.code === 'ER_CON_COUNT_ERROR') {
-      console.error('La base de datos tiene demasiadas conexiones');
-    } else if (err.code === 'ECONNREFUSED') {
-      console.error('Se ha rechazado la conexión a la base de datos');
+    if (err.code === 'ECONNREFUSED') {
+      console.error('❌ Se ha rechazado la conexión a la base de datos');
+    } else if (err.code === '3D000') {
+      console.error('❌ La base de datos no existe');
+    } else if (err.code === '28P01') {
+      console.error('❌ Error de autenticación - verifica usuario y contraseña');
     } else {
-      console.error('Error de conexión a la base de datos:', err);
+      console.error('❌ Error de conexión a la base de datos:', err.message);
     }
   }
 };

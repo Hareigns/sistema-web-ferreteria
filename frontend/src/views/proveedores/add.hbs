@@ -1,4 +1,5 @@
 <title>Registro de Proveedores</title>
+<link rel="stylesheet" href="/styles/proveedores.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,38 +12,65 @@
   </div>
 </nav>
 
-<div class="container mb-5">
-  <div class="card">
-    <div class="card-header">
-      <h3 class="text-center mb-0"><i class="fas fa-list me-2"></i>Lista de Proveedores</h3>
-    </div>
-    <div class="card-body p-4">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 display" id="proveedoresTable" style="width:100%">
-          <thead>
-            <tr>
-              <th><i class="fas fa-id-card me-1"></i> Código</th>
-              <th><i class="fas fa-user me-1"></i> Nombre</th>
-              <th><i class="fas fa-user-tag me-1"></i> Apellido</th>
-              <th><i class="fas fa-phone-alt me-1"></i> Teléfono</th>
-              <th><i class="fas fa-mobile-alt me-1"></i> Compañía</th>
-              <th><i class="fas fa-industry me-1"></i> Sector</th>
-              <th><i class="fas fa-circle me-1"></i> Estado</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
+<div class="container mt-4">
+  <!-- Pestañas -->
+  <ul class="nav nav-tabs" id="supplierTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab"
+        aria-controls="list" aria-selected="true">
+        <i class="fas fa-list me-2"></i>Lista de Proveedores
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button"
+        role="tab" aria-controls="register" aria-selected="false">
+        <i class="fas fa-user-plus me-2"></i>Registrar Proveedores
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="modify-tab" data-bs-toggle="tab" data-bs-target="#modify" type="button" role="tab"
+        aria-controls="modify" aria-selected="false">
+        <i class="fas fa-user-edit me-2"></i>Actualizar Proveedores
+      </button>
+    </li>
+  </ul>
 
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-10">
+  <!-- Contenido de las pestañas -->
+  <div class="tab-content" id="supplierTabsContent">
+    <!-- Pestaña de Lista de Proveedores -->
+    <div class="tab-pane fade show active" id="list" role="tabpanel" aria-labelledby="list-tab">
       <div class="card">
         <div class="card-header">
-          <h3 class="text-center mb-0"><i class="fas fa-user-edit me-2"></i>Registro de Proveedores</h3>
+          <h3 class="text-center mb-0"><i class="fas fa-list me-2"></i>Lista de Proveedores</h3>
+        </div>
+        <div class="card-body p-4">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 display" id="proveedoresTable" style="width:100%">
+              <thead>
+                <tr>
+                  <th><i class="fas fa-id-card me-1"></i> Código</th>
+                  <th><i class="fas fa-user me-1"></i> Nombre</th>
+                  <th><i class="fas fa-user-tag me-1"></i> Apellido</th>
+                  <th><i class="fas fa-phone-alt me-1"></i> Teléfono</th>
+                  <th><i class="fas fa-mobile-alt me-1"></i> Compañía</th>
+                  <th><i class="fas fa-industry me-1"></i> Sector</th>
+                  <th><i class="fas fa-circle me-1"></i> Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Los datos se cargarán dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestaña de Registro -->
+    <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center mb-0"><i class="fas fa-user-plus me-2"></i>Registro de Proveedores</h3>
         </div>
         <div class="card-body p-4">
           <form id="proveedorForm">
@@ -64,11 +92,12 @@
               <div class="col-md-6">
                 <div class="floating-label">
                   <label for="telefono">Teléfono</label>
-                  <input type="tel" id="telefono" name="telefono" class="form-control" required>
+                  <input type="tel" id="telefono" name="telefono" class="form-control" pattern="[0-9]{8}"
+                    title="Debe contener 8 dígitos" required>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="floating-label modern-select">
+                <div class="floating-label">
                   <label for="compania">Compañía</label>
                   <select id="compania" name="compania" class="form-select" required>
                     <option value="" selected disabled>Seleccione una compañía</option>
@@ -78,7 +107,7 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="floating-label modern-select">
+                <div class="floating-label">
                   <label for="sector">Sector</label>
                   <select id="sector" name="sector" class="form-select" required>
                     <option value="" disabled selected>Seleccione un sector</option>
@@ -93,11 +122,11 @@
                   </select>
                 </div>
               </div>
-              <div id="estado-container" class="col-md-6">
-                <div class="floating-label modern-select">
+              <div class="col-md-6">
+                <div class="floating-label">
                   <label for="estado">Estado</label>
                   <select id="estado" name="estado" class="form-select" required>
-                    <option value="Activo">Activo</option>
+                    <option value="Activo" selected>Activo</option>
                     <option value="Inactivo">Inactivo</option>
                   </select>
                 </div>
@@ -112,20 +141,107 @@
                 <i class="fas fa-broom me-2"></i>Limpiar
               </button>
             </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
-            <div class="mt-5">
-              <h5 class="section-title"><i class="fas fa-user-cog me-2"></i>Modificar Proveedor</h5>
-              <div class="modern-select mb-3">
-                <select id="codigo_proveedor" class="form-select" required onchange="cargarDatosProveedor(this.value)">
-                  <option value="" disabled selected>Seleccione un proveedor</option>
+    <!-- Pestaña de Modificación -->
+    <div class="tab-pane fade" id="modify" role="tabpanel" aria-labelledby="modify-tab">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center mb-0"><i class="fas fa-user-edit me-2"></i>Actualizar Proveedores</h3>
+        </div>
+        <div class="card-body p-4">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Seleccione un proveedor para modificar sus datos.
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-8">
+              <div class="floating-label">
+                <label for="select_proveedor_modificar">Buscar proveedor a modificar</label>
+                <select id="select_proveedor_modificar" class="form-select">
+                  <option value="" disabled selected>Seleccione un proveedor...</option>
+                  <!-- Los proveedores se cargarán dinámicamente -->
                 </select>
               </div>
-              <button class="btn btn-success w-100" type="button" id="modificarButton" onclick="modificarProveedor()"
-                disabled>
-                <i class="fas fa-user-edit me-2"></i>Modificar
-              </button>
             </div>
-          </form>
+          </div>
+
+          <div id="formulario-modificacion" style="display: none;">
+            <form id="modificarProveedorForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="floating-label">
+                    <label for="mod_codigo">Código</label>
+                    <input type="text" id="mod_codigo" class="form-control" readonly style="background-color: #f8f9fa;">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="floating-label">
+                    <label for="mod_nombre">Nombre</label>
+                    <input type="text" id="mod_nombre" class="form-control" readonly style="background-color: #f8f9fa;">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="floating-label">
+                    <label for="mod_apellido">Apellido</label>
+                    <input type="text" id="mod_apellido" class="form-control" readonly
+                      style="background-color: #f8f9fa;">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="floating-label">
+                    <label for="mod_telefono">Teléfono</label>
+                    <input type="tel" id="mod_telefono" class="form-control" pattern="[0-9]{8}"
+                      title="Debe contener 8 dígitos" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="floating-label">
+                    <label for="mod_compania">Compañía</label>
+                    <select id="mod_compania" class="form-select" required>
+                      <option value="" selected disabled>Seleccione una compañía</option>
+                      <option value="Tigo">Tigo</option>
+                      <option value="Claro">Claro</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="floating-label">
+                    <label for="mod_sector">Sector</label>
+                    <select id="mod_sector" class="form-select" disabled style="background-color: #f8f9fa;">
+                      <option value="" disabled selected>Seleccione un sector</option>
+                      <option value="Herramientas manuales">Herramientas manuales</option>
+                      <option value="Herramientas eléctricas">Herramientas eléctricas</option>
+                      <option value="Materiales de construcción">Materiales de construcción</option>
+                      <option value="Pinturas o accesorios">Pinturas o accesorios</option>
+                      <option value="Tuberías y plomería">Tuberías y plomería</option>
+                      <option value="Electricidad e iluminación">Electricidad e iluminación</option>
+                      <option value="Seguridad industrial">Seguridad industrial</option>
+                      <option value="Productos de ferretería general">Productos de ferretería general</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="floating-label">
+                    <label for="mod_estado">Estado</label>
+                    <select id="mod_estado" class="form-select" required>
+                      <option value="Activo">Activo</option>
+                      <option value="Inactivo">Inactivo</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-grid gap-2 mt-4">
+                <button class="btn btn-success" type="button" id="modificarButton">
+                  <i class="fas fa-save me-2"></i>Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -167,28 +283,42 @@
       const data = await response.json();
 
       if (data.success) {
-        const select = document.getElementById('codigo_proveedor');
-        select.innerHTML = '<option value="" disabled selected>Seleccione un proveedor</option>';
+        // Cargar en el select de modificación (CORREGIDO)
+        const selectModificar = document.getElementById('select_proveedor_modificar');
+        if (selectModificar) {
+          selectModificar.innerHTML = '<option value="" disabled selected>Seleccione un proveedor...</option>';
 
-        // Ordenar los proveedores por Cod_Proveedor (ascendente)
-        const proveedoresOrdenados = [...data.data].sort((a, b) => a.Cod_Proveedor - b.Cod_Proveedor);
+          // Ordenar los proveedores por cod_proveedor (ascendente)
+          const proveedoresOrdenados = [...data.data].sort((a, b) => a.cod_proveedor - b.cod_proveedor);
 
-        // Llenar el select con proveedores ordenados
-        proveedoresOrdenados.forEach(proveedor => {
-          const option = document.createElement('option');
-          option.value = proveedor.Cod_Proveedor;
-          option.textContent = `${proveedor.Cod_Proveedor} - ${proveedor.Nombre} ${proveedor.Apellido}`;
-          // Agregar datos adicionales como atributos data
-          option.dataset.nombre = proveedor.Nombre;
-          option.dataset.apellido = proveedor.Apellido;
-          option.dataset.telefono = proveedor.Telefono;
-          option.dataset.compania = proveedor.Compania;
-          option.dataset.sector = proveedor.Sector;
-          option.dataset.estado = proveedor.Estado;
-          select.appendChild(option);
-        });
+          // Llenar el select de modificación con proveedores ordenados
+          proveedoresOrdenados.forEach(proveedor => {
+            const option = document.createElement('option');
+            option.value = proveedor.cod_proveedor;
+            option.textContent = `${proveedor.cod_proveedor} - ${proveedor.nombre} ${proveedor.apellido}`;
+            // Agregar datos adicionales como atributos data
+            option.dataset.nombre = proveedor.nombre;
+            option.dataset.apellido = proveedor.apellido;
+            option.dataset.telefono = proveedor.telefono;
+            option.dataset.compania = proveedor.compania;
+            option.dataset.sector = proveedor.sector;
+            option.dataset.estado = proveedor.estado;
+            selectModificar.appendChild(option);
+          });
+
+          // Agregar evento para cargar datos cuando se seleccione un proveedor
+          selectModificar.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+              cargarDatosProveedorModificar(selectedOption.value);
+            } else {
+              document.getElementById('formulario-modificacion').style.display = 'none';
+            }
+          });
+        }
 
         // Llenar DataTable con proveedores ordenados
+        const proveedoresOrdenados = [...data.data].sort((a, b) => a.cod_proveedor - b.cod_proveedor);
         if (proveedoresTable) {
           proveedoresTable.clear();
           proveedoresTable.rows.add(proveedoresOrdenados).draw();
@@ -199,6 +329,35 @@
     } catch (error) {
       console.error('Error al cargar proveedores:', error);
       Swal.fire('Error', 'No se pudieron cargar los proveedores', 'error');
+    }
+  }
+
+  // Función para cargar datos del proveedor en el formulario de modificación
+  function cargarDatosProveedorModificar(codProveedor) {
+    const select = document.getElementById('select_proveedor_modificar');
+    const selectedOption = select.options[select.selectedIndex];
+
+    if (!selectedOption?.value) {
+      document.getElementById('formulario-modificacion').style.display = 'none';
+      return;
+    }
+
+    try {
+      // Mostrar formulario de modificación
+      document.getElementById('formulario-modificacion').style.display = 'block';
+
+      // Cargar datos del option seleccionado
+      document.getElementById('mod_codigo').value = selectedOption.value;
+      document.getElementById('mod_nombre').value = selectedOption.dataset.nombre || '';
+      document.getElementById('mod_apellido').value = selectedOption.dataset.apellido || '';
+      document.getElementById('mod_telefono').value = selectedOption.dataset.telefono || '';
+      document.getElementById('mod_compania').value = selectedOption.dataset.compania || '';
+      document.getElementById('mod_sector').value = selectedOption.dataset.sector || '';
+      document.getElementById('mod_estado').value = selectedOption.dataset.estado || 'Activo';
+
+    } catch (error) {
+      console.error('Error al cargar proveedor para modificar:', error);
+      Swal.fire('Error', 'No se pudieron cargar los datos del proveedor', 'error');
     }
   }
 
@@ -231,14 +390,14 @@
       },
       data: data,
       columns: [
-        { data: 'Cod_Proveedor' },
-        { data: 'Nombre' },
-        { data: 'Apellido' },
-        { data: 'Telefono' },
-        { data: 'Compania' },
-        { data: 'Sector' },
+        { data: 'cod_proveedor' },
+        { data: 'nombre' },
+        { data: 'apellido' },
+        { data: 'telefono' },
+        { data: 'compania' },
+        { data: 'sector' },
         {
-          data: 'Estado',
+          data: 'estado',
           render: function (data, type, row) {
             return `<span class="badge ${data === 'Activo' ? 'bg-success' : 'bg-danger'}">${data}</span>`;
           }
@@ -247,66 +406,9 @@
     });
   }
 
-  // Función para cargar datos del proveedor seleccionado
-  function cargarDatosProveedor(codProveedor) {
-    const select = document.getElementById('codigo_proveedor');
-    const selectedOption = select.options[select.selectedIndex];
-
-    if (!selectedOption?.value) {
-      limpiarFormulario();
-      return;
-    }
-
-    try {
-      // Mostrar campo de estado
-      document.getElementById('estado-container').classList.add('visible');
-
-      // Cargar datos del option seleccionado
-      document.getElementById('nombre').value = selectedOption.dataset.nombre || '';
-      document.getElementById('apellido').value = selectedOption.dataset.apellido || '';
-      document.getElementById('telefono').value = selectedOption.dataset.telefono || '';
-      document.getElementById('compania').value = selectedOption.dataset.compania || '';
-      document.getElementById('sector').value = selectedOption.dataset.sector || '';
-      document.getElementById('estado').value = selectedOption.dataset.estado || 'Activo';
-
-      // Habilitar solo Teléfono, Compañía y Estado
-      document.getElementById('nombre').disabled = true;
-      document.getElementById('apellido').disabled = true;
-      document.getElementById('sector').disabled = true;
-
-      document.getElementById('telefono').disabled = false;
-      document.getElementById('compania').disabled = false;
-      document.getElementById('estado').disabled = false;
-
-      // Activar botón de modificar
-      document.getElementById('modificarButton').disabled = false;
-      document.getElementById('ingresarButton').disabled = true;
-
-    } catch (error) {
-      console.error('Error al cargar proveedor:', error);
-      Swal.fire('Error', 'No se pudieron cargar los datos del proveedor', 'error');
-    }
-  }
-
-  // Función para limpiar el formulario
+  // Función para limpiar el formulario de registro
   function limpiarFormulario() {
     document.getElementById('proveedorForm').reset();
-    document.getElementById('codigo_proveedor').value = '';
-
-    // Ocultar campo de estado
-    document.getElementById('estado-container').classList.remove('visible');
-
-    // Reactivar todos los campos
-    document.getElementById('nombre').disabled = false;
-    document.getElementById('apellido').disabled = false;
-    document.getElementById('sector').disabled = false;
-    document.getElementById('telefono').disabled = false;
-    document.getElementById('compania').disabled = false;
-    document.getElementById('estado').disabled = false;
-
-    // Desactivar botón de modificar
-    document.getElementById('modificarButton').disabled = true;
-    document.getElementById('ingresarButton').disabled = false;
   }
 
   // Función para verificar teléfono existente
@@ -426,50 +528,71 @@
   });
 
   // Función para modificar proveedor (PUT)
-  async function modificarProveedor() {
-    const codProveedor = document.getElementById('codigo_proveedor').value;
+  document.getElementById('modificarButton').addEventListener('click', async function () {
+    const codProveedor = document.getElementById('mod_codigo').value;
     if (!codProveedor) {
       Swal.fire('Error', 'Debe seleccionar un proveedor', 'error');
       return;
     }
 
-    const nombre = document.getElementById('nombre').value.trim();
-    const apellido = document.getElementById('apellido').value.trim();
+    // Obtener los datos originales del select para nombre, apellido y sector
+    const select = document.getElementById('select_proveedor_modificar');
+    const selectedOption = select.options[select.selectedIndex];
 
-    // Validación de nombre y apellido (aunque estén deshabilitados, por seguridad)
-    if (!validarNombreApellido(nombre)) {
-      await Swal.fire("Error", "El nombre no es válido", "error");
+    if (!selectedOption) {
+      Swal.fire('Error', 'No se pudieron obtener los datos del proveedor', 'error');
       return;
     }
 
-    if (!validarNombreApellido(apellido)) {
-      await Swal.fire("Error", "El apellido no es válido", "error");
-      return;
-    }
+    // Usar los datos originales del select (que no se pueden modificar)
+    const nombre = selectedOption.dataset.nombre || '';
+    const apellido = selectedOption.dataset.apellido || '';
+    const sector = selectedOption.dataset.sector || '';
+
+    // Solo obtener los campos modificables
+    const telefono = document.getElementById('mod_telefono').value.trim();
+    const compania = document.getElementById('mod_compania').value;
+    const estado = document.getElementById('mod_estado').value;
 
     const formData = {
       nombre,
       apellido,
-      telefono: document.getElementById('telefono').value.trim(),
-      compania: document.getElementById('compania').value,
-      sector: document.getElementById('sector').value,
-      estado: document.getElementById('estado').value
+      telefono,
+      compania,
+      sector,
+      estado
     };
 
-    // Validaciones
-    if (!formData.nombre || !formData.apellido || !formData.telefono ||
-      !formData.compania || !formData.sector || !formData.estado) {
-      Swal.fire('Advertencia', 'Todos los campos son obligatorios', 'warning');
+    // Validaciones solo para campos modificables
+    if (!telefono || !compania || !estado) {
+      Swal.fire('Advertencia', 'Teléfono, compañía y estado son obligatorios', 'warning');
       return;
     }
 
-    if (await verificarTelefonoExistente(formData.telefono, codProveedor)) {
+    // Validar formato del teléfono
+    if (!/^\d{8}$/.test(telefono)) {
+      await Swal.fire("Error", "El teléfono debe contener exactamente 8 dígitos", "error");
+      return;
+    }
+
+    // Verificar si el teléfono ya existe (excluyendo el proveedor actual)
+    if (await verificarTelefonoExistente(telefono, codProveedor)) {
       return;
     }
 
     const confirmacion = await Swal.fire({
       title: '¿Actualizar proveedor?',
-      text: `¿Desea actualizar a ${formData.nombre} ${formData.apellido}?`,
+      text: `¿Desea actualizar los datos de ${nombre} ${apellido}?`,
+      html: `
+      <div class="text-start">
+        <p><strong>Cambios:</strong></p>
+        <ul>
+          <li>Teléfono: ${selectedOption.dataset.telefono} → ${telefono}</li>
+          <li>Compañía: ${selectedOption.dataset.compania} → ${compania}</li>
+          <li>Estado: ${selectedOption.dataset.estado} → ${estado}</li>
+        </ul>
+      </div>
+    `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Sí, actualizar',
@@ -496,7 +619,9 @@
       if (result.success) {
         await Swal.fire('Éxito', 'Proveedor actualizado correctamente', 'success');
         cargarProveedores();
-        limpiarFormulario();
+        // Limpiar formulario de modificación
+        document.getElementById('select_proveedor_modificar').value = '';
+        document.getElementById('formulario-modificacion').style.display = 'none';
       } else {
         Swal.fire('Error', result.errors?.join(', ') || 'Error al actualizar', 'error');
       }
@@ -506,9 +631,9 @@
     } finally {
       const btnModificar = document.getElementById('modificarButton');
       btnModificar.disabled = false;
-      btnModificar.innerHTML = '<i class="fas fa-user-edit me-2"></i>Modificar';
+      btnModificar.innerHTML = '<i class="fas fa-save me-2"></i>Guardar Cambios';
     }
-  }
+  });
 
   // Cargar proveedores al iniciar la página
   document.addEventListener('DOMContentLoaded', () => {

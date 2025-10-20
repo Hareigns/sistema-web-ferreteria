@@ -1,9 +1,11 @@
 {
   "type": "module",
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.1",
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
+    "connect-pg-simple": "^10.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -11,20 +13,25 @@
     "express": "^5.1.0",
     "express-flash": "^0.0.2",
     "express-handlebars": "^8.0.1",
-    "express-mysql-session": "^3.0.3",
     "express-session": "^1.18.1",
     "express-validator": "^7.2.1",
     "handlebars": "^4.7.8",
     "morgan": "^1.10.0",
-    "mysql2": "^3.14.0",
-    "node-cron": "^4.0.5",
+    "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "passport": "^0.7.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "pg": "^8.16.3",
+    "pg-dump": "^0.10.0",
+    "sharp": "^0.34.4",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
   },
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "network": "node start.js && npm run dev"
   }
 }

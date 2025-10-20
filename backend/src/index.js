@@ -3,18 +3,26 @@ import morgan from "morgan";
 import { engine } from "express-handlebars";
 import { join, dirname } from "path";
 import session from "express-session";
-//import flash from "connect-flash";
-import MySQLStoreFactory from "express-mysql-session";
 import passport from "passport";
 import { fileURLToPath } from "url";
-import { database } from "./keys.js";
+import { pool } from "./keys.js"; 
 import cookieParser from 'cookie-parser';
-import cors from 'cors'; // Importación añadida
+import cors from 'cors';
 import { Handlebars } from "./lib/handlebars.js";
 import './lib/passport.js';
 import bodyParser from 'body-parser';
 import flash from 'express-flash';
 import fs from 'fs';
+import pgSession from 'connect-pg-simple'; 
+import path from 'path';
+
+
+// ✅ CORRECCIÓN: Cambiar onst por const
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ✅ Configurar store de sesión para PostgreSQL
+const PostgresqlStore = pgSession(session);
 
 // Importación de rutas
 import indexRoutes from "./routes/index.js";
@@ -30,11 +38,8 @@ import dashboardRoutes from "./routes/dashboard.js";
 import dashboardempleRoutes from "./routes/dashboardemple.js";
 import { router as outletRoutes } from "./routes/outlet.js";
 
-
 // Inicialización
 const app = express();
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const MySQLStore = MySQLStoreFactory(session);
 
 // Configuración básica
 app.set('port', process.env.PORT || 4000);
@@ -48,7 +53,7 @@ const hbs = engine({
     partialsDir: join(viewsPath, 'partials'),
     extname: '.hbs',
     helpers: {
-        ...Handlebars, // Tus helpers existentes
+        ...Handlebars,
         notEmpty: function(obj) {
             return obj && Object.keys(obj).length > 0;
         },
@@ -61,7 +66,6 @@ const hbs = engine({
         gt: function(a, b) {
             return a > b;
         },
-        // Helper alternativo más simple
         hasProducts: function(productosPorSector, options) {
             return productosPorSector && Object.keys(productosPorSector).length > 0 ? 
                    options.fn(this) : options.inverse(this);
@@ -74,23 +78,35 @@ app.set('view engine', '.hbs');
 
 // Middlewares esenciales
 app.use(cors({
-    origin: 'http://localhost:5173', // Ajusta según tu puerto frontend
+    origin: [
+        'http://localhost:5173', 
+        'http://localhost:4000',
+        'http://192.168.1.21:4000',
+        'http://192.168.1.21:5173'
+    ],
     credentials: true
 }));
 
 app.use(cookieParser());
+
+// ✅ Asegúrate de que la tabla de sesiones existe
 app.use(session({
     secret: 'secret',
-    store: new MySQLStore(database),
+    store: new PostgresqlStore({
+        pool: pool,
+        tableName: 'session',
+        createTableIfMissing: true // Esto crea la tabla automáticamente
+    }),
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false,
+        secure: false, // Cambia a true en producción con HTTPS
         sameSite: 'lax',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
+
 app.use(flash());
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: false }));
@@ -107,44 +123,39 @@ app.use((req, res, next) => {
     next();
 });
 
-
 app.use((req, res, next) => {
-    res.locals.success = req.flash('success')[0]; // Tomamos el primer mensaje
+    res.locals.success = req.flash('success')[0];
     res.locals.error = req.flash('error')[0];
     next();
 });
 
-
-// Variables globales
+// Variables globales (sin cambios)
 app.use((req, res, next) => {
     res.locals.success = req.flash('success');
     res.locals.message = req.flash('message');
     res.locals.user = req.user ? {
-        Cod_Empleado: req.user.Cod_Empleado,
-        Nombre: req.user.Nombre,
-        Apellido: req.user.Apellido
+        Cod_Empleado: req.user.cod_empleado,
+        Nombre: req.user.nombre,
+        Apellido: req.user.apellido
     } : null;
     next();
 });
 
 app.use((req, res, next) => {
     res.locals.user = req.user || null;
-    res.locals.esAdmin = req.user ? [1, 2].includes(req.user.Cod_Empleado) : false;
+    res.locals.esAdmin = req.user ? [1, 2].includes(req.user.cod_empleado) : false;
     next();
-  });
+});
 
-
-  // Añade esto con tus otros middlewares
 app.use((req, res, next) => {
-    // Pasar alertData a las vistas
     if (req.session.alertData) {
         res.locals.alertData = req.session.alertData;
-        delete req.session.alertData; // Limpiar después de usar
+        delete req.session.alertData;
     }
     next();
 });
 
-// Configuración de rutas
+// Configuración de rutas (sin cambios)
 app.use(indexRoutes);
 app.use(autentificacionRoutes);
 app.use('/bodega', bodegaRoutes);
@@ -159,13 +170,13 @@ app.use('/reporteemple', reporteempleRoutes);
 app.use('/dashboardemple', dashboardempleRoutes);
 app.use('/outlet', outletRoutes);
 
-// Archivos estáticos
+
+// Archivos estáticos (sin cambios)
 const assetsPath = join(__dirname, '../../frontend/src/assets');
 app.use(express.static(assetsPath));
 app.set('assets', assetsPath);
 
-
-// Agrega esta ruta nueva (reemplaza la anterior /descargar-manual/:tipo)
+// Ruta manuales (sin cambios)
 app.get('/obtener-manual', (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).send('No autenticado');
@@ -174,13 +185,12 @@ app.get('/obtener-manual', (req, res) => {
   const manualesPath = join(__dirname, 'manuales');
   let archivo;
 
-  // Verifica el código del empleado desde la sesión
-  if ([1, 2].includes(req.user.Cod_Empleado)) {
+  if ([1, 2].includes(req.user.cod_empleado)) {
     archivo = 'Manual_De_Usuario_Admi.pdf';
-    console.log('Descargando manual de administrador para:', req.user.Cod_Empleado);
+    console.log('Descargando manual de administrador para:', req.user.cod_empleado);
   } else {
     archivo = 'Manual_de_Usuario_Worked.pdf';
-    console.log('Descargando manual de empleado para:', req.user.Cod_Empleado);
+    console.log('Descargando manual de empleado para:', req.user.cod_empleado);
   }
 
   const rutaCompleta = join(manualesPath, archivo);
@@ -190,11 +200,9 @@ app.get('/obtener-manual', (req, res) => {
     return res.status(404).send('Manual no encontrado');
   }
 
-  // Configura headers para forzar descarga
   res.setHeader('Content-Disposition', `attachment; filename="${archivo}"`);
   res.setHeader('Content-Type', 'application/pdf');
   
-  // Stream el archivo
   const fileStream = fs.createReadStream(rutaCompleta);
   fileStream.pipe(res);
   
@@ -206,8 +214,7 @@ app.get('/obtener-manual', (req, res) => {
   });
 });
 
-
-// Ruta para datos del empleado
+// Ruta para datos del empleado (sin cambios)
 app.get('/empleados', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({
@@ -222,7 +229,7 @@ app.get('/empleados', (req, res) => {
     }
 });
 
-// Manejo de errores
+// Manejo de errores (sin cambios)
 app.use((req, res) => {
     res.status(404).render('404', { title: 'Página no encontrada' });
 });
@@ -233,13 +240,8 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(app.get('port'), () => {
+// Cambia la configuración del servidor para escuchar en todas las interfaces
+app.listen(app.get('port'), '0.0.0.0', () => {
     console.log(`Servidor corriendo en http://localhost:${app.get('port')}`);
-
-    // Ejecutar backup al iniciar el servidor
-    import('./services/backup/backupDiario.js')
-        .then(mod => mod.ejecutarBackup())
-        .then(() => console.log('🛡️ Backup ejecutado al iniciar el servidor'))
-        .catch(err => console.error('❌ Error ejecutando backup al iniciar:', err));
+    console.log(`Accesible desde otros dispositivos en: http://[TU-IP-LOCAL]:${app.get('port')}`);
 });
-
