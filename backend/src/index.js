@@ -10,19 +10,11 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { Handlebars } from "./lib/handlebars.js";
 import './lib/passport.js';
-import bodyParser from 'body-parser';
 import flash from 'express-flash';
 import fs from 'fs';
 import pgSession from 'connect-pg-simple'; 
-import path from 'path';
-
-
-// ✅ CORRECCIÓN: Cambiar onst por const
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// ✅ Configurar store de sesión para PostgreSQL
-const PostgresqlStore = pgSession(session);
+import { createServer } from 'http';
+import socketManager from './socket-manager.js';
 
 // Importación de rutas
 import indexRoutes from "./routes/index.js";
@@ -36,10 +28,67 @@ import { router as reporteempleRoutes } from "./routes/reporteemple.js";
 import { router as reportesRoutes } from "./routes/reportes.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import dashboardempleRoutes from "./routes/dashboardemple.js";
-import { router as outletRoutes } from "./routes/outlet.js";
+import { router as catalogoRoutes } from "./routes/catalogo.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PostgresqlStore = pgSession(session);
 
 // Inicialización
 const app = express();
+const server = createServer(app);
+
+// ✅ CONFIGURACIÓN CRÍTICA: LÍMITES DE TAMAÑO DE PAYLOAD
+// ESTO DEBE IR AL PRINCIPIO, ANTES DE CUALQUIER OTRO MIDDLEWARE
+app.use(express.json({ limit: '50mb' })); // 🔥 AUMENTAR LÍMITE A 50MB
+app.use(express.urlencoded({ 
+    limit: '50mb', 
+    extended: true,
+    parameterLimit: 100000 // 🔥 AUMENTAR LÍMITE DE PARÁMETROS
+}));
+
+console.log('✅ Límites configurados: JSON=50MB, URLEncoded=50MB');
+
+const allowedOrigins = [
+  'http://localhost:5173', 
+  'http://localhost:4000',
+  'http://192.168.1.21:4000',
+  'http://192.168.1.21:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:4000',
+  'http://127.0.0.1:5173'
+];
+
+const corsOptions = {
+  cors: {
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log('❌ Origen bloqueado por CORS:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+  },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 45000,
+  transports: ['websocket', 'polling'],
+  allowUpgrades: true,
+  cookie: {
+    name: "io",
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax"
+  }
+};
+
+// ✅ INICIALIZAR SOCKET MANAGER GLOBAL
+const io = socketManager.initialize(server, corsOptions);
 
 // Configuración básica
 app.set('port', process.env.PORT || 4000);
@@ -52,6 +101,12 @@ const hbs = engine({
     layoutsDir: join(viewsPath, 'layouts'),
     partialsDir: join(viewsPath, 'partials'),
     extname: '.hbs',
+    // CONFIGURACIÓN CRÍTICA PARA BUSCAR EN SUBCARPETAS
+    runtimeOptions: {
+        allowProtoPropertiesByDefault: true,
+        allowProtoMethodsByDefault: true
+    },
+    // AGREGAR ESTA CONFIGURACIÓN
     helpers: {
         ...Handlebars,
         notEmpty: function(obj) {
@@ -69,6 +124,9 @@ const hbs = engine({
         hasProducts: function(productosPorSector, options) {
             return productosPorSector && Object.keys(productosPorSector).length > 0 ? 
                    options.fn(this) : options.inverse(this);
+        },
+        eq: function(a, b) {
+            return a === b;
         }
     }
 });
@@ -76,31 +134,28 @@ const hbs = engine({
 app.engine('.hbs', hbs);
 app.set('view engine', '.hbs');
 
-// Middlewares esenciales
+// ✅ CONFIGURACIÓN SIMPLIFICADA DE CORS
 app.use(cors({
-    origin: [
-        'http://localhost:5173', 
-        'http://localhost:4000',
-        'http://192.168.1.21:4000',
-        'http://192.168.1.21:5173'
-    ],
-    credentials: true
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 
 app.use(cookieParser());
 
-// ✅ Asegúrate de que la tabla de sesiones existe
+// Session configuration
 app.use(session({
     secret: 'secret',
     store: new PostgresqlStore({
         pool: pool,
         tableName: 'session',
-        createTableIfMissing: true // Esto crea la tabla automáticamente
+        createTableIfMissing: true
     }),
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false, // Cambia a true en producción con HTTPS
+        secure: false,
         sameSite: 'lax',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000
@@ -109,10 +164,7 @@ app.use(session({
 
 app.use(flash());
 app.use(morgan('dev'));
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -129,7 +181,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Variables globales (sin cambios)
+// Variables globales
 app.use((req, res, next) => {
     res.locals.success = req.flash('success');
     res.locals.message = req.flash('message');
@@ -155,7 +207,14 @@ app.use((req, res, next) => {
     next();
 });
 
-// Configuración de rutas (sin cambios)
+// ✅ Hacer io disponible en las rutas
+app.set('io', io);
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Configuración de rutas
 app.use(indexRoutes);
 app.use(autentificacionRoutes);
 app.use('/bodega', bodegaRoutes);
@@ -168,15 +227,14 @@ app.use('/api/empleados', empleadosRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/reporteemple', reporteempleRoutes);
 app.use('/dashboardemple', dashboardempleRoutes);
-app.use('/outlet', outletRoutes);
+app.use('/catalogo', catalogoRoutes);
 
-
-// Archivos estáticos (sin cambios)
+// Archivos estáticos
 const assetsPath = join(__dirname, '../../frontend/src/assets');
 app.use(express.static(assetsPath));
 app.set('assets', assetsPath);
 
-// Ruta manuales (sin cambios)
+// Ruta manuales
 app.get('/obtener-manual', (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).send('No autenticado');
@@ -214,7 +272,7 @@ app.get('/obtener-manual', (req, res) => {
   });
 });
 
-// Ruta para datos del empleado (sin cambios)
+// Ruta para datos del empleado
 app.get('/empleados', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({
@@ -229,19 +287,33 @@ app.get('/empleados', (req, res) => {
     }
 });
 
-// Manejo de errores (sin cambios)
+// Manejo de errores
 app.use((req, res) => {
-    res.status(404).render('404', { title: 'Página no encontrada' });
+  res.status(404).render('404', { title: 'Página no encontrada' });
 });
 
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    res.status(500).render('500', { title: 'Error en el servidor' });
+  console.error('❌ Error del servidor:', err);
+  
+  // Manejo específico para errores de tamaño de payload
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      success: false,
+      message: "Archivo demasiado grande. El límite es 50MB."
+    });
+  }
+  
+  res.status(500).render('500', { title: 'Error en el servidor' });
 });
 
 // Iniciar servidor
-// Cambia la configuración del servidor para escuchar en todas las interfaces
-app.listen(app.get('port'), '0.0.0.0', () => {
-    console.log(`Servidor corriendo en http://localhost:${app.get('port')}`);
-    console.log(`Accesible desde otros dispositivos en: http://[TU-IP-LOCAL]:${app.get('port')}`);
+server.listen(app.get('port'), '0.0.0.0', () => {
+    console.log('='.repeat(60));
+    console.log('🚀 SERVIDOR INICIADO CORRECTAMENTE');
+    console.log('='.repeat(60));
+    console.log(`   URL: http://localhost:${app.get('port')}`);
+    console.log(`   📡 WebSockets: ACTIVOS en puerto ${app.get('port')}`);
+    console.log(`   📦 Límite de payload: 50MB`);
+    console.log(`   🌐 Orígenes permitidos:`, allowedOrigins);
+    console.log('='.repeat(60));
 });

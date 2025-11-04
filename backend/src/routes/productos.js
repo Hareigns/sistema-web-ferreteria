@@ -2,9 +2,27 @@ import express from 'express';
 import pool from '../database.js';
 import { isLoggedIn } from "../lib/auth.js";
 import sharp from 'sharp'; 
-import { supabase } from '../supabase.js'; // ✅ Solo una importación
+import { supabase } from '../supabase.js';
+import { withDatabase } from '../middleware/db.js';
 
 const router = express.Router();
+
+// 🔥 SOLUCIÓN CRÍTICA: Configurar límites ANTES de las rutas
+router.use(express.json({ limit: '50mb' })); // 50MB para JSON
+router.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Middleware específico para rutas de imágenes
+const imagePayloadParser = express.json({ 
+  limit: '50mb',
+  verify: (req, res, buf) => {
+    try {
+      // Log para debugging
+      console.log(`📦 Payload recibido: ${buf.length} bytes`);
+    } catch (error) {
+      console.error('Error en verificación de payload:', error);
+    }
+  }
+});
 
 // Datos de sectores
 const SECTORES = [
@@ -16,10 +34,26 @@ const SECTORES = [
 
 // ========== FUNCIONES PARA SUPABASE ==========
 
+// Función para obtener URL de imagen existente
+const getExistingImageUrl = async (codigoProducto) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      'SELECT imagen_url FROM producto WHERE cod_producto = $1',
+      [codigoProducto]
+    );
+    client.release();
+    
+    return result.rows[0]?.imagen_url || null;
+  } catch (error) {
+    console.error('Error obteniendo imagen existente:', error);
+    return null;
+  }
+};
+
 // Función mejorada para subir imagen a Supabase
 const uploadImageToSupabase = async (imageBuffer, codigoProducto, mimeType = 'image/webp') => {
   try {
-    // Verificar que el buffer no esté vacío
     if (!imageBuffer || imageBuffer.length === 0) {
       throw new Error('Buffer de imagen vacío');
     }
@@ -35,7 +69,6 @@ const uploadImageToSupabase = async (imageBuffer, codigoProducto, mimeType = 'im
       mimeType
     });
 
-    // Verificar que Supabase esté configurado correctamente
     if (!supabase) {
       throw new Error('Cliente de Supabase no inicializado');
     }
@@ -50,12 +83,7 @@ const uploadImageToSupabase = async (imageBuffer, codigoProducto, mimeType = 'im
       });
 
     if (error) {
-      console.error('Error detallado de Supabase:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        statusCode: error.statusCode
-      });
+      console.error('Error detallado de Supabase:', error);
       
       if (error.message.includes('JWS') || error.message.includes('auth')) {
         throw new Error('Error de autenticación con Supabase. Verifica SUPABASE_ANON_KEY');
@@ -89,12 +117,10 @@ const processBase64Image = async (base64String, codigoProducto) => {
   try {
     console.log('Procesando imagen Base64, longitud:', base64String.length);
     
-    // Validaciones más estrictas del Base64
     if (!base64String || base64String.length < 100) {
       throw new Error('String Base64 inválido o demasiado corto');
     }
 
-    // Extraer el contenido Base64 con mejor manejo de errores
     const base64Regex = /^data:image\/([a-zA-Z]*);base64,(.*)$/;
     const matches = base64String.match(base64Regex);
     
@@ -105,7 +131,6 @@ const processBase64Image = async (base64String, codigoProducto) => {
     const imageType = matches[1];
     const base64Data = matches[2];
     
-    // Validar que los datos Base64 no estén corruptos
     if (!base64Data || base64Data.length < 50) {
       throw new Error('Datos Base64 insuficientes');
     }
@@ -113,18 +138,14 @@ const processBase64Image = async (base64String, codigoProducto) => {
     console.log('Tipo de imagen detectado:', imageType);
     console.log('Datos Base64 longitud:', base64Data.length);
 
-    try {
-      const imageBuffer = Buffer.from(base64Data, 'base64');
-      console.log('Buffer creado, tamaño:', imageBuffer.length);
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    console.log('Buffer creado, tamaño:', imageBuffer.length);
 
-      if (imageBuffer.length === 0) {
-        throw new Error('Buffer convertido está vacío');
-      }
-
-      return await processImage(imageBuffer, codigoProducto);
-    } catch (bufferError) {
-      throw new Error('Error al convertir Base64 a buffer: ' + bufferError.message);
+    if (imageBuffer.length === 0) {
+      throw new Error('Buffer convertido está vacío');
     }
+
+    return await processImage(imageBuffer, codigoProducto);
   } catch (error) {
     console.error('Error procesando imagen Base64:', error);
     throw new Error('Error al procesar la imagen Base64: ' + error.message);
@@ -158,8 +179,7 @@ const processImage = async (imageBuffer, codigoProducto) => {
   }
 };
 
-
-// Función para eliminar imagen anterior de Supabase
+// Función para eliminar imagen anterior de Supabase (MEJORADA)
 const deleteImageFromSupabase = async (imageUrl) => {
   try {
     if (!imageUrl) return;
@@ -205,17 +225,31 @@ router.get("/add", isLoggedIn, async (req, res) => {
 });
 
 // Ruta para guardar productos (con sistema de lotes)
-router.post("/api/productos", isLoggedIn, async (req, res) => {
+router.post("/api/productos", imagePayloadParser, isLoggedIn, async (req, res) => {
   const { productos } = req.body;
+  const client = req.dbClient;
 
+  console.log(`📦 Guardando ${productos?.length || 0} productos`);
+  
   if (!Array.isArray(productos) || productos.length === 0) {
     return res.status(400).json({ success: false, message: "No se recibieron productos." });
   }
 
-  let client;
+  // Validar tamaño total
+  const totalSize = JSON.stringify(productos).length;
+  console.log(`📊 Tamaño total del request: ${totalSize} bytes`);
+  
+  if (totalSize > 50 * 1024 * 1024) {
+    return res.status(413).json({
+      success: false,
+      message: "Demasiados datos. Reduzca la cantidad de productos o el tamaño de las imágenes."
+    });
+  }
+
   try {
-    client = await pool.connect();
     await client.query('BEGIN');
+
+    const productosConImagen = [];
 
     for (const producto of productos) {
       const { 
@@ -234,23 +268,22 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
       const fechaEntradaValida = fecha_entrada || new Date().toISOString().split('T')[0];
       const descripcionFinal = descripcion || ubicacion || null;
 
-      // DEBUG: Verificar si llega la imagen
-      console.log('Producto:', codigo_producto);
-      console.log('Tiene imagen_base64:', !!imagen_base64);
-      console.log('Longitud base64:', imagen_base64 ? imagen_base64.length : 0);
-
-      // Procesar imagen si existe (AHORA CON SUPABASE)
+      // Procesar imagen si existe
       let imagenUrl = null;
       if (imagen_base64 && imagen_base64.length > 0) {
         try {
-          console.log('Procesando imagen para producto:', codigo_producto);
+          console.log(`🖼️ Procesando imagen para producto: ${codigo_producto}`);
           imagenUrl = await processBase64Image(imagen_base64, codigo_producto);
-          console.log('Imagen procesada, URL:', imagenUrl);
+          console.log(`✅ Imagen procesada para ${codigo_producto}: ${imagenUrl}`);
+          productosConImagen.push({
+            codigo: codigo_producto,
+            imagen_url: imagenUrl
+          });
         } catch (imageError) {
-          console.error(`Error procesando imagen para producto ${codigo_producto}:`, imageError);
-          // Continuar sin imagen si hay error
+          console.error(`❌ Error procesando imagen para ${codigo_producto}:`, imageError);
         }
       }
+
 
       // Verificar si el producto ya existe
       const productoExistente = await client.query(
@@ -260,15 +293,14 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
 
       if (productoExistente.rows.length === 0) {
         // Insertar en tabla Producto si no existe
-        console.log('Insertando nuevo producto con imagen_url:', imagenUrl);
         await client.query(
           `INSERT INTO producto (cod_producto, nombre, marca, fechavencimiento, sector, descripcion, estado, imagen_url)
            VALUES ($1, $2, $3, $4, $5, $6, 'Activo', $7)`,
           [codigo_producto, nombre, marca, fechaVencimientoValida, sector, descripcionFinal, imagenUrl]
         );
+        console.log(`➕ Nuevo producto insertado: ${codigo_producto}`);
       } else {
         // Actualizar producto existente
-        console.log('Actualizando producto existente con imagen_url:', imagenUrl);
         if (imagenUrl) {
           await client.query(
             `UPDATE producto SET 
@@ -277,8 +309,8 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
              WHERE cod_producto = $7`,
             [nombre, marca, fechaVencimientoValida, sector, descripcionFinal, imagenUrl, codigo_producto]
           );
+          console.log(`🔄 Producto actualizado con imagen: ${codigo_producto}`);
         } else {
-          // Actualizar sin cambiar la imagen
           await client.query(
             `UPDATE producto SET 
              nombre = $1, marca = $2, fechavencimiento = $3, 
@@ -286,10 +318,11 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
              WHERE cod_producto = $6`,
             [nombre, marca, fechaVencimientoValida, sector, descripcionFinal, codigo_producto]
           );
+          console.log(`🔄 Producto actualizado sin imagen: ${codigo_producto}`);
         }
       }
 
-      // Insertar NUEVO LOTE en la tabla lotes_producto
+      // Insertar NUEVO LOTE
       await client.query(
         `INSERT INTO lotes_producto (cod_proveedor, cod_producto, fecha_entrada, precio, cantidad, cantidad_disponible)
          VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -298,18 +331,29 @@ router.post("/api/productos", isLoggedIn, async (req, res) => {
     }
 
     await client.query('COMMIT');
+    
+    // ✅ EMITIR EVENTO WEBSOCKET (esto YA funciona)
+    const io = req.app.get('io');
+    if (io) {
+      console.log('📢 Emitiendo evento WebSocket a clientes conectados');
+      io.emit('productos_actualizados', {
+        message: 'Nuevos productos agregados al sistema',
+        total_productos: productos.length,
+        timestamp: new Date().toISOString(),
+        origen: req.user?.cod_empleado || 'sistema',
+        accion: 'creacion'
+      });
+    }
+
     res.json({ 
       success: true, 
-      message: "Productos registrados exitosamente",
-      productos_con_imagen: productos.filter(p => p.imagen_base64 && p.imagen_base64.length > 0).length
+      message: `Se registraron ${productos.length} producto(s) exitosamente`
     });
 
   } catch (error) {
-    await client?.query('ROLLBACK');
-    console.error("Error al registrar productos:", error);
-    res.status(500).json({ success: false, message: error.message });
-  } finally {
-    client?.release();
+    await client.query('ROLLBACK');
+    console.error("❌ Error al registrar productos:", error);
+    throw error;
   }
 });
 
@@ -478,54 +522,6 @@ router.post('/api/productos/baja', isLoggedIn, async (req, res) => {
     }
 });
 
-// Ruta para obtener todos los productos con información CORRECTA de stock
-router.get("/api/productos", isLoggedIn, async (req, res) => {
-  let client;
-  try {
-    client = await pool.connect();
-    
-    const result = await client.query(`
-      SELECT 
-        p.cod_producto, 
-        p.nombre, 
-        p.marca, 
-        p.fechavencimiento, 
-        p.sector, 
-        p.descripcion,
-        p.estado,
-        p.imagen_url,
-        -- PRIORIDAD: Stock de lotes_producto, si no hay, usar proveproduct
-        COALESCE(
-          (SELECT SUM(lp.cantidad_disponible) 
-           FROM lotes_producto lp 
-           WHERE lp.cod_producto = p.cod_producto),
-          pp.cantidad,
-          0
-        ) as cantidad,
-        -- PRIORIDAD: Precio de lotes_producto, si no hay, usar proveproduct
-        COALESCE(
-          (SELECT lp2.precio 
-           FROM lotes_producto lp2 
-           WHERE lp2.cod_producto = p.cod_producto 
-           ORDER BY lp2.fecha_entrada DESC, lp2.id_lote DESC 
-           LIMIT 1),
-          pp.precio,
-          0
-        ) as precio_compra
-      FROM producto p
-      LEFT JOIN proveproduct pp ON p.cod_producto = pp.cod_producto
-      ORDER BY p.cod_producto ASC
-    `);
-
-    console.log("Datos de productos:", result.rows);
-    res.json({ success: true, data: result.rows });
-  } catch (error) {
-    console.error("Error al obtener productos:", error);
-    res.status(500).json({ success: false, message: "Error al obtener productos" });
-  } finally {
-    client?.release();
-  }
-});
 
 // Ruta para obtener un producto específico por su código (VERSIÓN MEJORADA)
 router.get("/api/productos/:codigo", isLoggedIn, async (req, res) => {
@@ -822,22 +818,22 @@ router.put("/api/productos/:codigo", isLoggedIn, async (req, res) => {
 router.put("/api/productos/:codigo/imagen", isLoggedIn, async (req, res) => {
   const { codigo } = req.params;
   const { imagen_base64, imagen_nombre, imagen_tipo } = req.body;
+  
+  if (!codigo || !imagen_base64) {
+    return res.status(400).json({
+      success: false,
+      message: "Datos de imagen incompletos"
+    });
+  }
 
   let client;
   try {
-    if (!codigo) {
-      return res.status(400).json({
-        success: false,
-        message: "Código de producto inválido"
-      });
-    }
-
     client = await pool.connect();
     await client.query('BEGIN');
 
-    // Verificar que el producto existe y obtener imagen actual
+    // Verificar que el producto existe
     const productoExistente = await client.query(
-      'SELECT cod_producto, imagen_url FROM producto WHERE cod_producto = $1',
+      'SELECT cod_producto FROM producto WHERE cod_producto = $1',
       [codigo]
     );
 
@@ -849,37 +845,59 @@ router.put("/api/productos/:codigo/imagen", isLoggedIn, async (req, res) => {
       });
     }
 
-    const imagenUrlActual = productoExistente.rows[0].imagen_url;
+    // Obtener imagen anterior para eliminarla después
+    const imagenAnterior = await client.query(
+      'SELECT imagen_url FROM producto WHERE cod_producto = $1',
+      [codigo]
+    );
+
+    const imagenUrlAnterior = imagenAnterior.rows[0]?.imagen_url;
+
+    // Procesar y subir nueva imagen
     let nuevaImagenUrl = null;
-
-    // Procesar nueva imagen si se proporciona
-    if (imagen_base64 && imagen_base64.length > 0) {
-      try {
-        console.log('Procesando nueva imagen para producto:', codigo);
-        nuevaImagenUrl = await processBase64Image(imagen_base64, codigo);
-        console.log('Nueva imagen procesada, URL:', nuevaImagenUrl);
-
-        // Eliminar imagen anterior si existe
-        if (imagenUrlActual) {
-          await deleteImageFromSupabase(imagenUrlActual);
-        }
-      } catch (imageError) {
-        console.error(`Error procesando imagen para producto ${codigo}:`, imageError);
-        await client.query('ROLLBACK');
-        return res.status(400).json({
-          success: false,
-          message: "Error al procesar la imagen: " + imageError.message
-        });
-      }
+    try {
+      console.log(`🖼️ Procesando nueva imagen para producto: ${codigo}`);
+      nuevaImagenUrl = await processBase64Image(imagen_base64, codigo);
+      console.log(`✅ Nueva imagen procesada para ${codigo}: ${nuevaImagenUrl}`);
+    } catch (imageError) {
+      console.error(`❌ Error procesando nueva imagen para ${codigo}:`, imageError);
+      await client.query('ROLLBACK');
+      return res.status(500).json({
+        success: false,
+        message: "Error al procesar la imagen"
+      });
     }
 
-    // Actualizar la imagen del producto
+    // Actualizar la URL de la imagen en la base de datos
     await client.query(
       'UPDATE producto SET imagen_url = $1 WHERE cod_producto = $2',
       [nuevaImagenUrl, codigo]
     );
 
+    // Eliminar imagen anterior de Supabase si existe
+    if (imagenUrlAnterior) {
+      try {
+        await deleteImageFromSupabase(imagenUrlAnterior);
+      } catch (deleteError) {
+        console.error('Error eliminando imagen anterior:', deleteError);
+        // No lanzar error, continuar con la transacción
+      }
+    }
+
     await client.query('COMMIT');
+
+    // ✅ EMITIR EVENTO WEBSOCKET
+    const io = req.app.get('io');
+    if (io) {
+      console.log('📢 Emitiendo evento de imagen actualizada');
+      io.emit('imagen_actualizada', {
+        codigo_producto: codigo,
+        imagen_url: nuevaImagenUrl,
+        timestamp: new Date().toISOString(),
+        origen: req.user?.cod_empleado || 'sistema',
+        accion: 'actualizacion_imagen'
+      });
+    }
 
     res.json({
       success: true,
@@ -892,7 +910,48 @@ router.put("/api/productos/:codigo/imagen", isLoggedIn, async (req, res) => {
     console.error("Error al actualizar imagen:", error);
     res.status(500).json({
       success: false,
-      message: "Error interno del servidor"
+      message: "Error interno del servidor",
+      error: error.message
+    });
+  } finally {
+    client?.release();
+  }
+});
+
+// Ruta para obtener imagen de un producto específico
+router.get("/api/productos/:codigo/imagen", isLoggedIn, async (req, res) => {
+  const { codigo } = req.params;
+  let client;
+  
+  try {
+    client = await pool.connect();
+    
+    const result = await client.query(
+      'SELECT imagen_url FROM producto WHERE cod_producto = $1',
+      [codigo]
+    );
+
+    if (result.rows.length === 0 || !result.rows[0].imagen_url) {
+      return res.status(404).json({
+        success: false,
+        message: "Imagen no encontrada"
+      });
+    }
+
+    // Agregar timestamp para evitar cache
+    const imagenUrl = result.rows[0].imagen_url;
+    const imagenUrlConCache = `${imagenUrl}${imagenUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+
+    res.json({
+      success: true,
+      imagen_url: imagenUrlConCache
+    });
+
+  } catch (error) {
+    console.error("Error al obtener imagen del producto:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener la imagen"
     });
   } finally {
     client?.release();
@@ -918,6 +977,67 @@ router.get("/api/ubicaciones", isLoggedIn, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error al obtener ubicaciones"
+    });
+  } finally {
+    client?.release();
+  }
+});
+
+// Ruta para obtener todos los productos para DataTables
+router.get("/api/productos", isLoggedIn, async (req, res) => {
+  let client;
+  try {
+    client = await pool.connect();
+    
+    const query = `
+      SELECT 
+        p.cod_producto,
+        p.nombre,
+        p.marca,
+        p.sector,
+        p.descripcion,
+        p.fechavencimiento,
+        p.estado,
+        p.imagen_url,
+        -- Agregar cache busting a la URL de imagen
+        CASE 
+          WHEN p.imagen_url IS NOT NULL THEN 
+            p.imagen_url || '?t=' || EXTRACT(EPOCH FROM NOW())::integer
+          ELSE NULL 
+        END as imagen_url_cache,
+        -- Stock total de todos los lotes
+        COALESCE(SUM(lp.cantidad_disponible), 0) as cantidad,
+        -- Precio del último lote
+        COALESCE(
+          (SELECT lp2.precio 
+           FROM lotes_producto lp2 
+           WHERE lp2.cod_producto = p.cod_producto 
+           ORDER BY lp2.fecha_entrada DESC, lp2.id_lote DESC 
+           LIMIT 1), 0
+        ) as precio_compra
+      FROM producto p
+      LEFT JOIN lotes_producto lp ON p.cod_producto = lp.cod_producto
+      WHERE p.estado = 'Activo'
+      GROUP BY 
+        p.cod_producto, p.nombre, p.marca, p.sector, 
+        p.descripcion, p.fechavencimiento, p.estado, p.imagen_url
+      ORDER BY p.cod_producto
+    `;
+
+    const result = await client.query(query);
+    
+    res.json({
+      success: true,
+      data: result.rows,
+      message: `${result.rows.length} productos encontrados`
+    });
+
+  } catch (error) {
+    console.error("Error al obtener productos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al cargar los productos",
+      error: error.message
     });
   } finally {
     client?.release();
@@ -984,6 +1104,182 @@ router.get("/api/productos-select", isLoggedIn, async (req, res) => {
     res.status(500).json({ success: false, message: "Error al obtener productos" });
   } finally {
     client?.release();
+  }
+});
+
+// Ruta de diagnóstico de WebSockets
+router.get("/api/websocket-debug", isLoggedIn, async (req, res) => {
+  try {
+    const io = req.app.get('io');
+    
+    if (!io) {
+      return res.json({
+        success: false,
+        message: "WebSocket no configurado"
+      });
+    }
+
+    // Obtener información de todos los clientes conectados
+    const sockets = await io.fetchSockets();
+    const clientsInfo = sockets.map(socket => ({
+      id: socket.id,
+      rooms: Array.from(socket.rooms),
+      connected: socket.connected,
+      data: socket.data
+    }));
+
+    res.json({
+      success: true,
+      websocket_enabled: true,
+      total_clients: io.engine.clientsCount,
+      clients_connected: clientsInfo.length,
+      clients: clientsInfo,
+      message: `WebSockets activos con ${io.engine.clientsCount} clientes conectados`
+    });
+  } catch (error) {
+    console.error('Error en diagnóstico WebSocket:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en diagnóstico WebSocket'
+    });
+  }
+});
+
+// Ruta para probar emisión de eventos
+router.post("/api/websocket-test", isLoggedIn, async (req, res) => {
+  try {
+    const { mensaje, producto } = req.body;
+    const io = req.app.get('io');
+    
+    if (!io) {
+      return res.json({
+        success: false,
+        message: "WebSocket no configurado"
+      });
+    }
+
+    const testEvent = {
+      mensaje: mensaje || 'Evento de prueba',
+      producto: producto || 'TEST-001',
+      imagen_url: 'https://via.placeholder.com/150',
+      timestamp: new Date().toISOString(),
+      origen: 'sistema',
+      tipo: 'prueba'
+    };
+
+    // Emitir a TODOS los clientes
+    io.emit('imagen_actualizada', testEvent);
+    io.emit('productos_actualizados', {
+      message: 'Evento de prueba de productos',
+      timestamp: new Date().toISOString(),
+      total_productos: 1,
+      productos_con_imagen: 1,
+      accion: 'prueba'
+    });
+
+    console.log('🎯 Eventos de prueba emitidos a todos los clientes:', testEvent);
+
+    res.json({
+      success: true,
+      message: `Eventos de prueba emitidos a ${io.engine.clientsCount} clientes`,
+      event: testEvent
+    });
+
+  } catch (error) {
+    console.error('Error en prueba WebSocket:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en prueba WebSocket'
+    });
+  }
+});
+
+// Ruta para verificar estado de WebSockets
+router.get("/api/websocket-status", isLoggedIn, async (req, res) => {
+  try {
+    const io = req.app.get('io');
+    if (io) {
+      const clientsCount = io.engine.clientsCount;
+      res.json({
+        success: true,
+        websocket_enabled: true,
+        clients_connected: clientsCount,
+        message: `WebSockets activos con ${clientsCount} clientes conectados`
+      });
+    } else {
+      res.json({
+        success: false,
+        websocket_enabled: false,
+        clients_connected: 0,
+        message: 'WebSockets no configurados'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error verificando estado de WebSockets'
+    });
+  }
+});
+
+// Al final de tu archivo de rutas, agrega:
+router.use((error, req, res, next) => {
+  if (error.type === 'entity.too.large') {
+    return res.status(413).json({
+      success: false,
+      message: "Archivo demasiado grande. Límite: 50MB"
+    });
+  }
+  next(error);
+});
+
+
+// Ruta de diagnóstico para imágenes
+router.get("/api/productos/diagnostico-imagenes", isLoggedIn, async (req, res) => {
+  const { producto } = req.query;
+  
+  try {
+    const client = await pool.connect();
+    
+    let query = `
+      SELECT cod_producto, nombre, imagen_url, 
+             imagen_url IS NOT NULL as tiene_imagen,
+             LENGTH(imagen_url) as longitud_url
+      FROM producto 
+      WHERE estado = 'Activo'
+    `;
+    
+    const params = [];
+    
+    if (producto) {
+      query += ' AND cod_producto = $1';
+      params.push(producto);
+    }
+    
+    query += ' ORDER BY cod_producto';
+    
+    const result = await client.query(query, params);
+    client.release();
+
+    const estadisticas = {
+      total: result.rows.length,
+      con_imagen: result.rows.filter(p => p.tiene_imagen).length,
+      sin_imagen: result.rows.filter(p => !p.tiene_imagen).length,
+      productos: result.rows
+    };
+
+    res.json({
+      success: true,
+      ...estadisticas,
+      message: `Total: ${estadisticas.total} | Con imagen: ${estadisticas.con_imagen} | Sin imagen: ${estadisticas.sin_imagen}`
+    });
+
+  } catch (error) {
+    console.error("Error en diagnóstico de imágenes:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error en diagnóstico de imágenes"
+    });
   }
 });
 

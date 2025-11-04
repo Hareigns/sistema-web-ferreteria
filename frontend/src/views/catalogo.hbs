@@ -1,0 +1,694 @@
+<title>Catálogo - Ferretería Las Brisas</title>
+
+<!-- Bootstrap y fuentes -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500;700&display=swap"
+    rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="/styles/catalogo.css">
+
+<!-- Barra superior -->
+<div class="top-bar">
+    <div class="container d-flex justify-content-start">
+        <a href="https://wa.me/50588212693" target="_blank" class="top-link">
+            <i class="fas fa-phone-alt"></i> Contáctanos
+        </a>
+    </div>
+</div>
+
+<!-- Barra de navegación principal -->
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top" style="height: 100px;">
+    <div class="container h-100">
+        <a class="navbar-brand-custom h-100 d-flex align-items-center" href="/" style="padding: 0;">
+            <img src="images/logo_ferreteria.webp" alt="Logo Ferretería Las Brisas" class="h-100"
+                style="object-fit: contain; padding: 5px 0;">
+            <div class="brand-text ms-3">
+                <h1 class="brand-name mb-0" style="line-height: 1.2;">Ferretería Las Brisas De Asososca</h1>
+            </div>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse h-100" id="navbarNav">
+            <ul class="navbar-nav ms-auto h-100">
+                <li class="nav-item ms-lg-3 d-flex align-items-center h-100">
+                    <a class="nav-link nav-link-custom btn-home" href="/">
+                        <i class="fas fa-home me-1"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item ms-lg-3 d-flex align-items-center h-100">
+                    <a class="nav-link nav-link-custom" href="/catalogo">
+                        <i class="fas fa-th-list me-1"></i> Catálogo
+                    </a>
+                </li>
+
+                <!-- BOTÓN DEL CARRITO -->
+                <li class="nav-item ms-lg-3 d-flex align-items-center h-100">
+                    <button class="nav-link nav-link-custom btn-cart position-relative" onclick="storeSystem.showCart()"
+                        style="background: none; border: none;">
+                        <i class="fas fa-shopping-cart me-1"></i> Carrito
+                        <span id="cartCount"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            0
+                        </span>
+                    </button>
+                </li>
+
+                <li class="nav-item ms-lg-3 d-flex align-items-center h-100">
+                    <a class="nav-link nav-link-custom btn-login" href="/login">
+                        <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Controles de búsqueda y filtro -->
+<div class="store-controls">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 mb-3">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" class="search-input form-control"
+                        placeholder="Buscar productos..." value="{{searchTerm}}">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <select id="categoryFilter" class="category-filter form-select">
+                    <option value="">Todas las categorías</option>
+                    {{#each categorias}}
+                    <option value="{{this}}">{{this}}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="products-count text-center">
+                    <span id="productsCount">{{productos.length}}</span> productos
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sección de productos -->
+<section class="featured-section" id="productos">
+    <div class="container">
+        <h2 class="text-center section-title">Catálogo de Productos</h2>
+        <div id="productsGrid" class="row">
+            {{#if productos.length}}
+            {{#each productos}}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card product-card h-100">
+                    <div class="card-body text-center p-4 d-flex flex-column">
+                        {{#if imagen_url}}
+                        <img src="{{imagen_url}}" alt="{{nombre}}" class="product-image mx-auto mb-3"
+                            style="width: 100px; height: 100px; object-fit: contain;">
+                        {{else}}
+                        <div class="product-icon bg-success bg-opacity-10 text-success rounded-circle mx-auto mb-3"
+                            style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-tools fa-2x"></i>
+                        </div>
+                        {{/if}}
+
+                        <h5 class="card-title">{{nombre}}</h5>
+                        <p class="card-text text-muted small">{{descripcion}}</p>
+                        <p class="card-text text-muted small">Categoría: {{categoria}}</p>
+
+                        {{#if stock}}
+                        <p class="card-text text-success small">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Disponible: {{stock}} unidades
+                        </p>
+                        {{else}}
+                        <p class="card-text text-danger small">
+                            <i class="fas fa-times-circle me-1"></i>
+                            Agotado
+                        </p>
+                        {{/if}}
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="product-price fw-bold text-success fs-5">C${{precio}}</span>
+                                <small class="text-muted">Código: {{codigo}}</small>
+                            </div>
+
+                            {{#if stock}}
+                            <div class="add-to-cart-section mt-3">
+                                <button onclick="storeSystem.addToCart('{{id}}')"
+                                    class="btn btn-success btn-sm w-100 add-to-cart-btn">
+                                    <i class="fas fa-cart-plus me-1"></i>
+                                    Agregar al Carrito
+                                </button>
+                            </div>
+                            {{else}}
+                            <div class="add-to-cart-section mt-3">
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="fas fa-times me-1"></i>
+                                    Producto Agotado
+                                </button>
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+            {{else}}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    No hay productos disponibles en este momento.
+                </div>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+</section>
+
+<!-- Modal del Carrito -->
+<div id="cartModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content cart-modal">
+        <div class="modal-header bg-success text-white">
+            <h2 class="modal-title">
+                <i class="fas fa-shopping-cart me-2"></i>Tu Carrito
+            </h2>
+            <button type="button" class="btn-close btn-close-white" id="closeCart"></button>
+        </div>
+        <div class="modal-body">
+            <div id="cartContent">
+                <!-- Contenido del carrito se cargará aquí -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="storeSystem.clearCart()">
+                <i class="fas fa-trash me-1"></i>Vaciar Carrito
+            </button>
+            <button type="button" class="btn btn-warning" onclick="storeSystem.checkout()">
+                <i class="fas fa-credit-card me-1"></i>Finalizar Compra
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Sistema de Notificaciones Toast -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    <!-- Las notificaciones se insertarán aquí dinámicamente -->
+</div>
+
+<!-- Footer -->
+<footer id="footer-info">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <h5 class="footer-title">Ferretería Las Brisas</h5>
+                <p> Somos una ferretería nicaragüense comprometida con ofrecer productos de calidad para tus
+                    proyectos de construcción y hogar. Con más de 15 años de experiencia, nos enorgullecemos de nuestro
+                    servicio personalizado y atención al cliente. Comprometidos con el desarrollo de Nicaragua.</p>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <h5 class="footer-title">Misión</h5>
+                <p class="footer-text">Proveer materiales de construcción de calidad con servicio excepcional,
+                    contribuyendo al
+                    desarrollo de proyectos de nuestros clientes.</p>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <h5 class="footer-title">Visión</h5>
+                <p class="footer-text">Ser la ferretería líder en León, reconocida por nuestra variedad de productos,
+                    precios
+                    competitivos y atención personalizada.</p>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <h5 class="footer-title">Contacto</h5>
+                <div class="footer-contact">
+                    <p><i class="fas fa-map-marker-alt"></i> De donde fue el Rastro Municipal 2c al sur, León</p>
+                    <p><i class="fas fa-phone-alt"></i> +505 8680 0409</p>
+                    <p><i class="fas fa-envelope"></i> contacto@lasbrisas.com</p>
+                    <p><i class="fas fa-clock"></i> Lunes-Viernes: 8AM-5PM</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom text-center pt-4">
+            <p class="mb-0">&copy; 2025 Ferretería Las Brisas de Asososca. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Sistema de productos y carrito simplificado
+    class StoreSystem {
+        constructor() {
+            this.products = [];
+            this.cart = [];
+            this.filteredProducts = [];
+            this.searchTerm = '';
+            this.categoryFilter = '';
+            this.categories = [];
+
+            this.init();
+        }
+
+        async init() {
+            await this.loadProducts();
+            await this.loadCategories();
+            this.loadCart();
+            this.setupEventListeners();
+            this.updateCartCount();
+        }
+
+        async loadProducts() {
+            try {
+                const response = await fetch('/catalogo/api/buscar');
+                const data = await response.json();
+
+                if (data.success) {
+                    this.products = data.productos;
+                    this.updateProductsGrid();
+                }
+            } catch (error) {
+                console.error('Error cargando productos:', error);
+                this.products = [];
+            }
+        }
+
+        async loadCategories() {
+            try {
+                const response = await fetch('/catalogo/api/categorias');
+                const data = await response.json();
+
+                if (data.success) {
+                    this.categories = data.categorias;
+                    this.updateCategoryFilter();
+                }
+            } catch (error) {
+                console.error('Error cargando categorías:', error);
+                this.categories = [];
+            }
+        }
+
+        async performSearch() {
+            try {
+                const params = new URLSearchParams();
+                if (this.searchTerm) params.append('q', this.searchTerm);
+                if (this.categoryFilter) params.append('categoria', this.categoryFilter);
+
+                const response = await fetch(`/catalogo/api/buscar?${params}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    this.products = data.productos;
+                    this.updateProductsGrid();
+                }
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+            }
+        }
+
+        updateCategoryFilter() {
+            const categorySelect = document.getElementById('categoryFilter');
+            if (categorySelect) {
+                const currentSelection = categorySelect.value;
+
+                while (categorySelect.options.length > 1) {
+                    categorySelect.remove(1);
+                }
+
+                this.categories.forEach(category => {
+                    const option = new Option(category, category);
+                    categorySelect.add(option);
+                });
+
+                if (this.categories.includes(currentSelection)) {
+                    categorySelect.value = currentSelection;
+                }
+            }
+        }
+
+        loadCart() {
+            const savedCart = localStorage.getItem('ferreteria_cart');
+            if (savedCart) {
+                this.cart = JSON.parse(savedCart);
+            }
+        }
+
+        saveCart() {
+            localStorage.setItem('ferreteria_cart', JSON.stringify(this.cart));
+        }
+
+        setupEventListeners() {
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                this.searchTerm = e.target.value;
+
+                searchTimeout = setTimeout(() => {
+                    this.performSearch();
+                }, 500);
+            });
+
+            document.getElementById('categoryFilter').addEventListener('change', (e) => {
+                this.categoryFilter = e.target.value;
+                this.performSearch();
+            });
+
+            document.getElementById('closeCart').addEventListener('click', () => {
+                this.hideCart();
+            });
+
+            document.getElementById('cartModal').addEventListener('click', (e) => {
+                if (e.target.id === 'cartModal') {
+                    this.hideCart();
+                }
+            });
+        }
+
+        updateProductsGrid() {
+            const grid = document.getElementById('productsGrid');
+            const countElement = document.getElementById('productsCount');
+
+            countElement.textContent = this.products.length;
+
+            if (this.products.length === 0) {
+                grid.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                No se encontraron productos.
+                            </div>
+                        </div>`;
+                return;
+            }
+
+            grid.innerHTML = this.products.map(product => `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card product-card h-100">
+                            <div class="card-body text-center p-4 d-flex flex-column">
+                                ${product.imagen_url && product.imagen_url !== '/images/default-product.jpg' ?
+                    `<img src="${product.imagen_url}" alt="${product.nombre}" class="product-image mx-auto mb-3" 
+                                        style="width: 100px; height: 100px; object-fit: contain;">` :
+                    `<div class="product-icon bg-success bg-opacity-10 text-success rounded-circle mx-auto mb-3"
+                                        style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-tools fa-2x"></i>
+                                    </div>`
+                }
+                                
+                                <h5 class="card-title">${product.nombre}</h5>
+                                <p class="card-text text-muted small">${product.descripcion}</p>
+                                <p class="card-text text-muted small">Categoría: ${product.categoria}</p>
+                                
+                                ${product.stock > 0 ?
+                    `<p class="card-text text-success small">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Disponible: ${product.stock} unidades
+                                    </p>` :
+                    `<p class="card-text text-danger small">
+                                        <i class="fas fa-times-circle me-1"></i>
+                                        Agotado
+                                    </p>`
+                }
+
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <span class="product-price fw-bold text-success fs-5">C$${product.precio}</span>
+                                        <small class="text-muted">Código: ${product.codigo}</small>
+                                    </div>
+
+                                    ${product.stock > 0 ? `
+                                        <div class="add-to-cart-section mt-3">
+                                            <button 
+                                                onclick="storeSystem.addToCart('${product.id}')"
+                                                class="btn btn-success btn-sm w-100 add-to-cart-btn"
+                                            >
+                                                <i class="fas fa-cart-plus me-1"></i>
+                                                Agregar al Carrito
+                                            </button>
+                                        </div>
+                                    ` : `
+                                        <div class="add-to-cart-section mt-3">
+                                            <button class="btn btn-secondary btn-sm w-100" disabled>
+                                                <i class="fas fa-times me-1"></i>
+                                                Producto Agotado
+                                            </button>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        addToCart(productId) {
+            const product = this.products.find(p => p.id === productId);
+            if (!product || product.stock === 0) {
+                this.showToast('No hay stock disponible', 'error');
+                return;
+            }
+
+            const existingItem = this.cart.find(item => item.id === productId);
+
+            if (existingItem) {
+                if (existingItem.quantity < product.stock) {
+                    existingItem.quantity += 1;
+                } else {
+                    this.showToast('No hay suficiente stock disponible', 'error');
+                    return;
+                }
+            } else {
+                this.cart.push({
+                    ...product,
+                    quantity: 1
+                });
+            }
+
+            this.saveCart();
+            this.updateCartCount();
+
+            // Mostrar notificación con icono del producto
+            this.showToast(
+                `${product.nombre} agregado al carrito`,
+                'success',
+                product.imagen_url
+            );
+        }
+
+        showToast(message, type = 'info', imageUrl = null) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const toastHTML = `
+                    <div id="${toastId}" class="toast toast-custom ${type}" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header-custom">
+                            <div class="d-flex align-items-center w-100">
+                                ${imageUrl && imageUrl !== '/images/default-product.jpg' ?
+                    `<img src="${imageUrl}" alt="Producto" class="toast-icon rounded me-2" style="width: 32px; height: 32px; object-fit: cover;">` :
+                    `<div class="toast-icon ${type}">
+                                        <i class="fas ${icons[type] || 'fa-info-circle'}"></i>
+                                    </div>`
+                }
+                                <strong class="me-auto" style="font-size: 0.95rem;">
+                                    ${type === 'success' ? '✅ Producto Agregado' :
+                    type === 'error' ? '❌ Error' :
+                        type === 'warning' ? '⚠️ Advertencia' : 'ℹ️ Información'}
+                                </strong>
+                                <button type="button" class="btn-close btn-close-custom" onclick="this.closest('.toast').remove()"></button>
+                            </div>
+                        </div>
+                        <div class="toast-body-custom">
+                            ${message}
+                            ${type === 'success' ? '<div class="mt-2 small text-muted">Haz clic en "Carrito" para ver tus productos</div>' : ''}
+                        </div>
+                    </div>
+                `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+
+            // Auto-remover después de 4 segundos
+            setTimeout(() => {
+                const toastElement = document.getElementById(toastId);
+                if (toastElement) {
+                    toastElement.style.animation = 'fadeOut 0.5s ease-in forwards';
+                    setTimeout(() => toastElement.remove(), 500);
+                }
+            }, 4000);
+        }
+
+        updateCartCount() {
+            const count = this.cart.reduce((total, item) => total + item.quantity, 0);
+            const cartCountElement = document.getElementById('cartCount');
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+                if (count === 0) {
+                    cartCountElement.style.display = 'none';
+                } else {
+                    cartCountElement.style.display = 'block';
+                }
+            }
+        }
+
+        showCart() {
+            this.renderCart();
+            document.getElementById('cartModal').style.display = 'flex';
+        }
+
+        hideCart() {
+            document.getElementById('cartModal').style.display = 'none';
+        }
+
+        renderCart() {
+            const cartContent = document.getElementById('cartContent');
+
+            if (this.cart.length === 0) {
+                cartContent.innerHTML = `
+            <div class="cart-empty">
+                <i class="fas fa-shopping-cart"></i>
+                <h4>Tu carrito está vacío</h4>
+                <p>Agrega algunos productos para continuar</p>
+            </div>`;
+                return;
+            }
+
+            const totalPrice = this.cart.reduce((total, item) => total + (parseFloat(item.precio) * item.quantity), 0);
+            const totalItems = this.cart.reduce((total, item) => total + item.quantity, 0);
+
+            cartContent.innerHTML = `
+        <div class="cart-items">
+            ${this.cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${item.nombre}</div>
+                        <div class="cart-item-price">C$${parseFloat(item.precio).toFixed(2)} c/u</div>
+                        <div class="cart-item-controls">
+                            <button class="quantity-btn" 
+                                onclick="storeSystem.updateQuantity('${item.id}', ${item.quantity - 1})">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span class="quantity-display">${item.quantity}</span>
+                            <button class="quantity-btn" 
+                                onclick="storeSystem.updateQuantity('${item.id}', ${item.quantity + 1})"
+                                ${item.quantity >= item.stock ? 'disabled' : ''}>
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger ms-2" 
+                                onclick="storeSystem.removeFromCart('${item.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="cart-item-total text-success">C$${(parseFloat(item.precio) * item.quantity).toFixed(2)}</div>
+                        <small class="text-muted">Disponible: ${item.stock}</small>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        <div class="cart-summary">
+            <div class="row text-center">
+                <div class="col-6">
+                    <h6>Total Items</h6>
+                    <h4 class="text-success">${totalItems}</h4>
+                </div>
+                <div class="col-6">
+                    <h6>Total a Pagar</h6>
+                    <h4 class="text-success">C$${totalPrice.toFixed(2)}</h4>
+                </div>
+            </div>
+        </div>`;
+        }
+
+        updateQuantity(productId, newQuantity) {
+            if (newQuantity <= 0) {
+                this.removeFromCart(productId);
+                return;
+            }
+
+            const item = this.cart.find(item => item.id === productId);
+            const product = this.products.find(p => p.id === productId);
+
+            if (item && product) {
+                if (newQuantity <= product.stock) {
+                    item.quantity = newQuantity;
+                    this.saveCart();
+                    this.renderCart();
+                    this.showToast(`Cantidad actualizada: ${item.nombre}`, 'info');
+                } else {
+                    this.showToast('No hay suficiente stock disponible', 'error');
+                }
+            }
+        }
+
+        removeFromCart(productId) {
+            const product = this.cart.find(item => item.id === productId);
+            this.cart = this.cart.filter(item => item.id !== productId);
+            this.saveCart();
+            this.updateCartCount();
+            this.renderCart();
+
+            if (product) {
+                this.showToast(`${product.nombre} removido del carrito`, 'warning');
+            }
+        }
+
+        clearCart() {
+            if (this.cart.length > 0) {
+                this.showToast('Carrito vaciado', 'info');
+            }
+            this.cart = [];
+            this.saveCart();
+            this.updateCartCount();
+            this.renderCart();
+        }
+
+        checkout() {
+            if (this.cart.length === 0) {
+                this.showToast('El carrito está vacío', 'warning');
+                return;
+            }
+
+            const total = this.cart.reduce((sum, item) => sum + (parseFloat(item.precio) * item.quantity), 0);
+
+            this.showToast(
+                `¡Compra realizada! Total: C$${total.toFixed(2)}`,
+                'success'
+            );
+
+            this.clearCart();
+            this.hideCart();
+        }
+    }
+
+    // Inicializar el sistema
+    let storeSystem;
+    document.addEventListener('DOMContentLoaded', function () {
+        storeSystem = new StoreSystem();
+
+        // Añadir funcionalidad para el navbar sticky
+        window.addEventListener('scroll', function () {
+            const navbar = document.querySelector('.navbar-custom');
+            if (window.scrollY > 50) {
+                navbar.style.padding = '10px 0';
+                navbar.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            } else {
+                navbar.style.padding = '15px 0';
+                navbar.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            }
+        });
+    });
+</script>

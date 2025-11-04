@@ -564,3 +564,43 @@
   padding-top: 12px;
   height: calc(3.5rem + 2px);
 }
+
+/* Estilos para el área de arrastrar y soltar */
+.drop-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background-color: #f8f9fa;
+}
+
+.drop-zone:hover {
+    border-color: #007bff;
+    background-color: #e9f7fe;
+}
+
+.drop-zone.dragover {
+    border-color: #28a745;
+    background-color: #f0fff4;
+    transform: scale(1.02);
+}
+
+.preview-image {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: cover;
+}
+
+.table-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.table-image:hover {
+    transform: scale(1.1);
+}

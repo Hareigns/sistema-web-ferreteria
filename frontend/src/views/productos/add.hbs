@@ -4,6 +4,8 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
 
 <nav class="navbar navbar-expand-lg navbar-dark">
   <div class="container">
@@ -218,14 +220,21 @@
                     <div id="preview-container" class="mt-3 text-center" style="display: none;">
                       <h6>Vista Previa:</h6>
                       <div class="position-relative d-inline-block">
-                        <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail preview-image">
+                        <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail preview-image"
+                          style="max-width: 200px; max-height: 200px;">
                         <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
-                          onclick="removeImage()" title="Eliminar imagen">
+                          onclick="limpiarImagenRegistro()" title="Eliminar imagen">
                           <i class="fas fa-times"></i>
                         </button>
                       </div>
                       <div class="mt-2">
                         <small class="text-muted" id="file-info"></small>
+                      </div>
+                      <div class="mt-2">
+                        <small class="text-success">
+                          <i class="fas fa-check-circle me-1"></i>
+                          Imagen lista para ser guardada en Supabase
+                        </small>
                       </div>
                     </div>
 
@@ -233,7 +242,8 @@
                     <div class="mt-3">
                       <small class="text-muted">
                         <i class="fas fa-info-circle me-1"></i>
-                        Formatos: JPG, PNG, GIF • Tamaño máximo: 2MB • Resolución recomendada: 800x800px
+                        Formatos: JPG, PNG, GIF, WebP • Tamaño máximo: 2MB • Las imágenes se guardan en la nube
+                        (Supabase)
                       </small>
                     </div>
                   </div>
@@ -731,26 +741,34 @@
   }
 
   // Función para cargar productos en la tabla principal
-  async function cargarProductos() {
+  async function cargarProductos(timestamp = null) {
     try {
-      const response = await fetch("/productos/api/productos");
-      const data = await response.json();
+      const cacheBuster = timestamp || new Date().getTime();
+      const response = await fetch(`/productos/api/productos?t=${cacheBuster}`);
 
-      console.log("Datos recibidos para inventario:", data);
-
-      if ($.fn.DataTable.isDataTable('#productosTable')) {
-        $('#productosTable').DataTable().destroy();
+      // Verificar si la respuesta es JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('El servidor respondió con HTML en lugar de JSON');
       }
 
-      $('#productosTable tbody').empty();
+      const data = await response.json();
+
+      console.log("📊 Datos recibidos para inventario:", {
+        cantidad: data.data?.length || 0,
+        timestamp: new Date().toLocaleTimeString()
+      });
+
+      // Destruir DataTable si ya existe
+      if ($.fn.DataTable.isDataTable('#productosTable')) {
+        productosTable.destroy();
+        $('#productosTable').empty();
+      }
 
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-        // ORDENAR los datos por código de producto antes de pasarlos a DataTables
         const datosOrdenados = data.data.sort((a, b) => {
-          // Convertir códigos a números si son numéricos, o ordenar alfabéticamente
           const codA = a.cod_producto;
           const codB = b.cod_producto;
-
           if (!isNaN(codA) && !isNaN(codB)) {
             return parseInt(codA) - parseInt(codB);
           } else {
@@ -759,22 +777,28 @@
         });
 
         productosTable = $('#productosTable').DataTable({
-          data: datosOrdenados, // Usar datos ordenados
+          data: datosOrdenados,
           columns: [
             {
-              data: 'imagen_url',
-              render: function (data) {
-                if (data) {
-                  return `<img src="${data}" alt="Imagen del producto" 
-                          class="img-thumbnail table-image" 
-                          style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                          onclick="ampliarImagen('${data}')"
-                          onerror="manejarErrorImagen(this)">`;
+              data: 'imagen_url_cache',
+              render: function (data, type, row) {
+                // ✅ USAR imagen_url_cache que incluye timestamp
+                const imageUrl = data || row.imagen_url;
+
+                if (imageUrl) {
+                  return `<img src="${imageUrl}" alt="Imagen del producto" 
+                    class="img-thumbnail table-image" 
+                    style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                    onclick="ampliarImagen('${imageUrl}')"
+                    onerror="manejarErrorImagen(this, '${row.cod_producto}')"
+                    loading="lazy"
+                    data-producto="${row.cod_producto}"
+                    data-timestamp="${new Date().getTime()}">`;
                 } else {
                   return `<div class="text-center text-muted">
-                          <i class="fas fa-image fa-2x"></i>
-                          <div class="small">Sin imagen</div>
-                        </div>`;
+                    <i class="fas fa-image fa-2x"></i>
+                    <div class="small">Sin imagen</div>
+                  </div>`;
                 }
               },
               orderable: false,
@@ -893,7 +917,8 @@
           }
         });
       } else {
-        $('#productosTable').DataTable({
+        // Inicializar DataTable vacío
+        productosTable = $('#productosTable').DataTable({
           data: [],
           language: {
             "emptyTable": "No hay productos registrados"
@@ -902,13 +927,25 @@
       }
     } catch (error) {
       console.error("Error al cargar productos:", error);
-      $('#productosTable').DataTable({
+
+      // Mostrar error específico
+      let errorMessage = 'Error al cargar los productos';
+      if (error.message.includes('HTML')) {
+        errorMessage = 'Error del servidor: Respuesta en formato incorrecto';
+      }
+
+      if ($.fn.DataTable.isDataTable('#productosTable')) {
+        productosTable.destroy();
+      }
+
+      productosTable = $('#productosTable').DataTable({
         data: [],
         language: {
-          "emptyTable": "Error al cargar los productos"
+          "emptyTable": errorMessage
         }
       });
-      Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+
+      Swal.fire('Error', errorMessage, 'error');
     }
   }
 
@@ -1190,7 +1227,7 @@
       if (data.success && data.data) {
         const producto = data.data;
 
-        // Llenar los campos del formulario (código existente...)
+        // Llenar los campos del formulario
         document.getElementById('mod_codigo_producto').value = producto.cod_producto || '';
         document.getElementById('mod_nombre').value = producto.nombre || '';
         document.getElementById('mod_marca').value = producto.marca || '';
@@ -1254,8 +1291,8 @@
           fechaVencimientoInput.dataset.originalValue = '';
         }
 
-        // Cargar imagen actual del producto
-        cargarImagenActual(producto.imagen_url);
+        // ✅ CORRECCIÓN CRÍTICA: Cargar imagen actual del producto
+        await cargarImagenActualProducto(codigoProducto, producto.imagen_url);
 
         // Mostrar el formulario
         formularioMod.style.display = 'block';
@@ -1270,8 +1307,8 @@
     }
   }
 
-  // Función para cargar la imagen actual del producto
-  function cargarImagenActual(imagenUrl) {
+  // ✅ NUEVA FUNCIÓN: Cargar imagen actual del producto
+  async function cargarImagenActualProducto(codigoProducto, imagenUrl = null) {
     const imgActual = document.getElementById('mod_imagen_actual');
     const sinImagen = document.getElementById('mod_sin_imagen');
     const btnActualizarImagen = document.getElementById('actualizarImagenButton');
@@ -1279,59 +1316,44 @@
     // Resetear nueva imagen
     cancelarCambioImagen();
 
-    if (imagenUrl) {
-      imgActual.src = imagenUrl;
-      imgActual.style.display = 'block';
-      sinImagen.style.display = 'none';
-    } else {
+    try {
+      let urlImagenFinal = null;
+
+      // Si no se proporcionó imagenUrl, obtenerla de la API
+      if (!imagenUrl) {
+        const response = await fetch(`/productos/api/productos/${codigoProducto}/imagen`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.imagen_url) {
+            urlImagenFinal = data.imagen_url;
+          }
+        }
+      } else {
+        urlImagenFinal = imagenUrl;
+      }
+
+      // Aplicar cache busting a la URL
+      if (urlImagenFinal) {
+        const urlConCache = `${urlImagenFinal}${urlImagenFinal.includes('?') ? '&' : '?'}t=${Date.now()}`;
+        imgActual.src = urlConCache;
+        imgActual.style.display = 'block';
+        sinImagen.style.display = 'none';
+
+        console.log(`✅ Imagen cargada para ${codigoProducto}:`, urlConCache);
+      } else {
+        imgActual.style.display = 'none';
+        sinImagen.style.display = 'block';
+        console.log(`ℹ️ Producto ${codigoProducto} sin imagen`);
+      }
+
+      // Ocultar botón de actualizar imagen inicialmente
+      btnActualizarImagen.style.display = 'none';
+
+    } catch (error) {
+      console.error(`❌ Error cargando imagen para ${codigoProducto}:`, error);
       imgActual.style.display = 'none';
       sinImagen.style.display = 'block';
     }
-
-    // Ocultar botón de actualizar imagen inicialmente
-    btnActualizarImagen.style.display = 'none';
-  }
-
-  // Función para procesar nueva imagen en modificación
-  function procesarNuevaImagenModificar(file) {
-    if (!file) return;
-
-    // Validar tipo de archivo
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Formato no válido',
-        text: 'Solo se permiten imágenes JPG, PNG, GIF o WebP'
-      });
-      return;
-    }
-
-    // Validar tamaño (2MB máximo)
-    if (file.size > 2 * 1024 * 1024) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Archivo muy grande',
-        text: 'La imagen no debe superar los 2MB'
-      });
-      return;
-    }
-
-    // Crear FileReader para mostrar vista previa
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      imagenActualModificar = e.target.result; // Base64
-      imagenNombreModificar = file.name;
-      imagenTipoModificar = file.type;
-
-      // Mostrar vista previa
-      document.getElementById('mod_preview_image').src = e.target.result;
-      document.getElementById('mod_preview_nueva_imagen').style.display = 'block';
-
-      // Mostrar botón de actualizar imagen
-      document.getElementById('actualizarImagenButton').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
   }
 
   // Función para cancelar cambio de imagen
@@ -1343,6 +1365,28 @@
     document.getElementById('mod_preview_nueva_imagen').style.display = 'none';
     document.getElementById('actualizarImagenButton').style.display = 'none';
     document.getElementById('mod_nueva_imagen').value = '';
+  }
+
+  // ✅ FUNCIÓN FALTANTE: Cargar imagen actual después de actualizar
+  function cargarImagenActual(nuevaImagenUrl) {
+    const imgActual = document.getElementById('mod_imagen_actual');
+    const sinImagen = document.getElementById('mod_sin_imagen');
+
+    if (nuevaImagenUrl) {
+      // Agregar cache busting
+      const urlConCache = `${nuevaImagenUrl}${nuevaImagenUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+      imgActual.src = urlConCache;
+      imgActual.style.display = 'block';
+      sinImagen.style.display = 'none';
+
+      console.log('✅ Imagen actualizada en el formulario:', urlConCache);
+    } else {
+      imgActual.style.display = 'none';
+      sinImagen.style.display = 'block';
+    }
+
+    // Limpiar la nueva imagen después de actualizar
+    cancelarCambioImagen();
   }
 
   // Función para actualizar solo la imagen
@@ -1767,11 +1811,20 @@
       fecha_entrada: fechaEntrada
     };
 
-    // Agregar imagen si existe
+    // Agregar imagen si existe (USANDO LAS MISMAS VARIABLES GLOBALES)
     if (imagenActual) {
       producto.imagen_base64 = imagenActual;
       producto.imagen_nombre = imagenNombre;
       producto.imagen_tipo = imagenTipo;
+
+      console.log('Imagen agregada al producto temporal:', {
+        codigo: codigoProducto,
+        tieneImagen: true,
+        longitudBase64: imagenActual.length,
+        tipo: imagenTipo
+      });
+    } else {
+      console.log('Producto sin imagen:', codigoProducto);
     }
 
     // Agregar a la lista temporal
@@ -1780,7 +1833,7 @@
     // Actualizar tabla temporal
     actualizarTablaTemporal();
 
-    // Limpiar formulario
+    // Limpiar formulario (PERO MANTENER LA IMAGEN SI SE QUIERE REUTILIZAR)
     limpiarCamposFormulario();
 
     // Mostrar confirmación
@@ -1808,6 +1861,26 @@
 
     // Limpiar imagen
     removeImage();
+  }
+
+  // Función para limpiar imagen manualmente
+  function limpiarImagenRegistro() {
+    imagenActual = null;
+    imagenNombre = null;
+    imagenTipo = null;
+
+    document.getElementById('preview-container').style.display = 'none';
+    document.getElementById('dropZone').style.display = 'block';
+    document.getElementById('imagen_producto').value = '';
+    document.getElementById('file-info').textContent = '';
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Imagen limpiada',
+      text: 'Puede seleccionar una nueva imagen',
+      timer: 1500,
+      showConfirmButton: false
+    });
   }
 
   // Función para mostrar vista previa de imagen
@@ -2051,13 +2124,148 @@
     }
   }
 
-
-  // Variables globales para imágenes
+  // Variables globales para imágenes (compartidas para registro y modificación)
   let imagenActual = null;
   let imagenNombre = null;
   let imagenTipo = null;
 
-  // Función para tomar foto desde la cámara
+  // Función para procesar archivo seleccionado (UNIFICADA)
+  async function processFile(file) {
+    // Validar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Formato no válido',
+        text: 'Solo se permiten imágenes JPG, PNG, GIF o WebP'
+      });
+      return;
+    }
+
+    // Validar tamaño máximo (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo muy grande',
+        html: `La imagen es demasiado grande (${(file.size / 1024 / 1024).toFixed(2)} MB).<br>
+             El tamaño máximo permitido es 5 MB.`
+      });
+      return;
+    }
+
+    try {
+      const btnActualizar = document.getElementById('actualizarImagenButton');
+      if (btnActualizar) {
+        btnActualizar.disabled = true;
+      }
+
+      // Mostrar loading
+      Swal.fire({
+        title: 'Procesando imagen...',
+        text: 'Comprimiendo y optimizando imagen',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+      });
+
+      // Comprimir imagen (siempre comprimir, no solo cuando es grande)
+      const compressed = await compressImage(file, 800, 0.6); // Más compresión
+
+      Swal.close();
+
+      console.log(`📸 Imagen comprimida: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressed.size / 1024 / 1024).toFixed(2)}MB (${compressed.compression}% reducción)`);
+
+      imagenActual = compressed.base64;
+      imagenNombre = file.name.replace(/\.[^/.]+$/, ".webp"); // Cambiar extensión a webp
+      imagenTipo = 'image/webp';
+
+      // Mostrar información del archivo
+      const originalSize = (file.size / 1024 / 1024).toFixed(2);
+      const compressedSize = (compressed.size / 1024 / 1024).toFixed(2);
+      document.getElementById('file-info').textContent =
+        `${file.name} • ${originalSize}MB → ${compressedSize}MB • WebP (${compressed.compression}% menor)`;
+
+      // Mostrar vista previa
+      document.getElementById('preview-image').src = imagenActual;
+      document.getElementById('preview-container').style.display = 'block';
+      document.getElementById('dropZone').style.display = 'none';
+
+      if (btnActualizar) {
+        btnActualizar.disabled = false;
+      }
+
+    } catch (error) {
+      console.error('Error procesando imagen:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo procesar la imagen. Intente con otra imagen.'
+      });
+    }
+  }
+
+  // Función de compresión mejorada
+  function compressImage(file, maxWidth = 800, quality = 0.6) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        img.src = e.target.result;
+      };
+
+      img.onload = function () {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+
+        // Calcular nuevas dimensiones manteniendo aspect ratio
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+
+        // Mejorar la calidad de renderizado
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convertir a WebP con calidad ajustable
+        canvas.toBlob(
+          blob => {
+            if (!blob) {
+              reject(new Error('No se pudo comprimir la imagen'));
+              return;
+            }
+
+            const newReader = new FileReader();
+            newReader.onload = function (e) {
+              resolve({
+                base64: e.target.result,
+                size: blob.size,
+                originalSize: file.size,
+                compression: Math.max(0, ((1 - (blob.size / file.size)) * 100).toFixed(1))
+              });
+            };
+            newReader.readAsDataURL(blob);
+          },
+          'image/webp',
+          quality
+        );
+      };
+
+      img.onerror = () => reject(new Error('Error al cargar la imagen'));
+      reader.onerror = () => reject(new Error('Error al leer el archivo'));
+
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Función para tomar foto desde la cámara (REGISTRO)
   function takePhoto() {
     const input = document.getElementById('imagen_producto');
 
@@ -2072,50 +2280,19 @@
     }, 1000);
   }
 
-  // Función para procesar archivo seleccionado
-  function processFile(file) {
-    // Validar tipo de archivo
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Formato no válido',
-        text: 'Solo se permiten imágenes JPG, PNG, GIF o WebP'
-      });
-      return;
-    }
+  // Función para eliminar imagen (REGISTRO)
+  function removeImage() {
+    imagenActual = null;
+    imagenNombre = null;
+    imagenTipo = null;
 
-    // Validar tamaño (2MB máximo)
-    if (file.size > 2 * 1024 * 1024) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Archivo muy grande',
-        text: 'La imagen no debe superar los 2MB'
-      });
-      return;
-    }
-
-    // Mostrar información del archivo
-    const fileSize = (file.size / 1024 / 1024).toFixed(2);
-    document.getElementById('file-info').textContent =
-      `${file.name} • ${fileSize} MB • ${file.type.replace('image/', '').toUpperCase()}`;
-
-    // Crear FileReader para mostrar vista previa
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      imagenActual = e.target.result; // Base64
-      imagenNombre = file.name;
-      imagenTipo = file.type;
-
-      // Mostrar vista previa
-      document.getElementById('preview-image').src = e.target.result;
-      document.getElementById('preview-container').style.display = 'block';
-      document.getElementById('dropZone').style.display = 'none';
-    };
-    reader.readAsDataURL(file);
+    document.getElementById('preview-container').style.display = 'none';
+    document.getElementById('dropZone').style.display = 'block';
+    document.getElementById('imagen_producto').value = '';
+    document.getElementById('file-info').textContent = '';
   }
 
-  // Event Listeners para el área de arrastrar y soltar
+  // Event Listeners para el área de arrastrar y soltar (REGISTRO)
   document.addEventListener('DOMContentLoaded', function () {
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('imagen_producto');
@@ -2268,13 +2445,443 @@
     });
   }
 
-// Función para manejar errores de carga de imágenes
-function manejarErrorImagen(imgElement) {
-  console.log('Error cargando imagen, mostrando placeholder');
-  imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0zMCAzN0MzMi43NjE0IDM3IDM1IDM0Ljc2MTQgMzUgMzJDMzUgMjkuMjM4NiAzMi43NjE0IDI3IDMwIDI3QzI3LjIzODYgMjcgMjUgMjkuMjM4NiAyNSAzMkMyNSAzNC43NjE0IDI3LjIzODYgMzcgMzAgMzdaIiBmaWxsPSIjQ0RDRENEIi8+CjxwYXRoIGQ9Ik0zNi41IDIyLjVIMjMuNUMxOS4zNTc5IDIyLjUgMTYgMjUuODU3OSAxNiAzMFY0MUMxNiA0NS4xNDIxIDE5LjM1NzkgNDguNSAyMy41IDQ4LjVIMzYuNUM0MC42NDIxIDQ4LjUgNDQgNDUuMTNDMjEgNDQgNDEgMjUuODU3OSA0MSAyMS43NVYzMEM0MSAyNS44NTc5IDQwLjY0MjEgMjIuNSAzNi41IDIyLjVaIiBmaWxsPSIjQ0RDRENEIi8+Cjwvc3ZnPgo=';
-  imgElement.alt = 'Imagen no disponible';
-  imgElement.style.cursor = 'default';
-  imgElement.onclick = null;
-}
+  // Función mejorada para manejar errores de carga de imágenes
+  function manejarErrorImagen(imgElement, codigoProducto) {
+    console.log(`🔄 Recargando imagen fallida para producto ${codigoProducto}`);
 
+    // Intentar recargar con nuevo timestamp
+    const newTimestamp = new Date().getTime();
+    const baseUrl = imgElement.src.split('?')[0];
+    const newUrl = `${baseUrl}?t=${newTimestamp}&retry=1`;
+
+    imgElement.src = newUrl;
+    imgElement.onerror = function () {
+      // Si sigue fallando, mostrar placeholder y intentar obtener de la API
+      this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNGNUY1RjUiLz48cGF0aCBkPSJNMzAgMzdDMzIuNzYxNCAzNyAzNSAzNC43NjE0IDM1IDMyQzM1IDI5LjIzODYgMzIuNzYxNCAyNyAzMCAyN0MyNy4yMzg2IDI3IDI1IDI5LjIzODYgMjUgMzJDMjUgMzQuNzYxNCAyNy4yMzg2IDM3IDMwIDM3WiIgZmlsbD0iI0NEQ0RDRCIvPjxwYXRoIGQ9Ik0zNi41IDIyLjVIMjMuNUMxOS4zNTc5IDIyLjUgMTYgMjUuODU3OSAxNiAzMFY0MUMxNiA0NS4xNDIxIDE5LjM1NzkgNDguNSAyMy41IDQ4LjVIMzYuNUM0MC42NDIxIDQ4LjUgNDQgNDUuMTNDMjEgNDQgNDEgMjUuODU3OSA0MSAyMS43NVYzMEM0MSAyNS44NTc5IDQwLjY0MjEgMjIuNSAzNi41IDIyLjVaIiBmaWxsPSIjQ0RDRENEIi8+PC9zdmc+';
+      this.alt = 'Imagen no disponible';
+      this.style.cursor = 'default';
+      this.onclick = null;
+
+      // Intentar recuperar la imagen desde la API
+      recuperarImagenDesdeAPI(codigoProducto);
+    };
+  }
+
+  // Función para recuperar imagen desde API
+  async function recuperarImagenDesdeAPI(codigoProducto) {
+    try {
+      const response = await fetch(`/productos/api/productos/${codigoProducto}/imagen`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.imagen_url) {
+          // Actualizar todas las instancias de esta imagen en la página
+          const imagenes = document.querySelectorAll(`img[data-producto="${codigoProducto}"]`);
+          imagenes.forEach(img => {
+            img.src = data.imagen_url;
+            img.onclick = function () { ampliarImagen(data.imagen_url); };
+            img.style.cursor = 'pointer';
+          });
+          console.log(`✅ Imagen recuperada para producto ${codigoProducto}`);
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error recuperando imagen para ${codigoProducto}:`, error);
+    }
+  }
+
+  // Función para forzar recarga de imágenes específicas
+  async function recargarImagenProducto(codigoProducto) {
+    try {
+      const response = await fetch(`/productos/api/productos/${codigoProducto}/imagen`);
+      const data = await response.json();
+
+      if (data.success && data.imagen_url) {
+        // Actualizar todas las instancias de esta imagen en la página
+        const imagenes = document.querySelectorAll(`img[data-producto="${codigoProducto}"]`);
+        imagenes.forEach(img => {
+          img.src = data.imagen_url;
+        });
+        console.log(`✅ Imagen recargada para producto ${codigoProducto}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error recargando imagen para ${codigoProducto}:`, error);
+    }
+  }
+
+  // Comando de diagnóstico para imágenes
+  window.diagnosticoImagenes = async function (codigoProducto = null) {
+    try {
+      let url = '/productos/api/productos/diagnostico-imagenes';
+      if (codigoProducto) {
+        url += `?producto=${codigoProducto}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log('🔍 Diagnóstico de imágenes:', data);
+      return data;
+    } catch (error) {
+      console.error('Error en diagnóstico:', error);
+    }
+  };
+
+  // ✅ FUNCIÓN FALTANTE: Procesar nueva imagen en modificación
+  function procesarNuevaImagenModificar(file) {
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Formato no válido',
+        text: 'Solo se permiten imágenes JPG, PNG, GIF o WebP'
+      });
+      return;
+    }
+
+    // Validar tamaño (2MB máximo)
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo muy grande',
+        text: 'La imagen no debe superar los 2MB'
+      });
+      return;
+    }
+
+    // Crear FileReader para mostrar vista previa
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      imagenActualModificar = e.target.result; // Base64
+      imagenNombreModificar = file.name;
+      imagenTipoModificar = file.type;
+
+      // Mostrar vista previa
+      document.getElementById('mod_preview_image').src = e.target.result;
+      document.getElementById('mod_preview_nueva_imagen').style.display = 'block';
+
+      // Mostrar botón de actualizar imagen
+      document.getElementById('actualizarImagenButton').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // WebSocket Manager PARA SUPABASE - Versión Corregida
+  class WebSocketManager {
+    constructor() {
+      this.socket = null;
+      this.isConnected = false;
+      this.connectionId = null;
+      this.reconnectAttempts = 0;
+      this.maxReconnectAttempts = 10;
+    }
+
+    initialize() {
+      try {
+        console.log('🔄 Iniciando WebSocket Manager...');
+
+        // Verificar que Socket.io esté cargado
+        if (typeof io === 'undefined') {
+          console.error('❌ Socket.io no está cargado');
+          this.mostrarErrorSocketIO();
+          return;
+        }
+
+        console.log('✅ Socket.io disponible, conectando...');
+
+        // Configuración simple
+        this.socket = io({
+          transports: ['websocket', 'polling'],
+          timeout: 10000,
+          reconnectionAttempts: this.maxReconnectAttempts,
+          reconnectionDelay: 2000
+        });
+
+        this.setupEventHandlers();
+
+      } catch (error) {
+        console.error('❌ Error inicializando WebSocket:', error);
+      }
+    }
+
+    setupEventHandlers() {
+      // CONEXIÓN EXITOSA
+      this.socket.on('connect', () => {
+        console.log('='.repeat(50));
+        console.log('✅ WEBSOCKET CONECTADO');
+        console.log('   ID:', this.socket.id);
+        console.log('   URL:', window.location.origin);
+        console.log('='.repeat(50));
+
+        this.isConnected = true;
+        this.connectionId = this.socket.id;
+        this.reconnectAttempts = 0;
+
+        this.showNotification('✅ Conexión en tiempo real activa', 'success', 3000);
+
+        // Registrar en servidor
+        this.socket.emit('cliente_conectado', {
+          tipo: 'gestion_productos',
+          pagina: 'productos',
+          timestamp: new Date().toISOString()
+        });
+      });
+
+      // EVENTOS DE PRODUCTOS
+      this.socket.on('productos_actualizados', (data) => {
+        console.log('📦 Productos actualizados:', data);
+        this.showNotification(`📦 ${data.total_productos} producto(s) actualizado(s)`, 'info', 4000);
+        this.recargarInventarioForzado();
+      });
+
+      this.socket.on('imagen_actualizada', (data) => {
+        console.log('🖼️ Imagen actualizada:', data);
+        this.showNotification(`🖼️ Imagen de ${data.codigo_producto} actualizada`, 'success', 4000);
+        this.actualizarImagenInmediata(data.codigo_producto, data.imagen_url);
+      });
+
+      // MENSAJES DEL SERVIDOR
+      this.socket.on('server_hello', (data) => {
+        console.log('👋 Servidor:', data.message);
+      });
+
+      // MANEJO DE ERRORES
+      this.socket.on('disconnect', (reason) => {
+        console.log('🔌 Desconectado:', reason);
+        this.isConnected = false;
+        this.showNotification('🔌 Conexión perdida', 'warning', 3000);
+      });
+
+      this.socket.on('connect_error', (error) => {
+        this.reconnectAttempts++;
+        console.error('❌ Error conexión:', error.message);
+      });
+    }
+
+    // RECARGAR INVENTARIO
+    async recargarInventarioForzado() {
+      try {
+        console.log('🔄 Recargando inventario...');
+        if ($.fn.DataTable.isDataTable('#productosTable')) {
+          productosTable.destroy();
+        }
+        await cargarProductos(new Date().getTime());
+      } catch (error) {
+        console.error('❌ Error recargando inventario:', error);
+      }
+    }
+
+    // ACTUALIZAR IMAGEN
+    actualizarImagenInmediata(codigoProducto, imagenUrl) {
+      if (!imagenUrl) return;
+
+      const nuevaUrl = `${imagenUrl}?t=${new Date().getTime()}`;
+
+      // Actualizar en tabla
+      const imagenes = document.querySelectorAll(`img[data-producto="${codigoProducto}"]`);
+      imagenes.forEach(img => {
+        img.src = nuevaUrl;
+      });
+
+      // Actualizar en formulario si está abierto
+      const productoActual = document.getElementById('select_producto_modificar')?.value;
+      if (productoActual === codigoProducto) {
+        const imgFormulario = document.getElementById('mod_imagen_actual');
+        if (imgFormulario) {
+          imgFormulario.src = nuevaUrl;
+        }
+      }
+    }
+
+    // NOTIFICACIONES
+    showNotification(message, type = 'info', timer = 3000) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: type,
+          title: message,
+          showConfirmButton: false,
+          timer: timer,
+          timerProgressBar: true
+        });
+      }
+    }
+
+    // DIAGNÓSTICO
+    testConexion() {
+      if (this.isConnected) {
+        this.socket.emit('test_conexion', {
+          mensaje: 'Test desde cliente',
+          timestamp: new Date().toISOString()
+        });
+        this.showNotification('🧪 Test enviado', 'info', 2000);
+      }
+    }
+
+    obtenerEstado() {
+      return {
+        conectado: this.isConnected,
+        id: this.connectionId,
+        reintentos: this.reconnectAttempts
+      };
+    }
+
+    mostrarErrorSocketIO() {
+      console.error('❌ Socket.io no cargado. Verifica el script en el HTML.');
+    }
+  }
+
+  // ========== INICIALIZACIÓN CORREGIDA ==========
+
+  // Función de inicialización segura
+  function inicializarWebSockets() {
+    console.log('🚀 INICIANDO WEBSOCKETS...');
+
+    // Crear instancia global ÚNICA
+    window.wsManager = new WebSocketManager();
+
+    // Inicializar después de un delay
+    setTimeout(() => {
+      try {
+        window.wsManager.initialize();
+      } catch (error) {
+        console.error('❌ Error en inicialización:', error);
+      }
+    }, 1000);
+  }
+
+  // ========== FUNCIONES DE DIAGNÓSTICO ==========
+
+  window.diagnosticoWebSockets = function () {
+    console.log('='.repeat(50));
+    console.log('🔍 DIAGNÓSTICO WEBSOCKETS');
+    console.log('='.repeat(50));
+    console.log('📍 URL:', window.location.origin);
+    console.log('📡 Socket.io:', typeof io !== 'undefined' ? '✅ CARGADO' : '❌ FALTANTE');
+    console.log('👨‍💼 WebSocket Manager:', window.wsManager ? '✅ INICIALIZADO' : '❌ NO INICIALIZADO');
+
+    if (window.wsManager) {
+      const estado = window.wsManager.obtenerEstado();
+      console.log('🔗 Conectado:', estado.conectado ? '✅ SI' : '❌ NO');
+      console.log('🆔 ID:', estado.id || 'N/A');
+      console.log('🔄 Reintentos:', estado.reintentos);
+    }
+
+    console.log('='.repeat(50));
+  };
+
+  window.probarConexion = function () {
+    if (window.wsManager) {
+      window.wsManager.testConexion();
+    } else {
+      console.error('❌ WebSocket Manager no disponible');
+    }
+  };
+
+  // ========== INICIALIZACIÓN AL CARGAR LA PÁGINA ==========
+
+  // Tu código existente de inicialización - MODIFICADO
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log('📄 DOM cargado - Iniciando aplicación...');
+
+    // Configurar fecha de entrada
+    document.getElementById('fecha_entrada').value = fechaActual;
+
+    // INICIALIZAR WEBSOCKETS PRIMERO
+    inicializarWebSockets();
+
+    // Event listeners existentes
+    document.getElementById('sector').addEventListener('change', cargarProveedores);
+    document.getElementById('check_vencimiento').addEventListener('change', toggleFechaVencimiento);
+    document.getElementById('agregarProducto').addEventListener('click', agregarProductoTemporal);
+    document.getElementById('guardarProductos').addEventListener('click', guardarProductos);
+
+    // Configurar Select2
+    $('.select2-search').select2({
+      language: "es",
+      placeholder: "Escriba para buscar productos...",
+      allowClear: true,
+      width: '100%',
+      minimumInputLength: 1,
+      dropdownParent: $('#modify')
+    });
+
+    // Manejar cambio en motivo de baja
+    document.getElementById('reason').addEventListener('change', function () {
+      const notesTextarea = document.getElementById('notes');
+      if (this.value === 'Otro') {
+        notesTextarea.disabled = false;
+        notesTextarea.required = true;
+      } else {
+        notesTextarea.disabled = true;
+        notesTextarea.required = false;
+        notesTextarea.value = '';
+      }
+    });
+
+    // Manejar cambio en select de productos para bajas
+    $('#product_id').on('change', function () {
+      const selectedOption = $(this).find('option:selected');
+      const stock = selectedOption.data('stock') || 0;
+      $('#stock-display').text(stock);
+      $('#quantity').attr('max', stock);
+    });
+
+    // Manejar envío del formulario de bajas
+    document.getElementById('bajaForm').addEventListener('submit', registrarBaja);
+
+    // Cargar datos iniciales
+    cargarProductos();
+    cargarSelectProductos();
+    cargarProductosParaBajas();
+    generarOpcionesUbicacion();
+
+    // Diagnóstico automático después de 3 segundos
+    setTimeout(() => {
+      diagnosticoWebSockets();
+    }, 3000);
+  });
+
+  // Comandos de diagnóstico para la consola
+  window.diagnosticoSistema = function () {
+    console.log('='.repeat(60));
+    console.log('🔍 DIAGNÓSTICO COMPLETO DEL SISTEMA');
+    console.log('='.repeat(60));
+    console.log('🌐 WebSocket:', window.wsManager?.isConnected ? '✅ CONECTADO' : '❌ DESCONECTADO');
+    console.log('🆔 ID:', window.wsManager?.connectionId);
+    console.log('🗄️  Base de datos:', 'Supabase');
+    console.log('📍 URL:', window.location.origin);
+    console.log('⏰ Hora:', new Date().toLocaleTimeString());
+    console.log('='.repeat(60));
+  };
+
+  // Probar sincronización manual
+  window.probarSincronizacion = function () {
+    if (window.wsManager && window.wsManager.isConnected) {
+      // Emitir evento de prueba
+      window.wsManager.socket.emit('test_sincronizacion', {
+        mensaje: 'Prueba de sincronización',
+        timestamp: new Date().toISOString(),
+        producto: 'TEST-001'
+      });
+
+      console.log('🧪 Evento de prueba enviado');
+      Swal.fire('Prueba', 'Evento de sincronización enviado', 'info');
+    } else {
+      console.error('❌ WebSocket no conectado');
+      Swal.fire('Error', 'WebSocket no conectado', 'error');
+    }
+  };
+
+  // Verificar estado de WebSocket
+  window.estadoWebSocket = function () {
+    if (window.wsManager) {
+      const estado = window.wsManager.obtenerEstado();
+      console.log('📊 Estado WebSocket:', estado);
+      return estado;
+    }
+    return null;
+  };
 </script>
