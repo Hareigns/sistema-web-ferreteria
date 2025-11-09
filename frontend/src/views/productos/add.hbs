@@ -759,10 +759,10 @@
         timestamp: new Date().toLocaleTimeString()
       });
 
-      // Destruir DataTable si ya existe
+      // CORRECCIÓN: Solo destruir DataTable si ya existe, pero NO vaciar la tabla
       if ($.fn.DataTable.isDataTable('#productosTable')) {
         productosTable.destroy();
-        $('#productosTable').empty();
+        // NO HACER: $('#productosTable').empty(); // ← ESTO CAUSA EL PROBLEMA
       }
 
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
@@ -776,29 +776,29 @@
           }
         });
 
+        // CORRECCIÓN: Usar clear() y rows.add() en lugar de recrear toda la tabla
         productosTable = $('#productosTable').DataTable({
           data: datosOrdenados,
           columns: [
             {
               data: 'imagen_url_cache',
               render: function (data, type, row) {
-                // ✅ USAR imagen_url_cache que incluye timestamp
                 const imageUrl = data || row.imagen_url;
 
                 if (imageUrl) {
                   return `<img src="${imageUrl}" alt="Imagen del producto" 
-                    class="img-thumbnail table-image" 
-                    style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                    onclick="ampliarImagen('${imageUrl}')"
-                    onerror="manejarErrorImagen(this, '${row.cod_producto}')"
-                    loading="lazy"
-                    data-producto="${row.cod_producto}"
-                    data-timestamp="${new Date().getTime()}">`;
+                  class="img-thumbnail table-image" 
+                  style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                  onclick="ampliarImagen('${imageUrl}')"
+                  onerror="manejarErrorImagen(this, '${row.cod_producto}')"
+                  loading="lazy"
+                  data-producto="${row.cod_producto}"
+                  data-timestamp="${new Date().getTime()}">`;
                 } else {
                   return `<div class="text-center text-muted">
-                    <i class="fas fa-image fa-2x"></i>
-                    <div class="small">Sin imagen</div>
-                  </div>`;
+                  <i class="fas fa-image fa-2x"></i>
+                  <div class="small">Sin imagen</div>
+                </div>`;
                 }
               },
               orderable: false,
@@ -865,8 +865,8 @@
                 }
 
                 return `<span class="badge ${badgeClass}">
-                        ${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}
-                      </span>`;
+                      ${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear()}
+                    </span>`;
               },
               width: '120px'
             },
@@ -917,9 +917,21 @@
           }
         });
       } else {
-        // Inicializar DataTable vacío
+        // CORRECCIÓN: Inicializar DataTable vacío sin destruir la estructura
         productosTable = $('#productosTable').DataTable({
           data: [],
+          columns: [
+            { data: 'imagen_url_cache' },
+            { data: 'cod_producto' },
+            { data: 'nombre' },
+            { data: 'sector' },
+            { data: 'marca' },
+            { data: 'descripcion' },
+            { data: 'cantidad' },
+            { data: 'precio_compra' },
+            { data: 'fechavencimiento' },
+            { data: 'estado' }
+          ],
           language: {
             "emptyTable": "No hay productos registrados"
           }
@@ -934,12 +946,25 @@
         errorMessage = 'Error del servidor: Respuesta en formato incorrecto';
       }
 
+      // CORRECCIÓN: Manejar error sin destruir la estructura
       if ($.fn.DataTable.isDataTable('#productosTable')) {
         productosTable.destroy();
       }
 
       productosTable = $('#productosTable').DataTable({
         data: [],
+        columns: [
+          { data: 'imagen_url_cache' },
+          { data: 'cod_producto' },
+          { data: 'nombre' },
+          { data: 'sector' },
+          { data: 'marca' },
+          { data: 'descripcion' },
+          { data: 'cantidad' },
+          { data: 'precio_compra' },
+          { data: 'fechavencimiento' },
+          { data: 'estado' }
+        ],
         language: {
           "emptyTable": errorMessage
         }
@@ -1453,14 +1478,8 @@
   // Función para recargar y reordenar el inventario
   async function recargarYReordenarInventario() {
     try {
-      // Si la tabla de DataTables existe, destruirla primero
-      if ($.fn.DataTable.isDataTable('#productosTable')) {
-        productosTable.destroy();
-      }
-
-      // Recargar los datos
-      await cargarProductos();
-
+      // Recargar los datos sin destruir la estructura
+      await cargarProductos(new Date().getTime());
       console.log('Inventario recargado y reordenado correctamente');
     } catch (error) {
       console.error('Error al recargar inventario:', error);
